@@ -1,0 +1,12 @@
+{
+  "planilha": "planilhas/CL373.00.LIR.04.xlsx",
+  "urlMes": "http://localhost/nexxus-mes",
+  "usuarioMes": "ADMIN",
+  "esperaBuscaMs": 0,
+  "esperaVisualS7Ms": 0,
+  "esperaMesSemS7Ms": 0,
+  "numTestsKeptInMemory": 5,
+  "capturaDesktop": true,
+  "selecaoRotas": "pendentes",
+  "modoBusca": "estavel"
+}

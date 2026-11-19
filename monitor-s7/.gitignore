@@ -1,0 +1,8 @@
+node_modules/
+dist/
+catalogos/
+*.plf
+*.ap16
+*.exe
+*.blob
+*.log

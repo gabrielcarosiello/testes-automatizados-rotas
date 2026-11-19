@@ -1,0 +1,25 @@
+{
+  "data": "2026-11-19",
+  "piloto": "11.4",
+  "monitor": "0.13.0",
+  "documentacao": "Rev03",
+  "base": "Integracao_MES_S7_Piloto_10_3(1).zip",
+  "hostPreservado": "10.255.11.52",
+  "contatoPreservado": "NF (1)",
+  "testes": {
+    "piloto": 105,
+    "monitor": 25,
+    "integracaoSimulada": 3,
+    "totalAprovados": 133,
+    "falhas": 0,
+    "ignorados": 0,
+    "windowsExcelOperacional": "pendente"
+  },
+  "bancadaReal": "pendente",
+  "auditoriaNpm": {
+    "altas": 1,
+    "dependencia": "xlsx",
+    "resolvida": false
+  },
+  "integracaoNutE3": "em-espera"
+}

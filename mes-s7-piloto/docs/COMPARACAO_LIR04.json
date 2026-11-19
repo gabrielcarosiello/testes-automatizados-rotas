@@ -1,0 +1,30 @@
+{
+  "data": "2026-11-19",
+  "arquivo": "CL373.00.LIR.04_preenchida.xlsx",
+  "anterior": "CL373.00.LIR.03.xlsx",
+  "aba": "Lista de Rotas - Transferências",
+  "rotas": 265,
+  "definicoesAlteradas": [],
+  "testesNormais": {
+    "OK": 263,
+    "NT": 2
+  },
+  "nivelAlto": {
+    "comSinal": 257,
+    "sinaisDistintos": 41,
+    "semSinal": [
+      "704",
+      "703",
+      "180",
+      "161",
+      "142",
+      "123",
+      "104",
+      "85"
+    ],
+    "pendentesComSinal": 257,
+    "idsConflitantes": [],
+    "nomesConflitantes": []
+  },
+  "roteiroNivelAlto": "Pendente: atuação pela API do PLCSIM Advanced e confirmação DB/MES; nenhuma digital alterada nesta preparação."
+}

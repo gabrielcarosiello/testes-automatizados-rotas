@@ -1,0 +1,15 @@
+{
+  "declaracoes": 136154,
+  "rotas": 265,
+  "sinaisLir": 257,
+  "importacaoMs": 1836.7769090000002,
+  "comparacaoIndice": {
+    "repeticoes": 50,
+    "antesMs": 193.30729599999995,
+    "depoisMs": 163.86892000000034,
+    "aquecidoMs": 0.007880999999997584,
+    "incluiConstrucaoDoIndice": true
+  },
+  "erros": [],
+  "bancada": "Leitura offline do PEData fornecido. Nenhum acesso ao CLP, MES ou SQL."
+}

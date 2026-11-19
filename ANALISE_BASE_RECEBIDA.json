@@ -1,0 +1,44 @@
+{
+  "total": 265,
+  "corretas": 164,
+  "falhas": 5,
+  "naoTestadas": 96,
+  "pendentesSelecionadas": 101,
+  "detalhes": [
+    {
+      "codigo": "704",
+      "origem": "ME29",
+      "destino": "ME07",
+      "falha": "Confirmar saídas S7: ME06 / EspelhoEntrada1 (DB1403,X1.5): esperado true, lido false; true ainda não observado | ME32 / EspelhoEntrada1 (DB1402,X1.5): esperado true, lido false; true ainda não observado | Evidência S7: resultados/Teste_rotas_Rev00_2026-11-19-12-08-19-967/s7-rota-704-1795100959706.json | Tentativa de parar transferência: Transferência Remoagem Extrusão EX | Parada confirmada: Transferência Remoagem Extrusão EX | ME06 / EspelhoEntrada1 (DB1403,X1.5): esperado true, lido false; true ainda não observado | ME32 / EspelhoEntrada1 (DB1402,X1.5): esperado true, lido false; true ainda não observado",
+      "resultadoPlanilhaOriginal": "Pendente"
+    },
+    {
+      "codigo": "703",
+      "origem": "ME01",
+      "destino": "ME07",
+      "falha": "Confirmar saídas S7: ME06 / EspelhoEntrada1 (DB1403,X1.5): esperado true, lido false; true ainda não observado | ME04 / EspelhoEntrada1 (DB1401,X1.5): esperado true, lido false; true ainda não observado | Evidência S7: resultados/Teste_rotas_Rev00_2026-11-19-12-08-19-967/s7-rota-703-1795101020659.json | Tentativa de parar transferência: Transferência Remoagem Extrusão EX | Parada confirmada: Transferência Remoagem Extrusão EX | ME06 / EspelhoEntrada1 (DB1403,X1.5): esperado true, lido false; true ainda não observado | ME04 / EspelhoEntrada1 (DB1401,X1.5): esperado true, lido false; true ainda não observado",
+      "resultadoPlanilhaOriginal": "Pendente"
+    },
+    {
+      "codigo": "669",
+      "origem": "RG37",
+      "destino": "RC08",
+      "falha": "Selecionar destino: `cy.type()` failed because it targeted a disabled element.\n\nThe element typed into was:\n\n  > <input class=\"form-control form-control-sm search-input\" placeholder=\"Buscar...\" autofocus=\"\">\n\nEnsure the element does not have an attribute named `disabled` before typing into it.",
+      "resultadoPlanilhaOriginal": "Pendente"
+    },
+    {
+      "codigo": "179",
+      "origem": "RG37",
+      "destino": "MG14",
+      "falha": "Confirmar saídas S7: RG04 / EspelhoEntrada1 (DB1363,X1.5): esperado true, lido false; true ainda não observado | RG18 / EspelhoEntrada1 (DB1012,X1.5): esperado true, lido false; true ainda não observado | RG19 / EspelhoEntrada1 (DB1153,X1.5): esperado true, lido false; true ainda não observado | RG38 / EspelhoEntrada1 (DB1050,X1.5): esperado true, lido false; true ainda não observado | RG39 / EspelhoEntrada1 (DB1051,X1.5): esperado true, lido false; true ainda não observado | Evidência S7: resultados/Teste_rotas_Rev00_2026-11-19-12-08-19-967/s7-rota-179-1795106693562.json | Tentativa de parar transferência: Transferência Armazenagem | Parada confirmada: Transferência Armazenagem | RG04 / EspelhoEntrada1 (DB1363,X1.5): esperado true, lido false; true ainda não observado | RG18 / EspelhoEntrada1 (DB1012,X1.5): esperado true, lido false; true ainda não observado | RG19 / EspelhoEntrada1 (DB1153,X1.5): esperado true, lido false; true ainda não observado | RG38 / EspelhoEntrada1 (DB1050,X1.5): esperado true, lido false; true ainda não observado | RG39 / EspelhoEntrada1 (DB1051,X1.5): esperado true, lido false; true ainda não observado",
+      "resultadoPlanilhaOriginal": "Pendente"
+    },
+    {
+      "codigo": "169",
+      "origem": "RG37",
+      "destino": "RG11",
+      "falha": "Finalizar transferência após as validações: RG04 / EspelhoEntrada1 (DB1363,X1.5): esperado true, lido false; true ainda não observado | RG06 / EspelhoEntrada1 (DB1011,X1.5): esperado true, lido false; true ainda não observado | RG10 / EspelhoEntrada1 (DB1160,X1.5): esperado true, lido false; true ainda não observado | RG18 / EspelhoEntrada1 (DB1012,X1.5): esperado true, lido false; true ainda não observado | RG19 / EspelhoEntrada1 (DB1153,X1.5): esperado true, lido false; true ainda não observado | RG38 / EspelhoEntrada1 (DB1050,X1.5): esperado true, lido false; true ainda não observado | RG39 / EspelhoEntrada1 (DB1051,X1.5): esperado true, lido false; true ainda não observado | Evidência S7: resultados/Teste_rotas_Rev00_2026-11-19-12-08-19-967/s7-rota-169-1795107140617.json | A transferência não apareceu para parada; verificação necessária",
+      "resultadoPlanilhaOriginal": "Pendente"
+    }
+  ]
+}

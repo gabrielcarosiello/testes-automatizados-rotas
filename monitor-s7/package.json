@@ -1,0 +1,19 @@
+{
+  "name": "monitor-s7-siemens",
+  "version": "0.13.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@st-one-io/nodes7": "1.1.2"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0"
+  }
+}

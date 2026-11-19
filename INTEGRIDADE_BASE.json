@@ -1,0 +1,84 @@
+{
+  "arquivoBase": "Integracao_MES_S7_Piloto_10_3(1).zip",
+  "sha256Base": "bc15aab6f14a7b05665ec7e18ab3a8e1a930ed859e555827bdb2ff2498c2e1bb",
+  "arquivosPreservados": [
+    {
+      "origem": "mes-s7-piloto/clp/System/.gitkeep",
+      "destino": "mes-s7-piloto/clp/System/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "preservado": true
+    },
+    {
+      "origem": "mes-s7-piloto/clp/System/PEData.idx",
+      "destino": "mes-s7-piloto/clp/System/PEData.idx",
+      "sha256": "39c44ad1cd3a3bcc5c04cd66a2f5df29f2602191469c717e160c6659602a7854",
+      "preservado": true
+    },
+    {
+      "origem": "mes-s7-piloto/clp/System/PEData.plf",
+      "destino": "mes-s7-piloto/clp/System/PEData.plf",
+      "sha256": "f172bf84a1542cabb8ad10d432c76b70313bfc447f635a0ee706a6816724746e",
+      "preservado": true
+    },
+    {
+      "origem": "mes-s7-piloto/clp/System/PEData/Meta/ChangeListConsumer/HmiBase.xml",
+      "destino": "mes-s7-piloto/clp/System/PEData/Meta/ChangeListConsumer/HmiBase.xml",
+      "sha256": "6b34d3c1ae6e5f83a6fb23671833c65121578c2686f8d832d64a59c3d0de7220",
+      "preservado": true
+    },
+    {
+      "origem": "mes-s7-piloto/clp/System/PEData/Meta/ChangeListConsumer/Iecpl.xml",
+      "destino": "mes-s7-piloto/clp/System/PEData/Meta/ChangeListConsumer/Iecpl.xml",
+      "sha256": "6b34d3c1ae6e5f83a6fb23671833c65121578c2686f8d832d64a59c3d0de7220",
+      "preservado": true
+    },
+    {
+      "origem": "mes-s7-piloto/clp/System/PEData/Meta/ChangeListConsumer/Siemens.Simatic.Lang.IPI.Target.xml",
+      "destino": "mes-s7-piloto/clp/System/PEData/Meta/ChangeListConsumer/Siemens.Simatic.Lang.IPI.Target.xml",
+      "sha256": "6b34d3c1ae6e5f83a6fb23671833c65121578c2686f8d832d64a59c3d0de7220",
+      "preservado": true
+    },
+    {
+      "origem": "mes-s7-piloto/clp/System/PEData/Meta/ChangeListConsumer/Siemens.Simatic.Lang.Online.xml",
+      "destino": "mes-s7-piloto/clp/System/PEData/Meta/ChangeListConsumer/Siemens.Simatic.Lang.Online.xml",
+      "sha256": "6b34d3c1ae6e5f83a6fb23671833c65121578c2686f8d832d64a59c3d0de7220",
+      "preservado": true
+    },
+    {
+      "origem": "mes-s7-piloto/clp/System/PEData/Meta/ChangeListConsumer/Siemens.Simatic.Lang.xml",
+      "destino": "mes-s7-piloto/clp/System/PEData/Meta/ChangeListConsumer/Siemens.Simatic.Lang.xml",
+      "sha256": "6b34d3c1ae6e5f83a6fb23671833c65121578c2686f8d832d64a59c3d0de7220",
+      "preservado": true
+    },
+    {
+      "origem": "mes-s7-piloto/clp/System/PEData/Meta/ChangeListProvider/Siemens.Automation.DomainModel.xml",
+      "destino": "mes-s7-piloto/clp/System/PEData/Meta/ChangeListProvider/Siemens.Automation.DomainModel.xml",
+      "sha256": "6dcb36901217485dd657f330a6e0215e37911295df2540f56306255e3783ce5e",
+      "preservado": true
+    },
+    {
+      "origem": "mes-s7-piloto/planilhas/.gitkeep",
+      "destino": "mes-s7-piloto/planilhas/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "preservado": true
+    },
+    {
+      "origem": "mes-s7-piloto/planilhas/CL373.00.LIR.04.xlsx",
+      "destino": "mes-s7-piloto/planilhas/CL373.00.LIR.04.xlsx",
+      "sha256": "8feee39ebac516c499e9ce4b55d9db64c700e4776630f23c3d9b8494b113e0f0",
+      "preservado": true
+    },
+    {
+      "origem": "mes-s7-piloto/planilhas/CL373.00.LIR.04_preenchida.xlsx",
+      "destino": "mes-s7-piloto/planilhas/arquivo/CL373.00.LIR.04_preenchida.xlsx",
+      "sha256": "01ac3448deeaa53a6990f102c5f687d1cf962f1b620381d4700180958de0af55",
+      "preservado": true
+    },
+    {
+      "origem": "mes-s7-piloto/s7.local.json",
+      "destino": "mes-s7-piloto/s7.local.json",
+      "sha256": "7403850a41f9afcc2d66ea731d3f8e7f29ba2f0be1b854bc6cb54da0d9aa237d",
+      "preservado": true
+    }
+  ]
+}

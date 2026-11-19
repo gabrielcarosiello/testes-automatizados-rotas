@@ -1,0 +1,17 @@
+{
+  "versao": "11.4",
+  "pacoteAplicadoSobre": "Piloto 11",
+  "testesAprovados": 133,
+  "ignorados": 0,
+  "recuperacaoArquivoForaPlanilhas": true,
+  "validadorIndependente": "lxml",
+  "partes": 43,
+  "formulas": 340,
+  "calcChainPreservadoByteAByte": true,
+  "partesAlteradas": [
+    "xl/worksheets/sheet3.xml",
+    "xl/workbook.xml"
+  ],
+  "originalPreservado": true,
+  "excelWindowsReal": "pendente"
+}
