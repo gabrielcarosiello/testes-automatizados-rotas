@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const { defineConfig } = require('cypress')
+const { piloto: versaoPiloto } = require('../../versao.json')
 const { ler, registrar, mensagemSemPendencias } = require('./lir-rotas')
 const { selecionarRotas, resumirLir, conferirRotaAtual } = require('./selecao-lir')
 const { gravarEvento, classificarFalha } = require('../../comum/registro-execucao')
@@ -59,7 +60,7 @@ module.exports = defineConfig({
           const livro = XLSX.utils.book_new()
           XLSX.utils.book_append_sheet(livro, XLSX.utils.aoa_to_sheet([['Data e hora', 'Código', 'Local', 'Transferência', 'Rota', 'Origem', 'Destino', 'Resultado', 'Etapa', 'Detalhes', 'Login e acesso (s)', 'Aguardar card (s)', 'Aguardar campo (s)', 'Iniciar (s)', 'Parada (s)', 'Iniciar até parada (s)', 'Teste da rota completo (s)', 'Execução acumulada (s)', 'Captura', 'Modalidade', 'Teste anterior', 'Resultado normal', 'Resultado nível alto']]), 'Resultados')
           XLSX.writeFile(livro, path.join(raiz, pasta, 'historico-rev00.xlsx'))
-          gravarEvento(config.projectRoot, pasta, 'inicio', { piloto: '11', node: process.version, planilha: path.basename(lir.arquivo), hash: lir.hash, rotas: rotas.map(r => r.codigo) })
+          gravarEvento(config.projectRoot, pasta, 'inicio', { piloto: versaoPiloto, node: process.version, planilha: path.basename(lir.arquivo), hash: lir.hash, rotas: rotas.map(r => r.codigo) })
           return pasta
         },
         retomarRev00(pasta) {

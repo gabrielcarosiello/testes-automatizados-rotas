@@ -20,6 +20,7 @@ function configurar(s7, rotas = [{ codigo: '91', status: 'NT' }, { codigo: '73',
       }
       if (id === 'path') return path
       if (id === 'cypress') return { defineConfig: objeto => objeto }
+      if (id === './versao.json') return require('../versao.json')
       if (id === './comum/execucao') return { lerExecucao: () => ({ planilha: null, numTestsKeptInMemory: 5 }) }
       if (id === './comum/credenciais-mes') return { lerSenhaMes: () => ({ erro: 'Senha MES ausente.' }) }
       if (id === './comum/s7/nivel-alto') return require('./s7/nivel-alto')
@@ -45,6 +46,7 @@ test('S7 ativa por arquivo local, filtra 91 e registra tarefas sem depender de e
   assert.equal(dados.rotas[0].codigo, '91')
   assert.ok(tarefas.includes('prepararS7') && tarefas.includes('confirmarS7'))
   assert.match(mensagens.join(' '), /MES \+ S7/)
+  assert.ok(mensagens.some(linha => linha.startsWith('[' + require('../versao.json').piloto + '] Modo ')))
 })
 
 test('configuração ausente ou sem habilitado impede execução silenciosa só MES', () => {

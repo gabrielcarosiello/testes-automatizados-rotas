@@ -1,5 +1,6 @@
 /* Versão inicial: uma rota por teste. Mantenha a VM e o supervisório visíveis. */
 require('../../comum/consultas-mes')
+const { piloto: versaoPiloto } = require('../../versao.json')
 describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
   const { mostrarMonitor, informarResultado, ocultarMonitor } = require('../../comum/visualizacao-monitor')
   const { abrirMonitorERetornar } = require('../../comum/abrir-monitor')
@@ -428,7 +429,7 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
   }
 
   it('01 - Login - Rev 00', () => {
-    cy.log(pilotoS7 ? 'Piloto 11.4 — MES + validação S7 ativa' : 'Piloto 11.4 — modo MES selecionado')
+    cy.log(`${versaoPiloto} — ${pilotoS7 ? 'MES + validação S7 ativa' : 'modo MES selecionado'}`)
     if (pilotoS7) cy.task('validarCatalogoS7', null, { timeout: 150000 }).then(info => {
       cy.log(`Catálogo: ${info.origem} · ${info.catalogo?.name || 'projeto importado'} · ${info.declaracoes} declarações`)
       cy.log(`Identificação: ${info.catalogo?.id || 'Monitor anterior sem identificação de catálogo'}`)

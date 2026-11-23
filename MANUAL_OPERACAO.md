@@ -1,10 +1,10 @@
 # Manual de operação — MES + Monitor S7
 
-**Revisão documental 02 · 23/11/2026 · Código recebido: Piloto 11.4 · Monitor: 0.13.0**
+**Revisão documental 03 · 23/11/2026 · Piloto-12 · Monitor 0.13.0**
 
 Mapa de processos e consumidores na [skill piloto-evolucao-processos](.agents/skills/piloto-evolucao-processos/SKILL.md). Consulte o [changelog](CHANGELOG.md) para o histórico documental.
 
-Este é o ponto único de consulta para operar o pacote enviado. A organização é documental: não altera regras do MES, SQL, S7, planilhas, resultados ou dependências. O nome externo Piloto_11 foi mantido porque é o diretório do projeto recebido; o log do código identifica 11.4. Não há nova versão funcional nem novo executável do Monitor nesta entrega. NUT/E3 permanece em espera.
+Este é o ponto único de consulta para operar o pacote enviado. A organização é documental: não altera regras do MES, SQL, S7, planilhas, resultados ou dependências. A identificação Piloto-12 é usada no Cypress e nos eventos de novas execuções. A versão do Monitor é 0.13.0. NUT/E3 permanece em espera.
 
 As instruções atuais abaixo prevalecem sobre os documentos históricos. A documentação anterior foi arquivada integralmente em documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip. Só permanece um redirecionamento no caminho antigo citado pelo erro de restauração.
 

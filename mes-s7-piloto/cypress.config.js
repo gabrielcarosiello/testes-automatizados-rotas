@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const { defineConfig } = require('cypress')
+const { piloto: versaoPiloto } = require('./versao.json')
 const { criarPiloto } = require('./comum/s7/piloto')
 const { configuracaoNivel } = require('./comum/s7/nivel-alto')
 const base = require('./cypress.base.config')
@@ -53,7 +54,7 @@ module.exports = defineConfig({
           if (pilotoS7) on('task', criarPiloto(config.projectRoot, undefined, {
             rotas, prevalidarSql: true, consultarSilo: destino => require('./comum/s7/consultarRota').consultarSilo(destino),
           }))
-          console.log(`[Piloto 11] Modo ${pilotoS7 ? 'MES + S7' : 'MES'}; rotas ${rotas.map(rota => rota.codigo).join(', ')}`)
+          console.log(`[${versaoPiloto}] Modo ${pilotoS7 ? 'MES + S7' : 'MES'}; rotas ${rotas.map(rota => rota.codigo).join(', ')}`)
           if (pilotoS7) console.log(`[S7] Monitor ${s7.monitor}. A leitura ocorre pela API enquanto a tela permanece no MES.`)
         }
         resultado.expose.catalogoRev00 = {

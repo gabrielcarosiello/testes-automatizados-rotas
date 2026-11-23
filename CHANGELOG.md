@@ -1,5 +1,9 @@
 # Changelog
 
+## Piloto-12 — 23/11/2026
+
+- Atualizada a identificação do piloto nos logs do Cypress, no evento inicial de novos lotes e na documentação.
+
 ## Revisão documental 02 — 23/11/2026
 
 - Criada a skill [piloto-evolucao-processos v0.1.0](.agents/skills/piloto-evolucao-processos/SKILL.md).

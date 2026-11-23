@@ -1,5 +1,4 @@
 Integração MES + Monitor S7
-Piloto 11.4 — integridade e recuperação da LIR
-Base Piloto 11/11.x; Monitor 0.13.0
-133 testes locais aprovados; operação Windows/Excel real pendente
-Leia docs/PILOTO_11_4_INTEGRIDADE_LIR.md
+Piloto-12
+Monitor 0.13.0
+Consulte ../MANUAL_OPERACAO.md e ../CHANGELOG.md.
