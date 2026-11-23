@@ -113,6 +113,6 @@ O piloto lê esse ponto na mesma amostra dos bits digitais e salva o valor no hi
 
 No lote das 15h51 de 23/11/2026, as rotas 704 e 703 foram selecionadas no MES e o botão Iniciar permaneceu desabilitado sem aviso visível. A espera por retornos e o painel S7 só eram alcançados depois do clique, por isso essas rotas foram gravadas sem estados dos DBs.
 
-Após confirmar o botão desabilitado, o piloto preserva a captura e consulta os DBs dos equipamentos vinculados à rota no modo MES + S7. Os estados confirmados, os campos lidos e as leituras indisponíveis são gravados em **Falha Identificada** na LIR e em **Detalhes** no histórico Rev 00. O resultado continua NOK. O diagnóstico faz somente leitura.
+Após confirmar o botão desabilitado, o piloto preserva a captura e consulta os DBs dos equipamentos vinculados à rota no modo MES + S7. O histórico Rev 00 grava em **Detalhes** os estados confirmados, os endereços, os campos lidos e as leituras indisponíveis. Na LIR, **Falha Identificada** agrupa os equipamentos afetados por condição, por exemplo, **Identificados equipamentos em emergência — ME06, ME32**. O resultado continua NOK. O diagnóstico faz somente leitura.
 
 O campo `Eqp.EquipamentoDWord1.Suspender` indica o estado de suspensão no CLP. Quando a leitura válida confirma `true`, o piloto registra **Equipamento suspenso** e o endereço lido. Leituras válidas em `false` registram o valor do campo e leituras indisponíveis mantêm a suspensão como não verificada.

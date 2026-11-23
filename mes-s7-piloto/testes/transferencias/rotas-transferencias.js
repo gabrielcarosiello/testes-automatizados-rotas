@@ -521,6 +521,11 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
         tipoExecucao: atual.validacaoLir?.tipoExecucao || atual.rota.tipoExecucao,
         statusInicial: atual.validacaoLir?.statusInicial || atual.rota.statusInicial,
         detalhes: [atual.detalhes, erro].filter(Boolean).join(' | '),
+        falhaLir: atual.resumoEquipamentos && [
+          atual.resumoEquipamentos,
+          execucao.restauracaoFalhou && 'Restauração pendente.',
+          atual.tentouLimparInterrompida && execucao.anterior && 'Encerramento pendente no MES.',
+        ].filter(Boolean).join(' '),
         loginSeg: execucao.loginSeg, cardSeg: execucao.cardSeg, campoSeg: execucao.campoSeg,
         inicio: atual.inicio, parada: atual.parada,
         total: atual.inicioRota ? segundos(atual.inicioRota) : '',

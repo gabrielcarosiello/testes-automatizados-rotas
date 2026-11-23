@@ -47,6 +47,7 @@ test('consulta Monitor somente com endereços de leitura e registra valores e c�
   assert.match(r.detalhes, /ME06.*Emergencia=true.*Estado=7.*Manutencao=true.*Suspenso=true/)
   assert.match(r.detalhes, /Equipamento em manutenção \(DB1403,X2\.7\)/)
   assert.match(r.detalhes, /Equipamento suspenso \(DB1403,X3\.0\)/)
+  assert.equal(r.resumo, 'Identificados equipamentos em emergência — ME06 | Identificados equipamentos em manutenção — ME06 | Identificados equipamentos suspensos — ME06')
 })
 
 test('identifica a emergência pelo AlarmeEmergencia do DB validado no catálogo', async () => {

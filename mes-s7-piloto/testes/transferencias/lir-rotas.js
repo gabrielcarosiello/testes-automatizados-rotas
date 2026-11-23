@@ -115,7 +115,7 @@ function registrar(root,dados,caminho,opcoes = {}) {
   const nivelAlto = gravarNivel ? (dados.resultadoNivelAlto === 'Concluída' ? 'OK' : 'NOK') :
     (podeMarcarNaoAplicavel(rota, atual.colunas) ? '---' : undefined)
   const colunas = Object.fromEntries(['Teste', 'Data', 'Falha Identificada', ...(nivelAlto !== undefined ? ['Nível Alto'] : [])].map(nome => [nome, XLSX.utils.encode_col(atual.colunas[nome])]))
-  const info = {backupDir:path.join(dadosPasta,'backups-lir'),arquivo:atual.arquivo,hash:atual.hash,linha:rota.linha,colunas,teste:resultadoNormal==='Concluída'?'OK':'NOK',nivelAlto,falha:dados.resultado==='Falhou' ? [dados.etapa, dados.detalhes].filter(Boolean).join(': ').slice(0,30000) : ''}
+  const info = {backupDir:path.join(dadosPasta,'backups-lir'),arquivo:atual.arquivo,hash:atual.hash,linha:rota.linha,colunas,teste:resultadoNormal==='Concluída'?'OK':'NOK',nivelAlto,falha:dados.resultado==='Falhou' ? (dados.falhaLir || [dados.etapa, dados.detalhes].filter(Boolean).join(': ')).slice(0,30000) : ''}
   const gravacao = atualizarLir(info)
   const atualizado = ler(root, atual.arquivo)
   const final = atualizado.rotas.find(r=>r.codigo===rota.codigo)

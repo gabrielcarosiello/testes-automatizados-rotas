@@ -78,20 +78,24 @@ async function lerDiagnosticoEquipamentos({ equipamentos, cpu, chamar }) {
       break
     }
   }
+  const equipamentosPorCondicao = new Map()
   const observacoes = equipamentos.map(e => {
     const lidas = e.tags.filter(tag => valores.get(tag.id)?.address === tag.address)
     const campos = lidas.map(tag => tag.nome + '=' + valores.get(tag.id).value)
     if (!campos.length) campos.push('nenhum campo de estado confirmado')
     const nomesLidos = lidas.map(tag => normalizar(tag.nome.split('.').at(-1)))
-    for (const [situacao, padrao] of [
-      ['Equipamento em emergência', /^(?:[bxi])?(?:emergencia|alarmeemergencia|emergency)$/],
-      ['Equipamento em manutenção', /^(?:[bxi])?(?:manutencao|maintenance)$/],
-      ['Equipamento suspenso', /^(?:[bxi])?(?:suspensao|suspender|suspenso|suspensa|suspended)$/],
-      ['Equipamento com falha', /^(?:[bxi])?(?:falha|fault)$/],
-      ['Equipamento bloqueado', /^(?:[bxi])?(?:bloqueado|bloqueio|blocked)$/],
+    for (const [situacao, resumo, padrao] of [
+      ['Equipamento em emergência', 'Identificados equipamentos em emergência', /^(?:[bxi])?(?:emergencia|alarmeemergencia|emergency)$/],
+      ['Equipamento em manutenção', 'Identificados equipamentos em manutenção', /^(?:[bxi])?(?:manutencao|maintenance)$/],
+      ['Equipamento suspenso', 'Identificados equipamentos suspensos', /^(?:[bxi])?(?:suspensao|suspender|suspenso|suspensa|suspended)$/],
+      ['Equipamento com falha', 'Identificados equipamentos com falha', /^(?:[bxi])?(?:falha|fault)$/],
+      ['Equipamento bloqueado', 'Identificados equipamentos bloqueados', /^(?:[bxi])?(?:bloqueado|bloqueio|blocked)$/],
     ]) {
       const ativo = lidas.find((tag, i) => padrao.test(nomesLidos[i]) && valores.get(tag.id).value === true)
-      if (ativo) campos.push(situacao + ' (' + ativo.address + ')')
+      if (!ativo) continue
+      campos.push(situacao + ' (' + ativo.address + ')')
+      if (!equipamentosPorCondicao.has(resumo)) equipamentosPorCondicao.set(resumo, new Set())
+      equipamentosPorCondicao.get(resumo).add(e.equipamento)
     }
     const naoVerificadas = [
       ['emergência', /emergencia|emergency/],
@@ -105,7 +109,9 @@ async function lerDiagnosticoEquipamentos({ equipamentos, cpu, chamar }) {
     return { completo: lidas.length > 0 && faltam === 0 && e.semEndereco.length === 0,
       texto: e.equipamento + ' (DB' + e.db + '): ' + campos.join(', ') }
   })
+  const resumo = [...equipamentosPorCondicao].map(([condicao, nomes]) => `${condicao} — ${[...nomes].join(', ')}`)
   return { completo: observacoes.length > 0 && observacoes.every(o => o.completo) && !avisos.length,
+    resumo: resumo.length ? resumo.join(' | ') : 'Nenhuma condição ativa confirmada. Consulte o histórico Rev 00.',
     detalhes: observacoes.length ? [...observacoes.map(o => o.texto), ...avisos].join(' | ') :
       'A rota não retornou equipamentos vinculados para diagnóstico.' }
 }

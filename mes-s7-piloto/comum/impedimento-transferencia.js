@@ -21,6 +21,7 @@ function registrarDiagnosticoS7(cy, atual) {
   return cy.task('diagnosticarEquipamentosS7', atual.rota.codigo, { timeout: 100000 }).then(diagnostico => {
     const complemento = 'DBs dos equipamentos no Monitor S7: ' + diagnostico.detalhes
     atual.detalhes = [atual.detalhes, complemento].filter(Boolean).join(' | ')
+    atual.resumoEquipamentos = diagnostico.resumo || 'Diagnóstico dos equipamentos indisponível. Consulte o histórico Rev 00.'
     return { completo: diagnostico.completo, complemento }
   })
 }
