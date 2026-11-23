@@ -86,3 +86,9 @@ O aviso do MES é comparado com o destino da rota em execução. A regressão in
 Quando a LIR tem IO e ID de nível alto vazios ou marcados com `---`, o piloto executa o teste normal se ele estiver selecionado e registra Não aplicável no histórico Rev 00. A coluna Nível Alto recebe `---` quando estiver pendente ou vazia e a revisão da planilha contiver as duas colunas de especificação. Um `---` explícito em Nível Alto também desabilita o ensaio. Uma recusa do MES para o destino continua sendo registrada como recusa de partida.
 
 Na LIR.04 da bancada, as rotas 180, 161, 142, 123, 104 e 85 de RG01 tinham Teste OK e Nível Alto NT, sem IO nem ID. A marcação foi validada em cópia e atinge as células K166, K185, K204, K223, K242 e K261. A regressão cobre também a gravação pelo fluxo normal e a reaplicação da marcação.
+
+## Nível alto confirmado no CLP sem reação no MES
+
+No lote de 23/11/2026, as 12 falhas de nível alto se concentraram em RG08 e RG11. O Monitor confirmou a LSH e o Aviso nos DBs digitais. Nos cartões acompanhados, o MES permaneceu em Iniciado durante o prazo. O RG16 apresentou Nível Alto com a mesma combinação de Alm e Aviso.
+
+Quando o prazo termina com nível alto confirmado no CLP e sem o estado esperado no MES, o piloto registra a rota, o caminho, a origem e o destino e alerta para validar a FC do transporte correspondente e a geração do alarme enviado ao MES. O histórico inclui a categoria `nivel-alto-confirmado-clp-sem-mes`. A rota continua com falha e segue a restauração e o encerramento de recuperação.

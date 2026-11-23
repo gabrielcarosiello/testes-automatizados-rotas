@@ -69,7 +69,12 @@ test('entrada que não permanece, timeout e mudança de sessão não aprovam nem
   assert.equal((await controls.consultarNivelAltoS7()).concluido, true)
   state.entrada = true; state.alm = true
   c.nivel.limite = Date.now() - 1
-  assert.equal((await controls.consultarNivelAltoS7()).ok, false)
+  const expirado = await controls.consultarNivelAltoS7()
+  assert.equal(expirado.ok, false)
+  assert.equal(expirado.concluido, true)
+  assert.equal(expirado.confirmadoClp, true)
+  state.alm = false
+  assert.equal((await controls.consultarNivelAltoS7()).confirmadoClp, false)
   state.connection = 'outra'
   const count = state.writes.length
   assert.equal((await controls.restaurarNivelAltoS7()).ok, false)
@@ -86,6 +91,7 @@ for (const [alm, aviso, esperado] of [[false, false, false], [true, false, true]
     state.alm = alm; state.aviso = aviso
     const result = await controls.consultarNivelAltoS7()
     assert.equal(result.ok, esperado)
+    assert.equal(result.confirmadoClp, esperado)
     assert.equal(result.tags.length, 3)
     if (esperado) {
       await assert.rejects(controls.confirmarNivelAltoMesS7({ statusMes: 'Iniciado' }))

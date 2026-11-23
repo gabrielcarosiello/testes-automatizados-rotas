@@ -159,7 +159,7 @@ function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registra
       const error = fresh && !inputOk ? 'A LSH não permaneceu no valor de nível alto.' : expired ? 'Prazo para confirmar nível alto no DB e no MES esgotado.' : ''
       c.nivel.ultima = { sequence: data.sequence, receivedAt: data.receivedAt, entrada: points[0].value, alm: points[1].value, confirmacoes: points.slice(1).map(p => ({ address: p.address, value: p.value })) }
       if (c.nivel.historico.at(-1)?.sequence !== data.sequence) c.nivel.historico.push(c.nivel.ultima)
-      return { ok: dbOk && !error, concluido: Boolean(error), detalhe: error || (dbOk ? 'Alm ou Aviso confirmado; aguardando Nível Alto no MES.' : 'Aguardando LSH e Alm ou Aviso.'), tags: points, sequence: data.sequence, receivedAt: data.receivedAt, intervaloConsultaMs: 1000, statusMes: cfg.statusMes, fase: 'nivel-alto' }
+      return { ok: dbOk && !error, confirmadoClp: dbOk, concluido: Boolean(error), detalhe: error || (dbOk ? 'Alm ou Aviso confirmado; aguardando Nível Alto no MES.' : 'Aguardando LSH e Alm ou Aviso.'), tags: points, sequence: data.sequence, receivedAt: data.receivedAt, intervaloConsultaMs: 1000, statusMes: cfg.statusMes, fase: 'nivel-alto' }
     },
     // Fase 3: juntar a evidência S7 ao estado lido no cartão correto do MES.
     async confirmarNivelAltoMesS7({ statusMes } = {}) {

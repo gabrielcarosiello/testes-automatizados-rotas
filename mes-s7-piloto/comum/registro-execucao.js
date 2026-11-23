@@ -15,6 +15,7 @@ function classificarFalha(dados) {
   if (dados.resultado === 'Concluída') return 'aprovado'
   const texto = `${dados.etapa || ''} ${dados.detalhes || ''}`.toLowerCase()
   if (/restaura.*pendente|restaura.*não confirmada/.test(texto)) return 'recuperacao-pendente'
+  if (texto.includes('nível alto confirmado no clp e não confirmado no mes')) return 'nivel-alto-confirmado-clp-sem-mes'
   if (/partida recusada|já indica nível alto/.test(texto)) return 'condicao-pre-existente'
   if (/monitor:|fetch failed|conexão|conexao|sql|econn|timeout/.test(texto)) return 'comunicacao-ou-infraestrutura'
   if (/botão|botao|cartão|cartao|dropdown|campo de busca|opção/.test(texto)) return 'interface'
