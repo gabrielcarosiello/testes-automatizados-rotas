@@ -35,3 +35,13 @@ Para validar em bancada, o operador deve primeiro identificar e encerrar a trans
 ## Recusa de partida por nível alto em RG11
 
 Na rota 169, o MES apresentou um aviso de recusa por nível alto no destino RG11. O piloto reconhece as duas frases mesmo quando o aviso aparece em linhas separadas, captura a mensagem e confirma OK. A rota é registrada como partida recusada. As próximas rotas só são liberadas quando o MES confirma que o local está vazio e não há restauração pendente. A regressão reproduz esse fluxo no DOM simulado do Cypress.
+
+## Rearme após recusa de partida no PLCSIM 6.0
+
+A opção `nivelAlto.rearmarRecusaPlcsim: true` em `s7.local.json` declara que o Monitor está conectado à CPU do PLCSIM. A opção vem desativada e exige MES + S7, ensaio de nível alto e escrita da LSH habilitados. O Monitor usa o mesmo protocolo S7 para a CPU simulada, então confirme a instância configurada antes de ativar a opção.
+
+Após a recusa por nível alto no MES, o piloto preserva a captura e o evento da primeira partida e confirma que o local está vazio. Se a LSH estiver em nível alto, grava a intenção, solicita uma única escrita para o valor normal e confirma por releitura que a LSH, Alm e Aviso normalizaram. Se todos os sinais já estiverem normais, a tentativa segue sem escrita. Se a LSH já estiver normal e Alm ou Aviso permanecer ativo, a rota falha e a origem do alarme precisa ser verificada. A nova tentativa repete a preparação da mesma rota. Uma nova recusa encerra o teste sem outro rearme.
+
+Se restar uma pendência do tipo `rearme-plcsim`, o valor normal a confirmar é o campo `destino`. Siga a seção de recuperação do manual antes de liberar o piloto. Se a preparação S7 barrar a rota antes da tentativa de partida no MES, confira o destino na bancada e libere-o antes de reexecutar.
+
+Validação no Windows com MES e S7 simulados. Passaram 158 testes, incluindo escrita única, normalização sem escrita quando os sinais já estão normais, alarme ativo com LSH normal, perda de resposta e opção desativada.

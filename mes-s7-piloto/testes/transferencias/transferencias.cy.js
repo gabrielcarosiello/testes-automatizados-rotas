@@ -15,6 +15,7 @@ if (!dados || dados.erro) {
   Cypress.expose('execucao', dados.execucao)
   Cypress.expose('monitorS7', dados.monitorS7)
   Cypress.expose('nivelAltoHabilitado', dados.nivelAltoHabilitado === true)
+  Cypress.expose('rearmarRecusaPlcsim', dados.rearmarRecusaPlcsim === true)
   Cypress.expose('pilotoS7', dados.pilotoS7 === true)
   Cypress.expose('rotas', dados.rotas)
   Cypress.expose('retomarPasta', dados.retomarPasta || null)

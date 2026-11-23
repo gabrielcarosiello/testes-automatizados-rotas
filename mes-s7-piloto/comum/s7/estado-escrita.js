@@ -28,7 +28,7 @@ function criarEstadoEscrita(raiz, alvo, { arquivos = fs, esperar = aguardar } = 
 
   function exigirLivre() {
     const pendente = ler()
-    if (pendente) throw new Error(`Restauração pendente registrada em disco: ${pendente.address} no CLP ${pendente.host}, original=${Number(pendente.original)}. Confira o sinal e siga docs/PILOTO_11_ESTABILIDADE.md antes de liberar outra rota. Arquivo: ${arquivo}`)
+    if (pendente) throw new Error(`Restauração pendente registrada em disco: ${pendente.address} no CLP ${pendente.host}, original=${Number(pendente.original)}${pendente.tipo === 'rearme-plcsim' ? `, normal esperado=${Number(pendente.destino)} (rearme PLCSIM)` : ''}. Confira o sinal e siga docs/PILOTO_11_ESTABILIDADE.md antes de liberar outra rota. Arquivo: ${arquivo}`)
   }
 
   function exigirPropriedade(c) {
@@ -77,7 +77,7 @@ function criarEstadoEscrita(raiz, alvo, { arquivos = fs, esperar = aguardar } = 
     }
 
     const agora = new Date().toISOString()
-    const dados = { versao: 1, owner: c.nivel.id, ...alvo, codigo: c.codigo, address: c.lsh.address, original: c.lsh.valorInicial, destino: c.nivel.valorSolicitado, fase, atualizadoEm: agora, criadaEm: anterior?.criadaEm ?? agora }
+    const dados = { versao: 1, owner: c.nivel.id, ...alvo, ...(c.tipoEscrita ? { tipo: c.tipoEscrita } : {}), codigo: c.codigo, address: c.lsh.address, original: c.lsh.valorInicial, destino: c.nivel.valorSolicitado, fase, atualizadoEm: agora, criadaEm: anterior?.criadaEm ?? agora }
     if (fase === 'solicitada') {
       try {
         arquivos.mkdirSync(path.dirname(arquivo), { recursive: true })

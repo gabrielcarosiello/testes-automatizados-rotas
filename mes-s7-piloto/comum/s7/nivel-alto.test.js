@@ -117,3 +117,68 @@ test('LSH_TQME19 sem offset usa DB importado e os bits autorizados, sem cadastro
   assert.throws(() => resolverAlarme(rotaTq, [tag, { ...tag, dbNumber: 4813 }], cfg), /única/)
   assert.throws(() => resolverAlarme(rotaTq, [{ ...tag, block: 'DIG098_LSH_TQME19' }], cfg), /não localizado/)
 })
+
+function fixtureRearme({ habilitado = true, entrada = false, alarme = true, perderResposta = false } = {}) {
+  const contato = configurarContatoLSH(1)
+  const c = { codigo: '169', baseline: 10, connection: 'plcsim:0',
+    lsh: { id: 'lsh', address: 'I31.2', writable: true }, alarme: { id: 'alm', address: 'DB3023,X1.0' } }
+  const eventos = []
+  let sequencia = 10
+  const cfg = configuracaoNivel({ nivelAlto: { habilitado: true, rearmarRecusaPlcsim: habilitado } })
+  const controle = criarControleNivel({
+    getContext: () => c, cfg, contato, pollMs: 100,
+    exigirLivre: () => eventos.push('livre'),
+    registrarEscrita: (fase, operacao) => {
+      assert.equal(operacao.tipoEscrita, 'rearme-plcsim')
+      assert.equal(operacao.lsh.valorInicial, false)
+      assert.equal(operacao.nivel.valorSolicitado, true)
+      eventos.push(fase)
+    },
+    chamar: async (rota, opcoes) => {
+      if (rota === '/api/escrita') {
+        eventos.push('escrita')
+        assert.deepEqual(JSON.parse(opcoes.body), { id: 'lsh', connection: c.connection, expected: false, value: true })
+        entrada = true
+        alarme = false
+        if (perderResposta) throw new Error('resposta perdida')
+        return { acknowledged: true, verified: true, observed: true, sequence: ++sequencia }
+      }
+      return { mode: 's7', state: 'ok', connected: true, connection: c.connection,
+        sequence: ++sequencia, receivedAt: new Date().toISOString(),
+        tags: [{ ...c.lsh, good: true, value: entrada }, { ...c.alarme, good: true, value: alarme }] }
+    },
+  })
+  return { rearme: () => controle.rearmarRecusaNivelAltoS7({ codigo: c.codigo }), eventos }
+}
+
+test('PLCSIM rearma uma única vez com persistência antes da escrita e releitura de LSH e Alm', async () => {
+  const { rearme, eventos } = fixtureRearme()
+  assert.deepEqual(await rearme(), { address: 'I31.2', anterior: false, valorNormal: true, escrita: true, amostra: 13 })
+  await assert.rejects(rearme(), /já tentado/)
+  assert.deepEqual(eventos, ['livre', 'solicitada', 'escrita', 'confirmada', 'restaurada'])
+})
+
+test('rearme PLCSIM preserva a pendência após perder resposta, sem reenviar', async () => {
+  const { rearme, eventos } = fixtureRearme({ perderResposta: true })
+  await assert.rejects(rearme(), /resposta perdida/)
+  await assert.rejects(rearme(), /já tentado/)
+  assert.deepEqual(eventos, ['livre', 'solicitada', 'escrita'])
+})
+
+test('LSH normal com alarme ativo impede escrita e nova tentativa', async () => {
+  const { rearme, eventos } = fixtureRearme({ entrada: true })
+  await assert.rejects(rearme(), /Alm\/Aviso continuam ativos/)
+  assert.deepEqual(eventos, ['livre'])
+})
+
+test('LSH e alarme já normais permitem tentativa sem escrita', async () => {
+  const { rearme, eventos } = fixtureRearme({ entrada: true, alarme: false })
+  assert.equal((await rearme()).escrita, false)
+  assert.deepEqual(eventos, ['livre'])
+})
+
+test('rearme exige configuração explícita do PLCSIM', async () => {
+  const { rearme, eventos } = fixtureRearme({ habilitado: false })
+  await assert.rejects(rearme(), /indisponível/)
+  assert.deepEqual(eventos, [])
+})

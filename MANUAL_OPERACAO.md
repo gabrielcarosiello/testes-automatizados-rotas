@@ -241,7 +241,7 @@ Uma escrita LSH cria resultados/controle/escrita-pendente.json antes do comando 
 
 1. Pare o lote e impeça novas execuções enquanto confere os registros. Preserve o JSON, os temporários correspondentes e as evidências S7/MES com seus horários. Uma falha de `rename` na fase confirmada ocorre após a releitura da escrita pelo Monitor.
 2. Confira host, endereço e valor original no registro. Identifique a transferência exata no MES. Se ela ainda estiver em andamento, peça ao operador autorizado que coordene a parada e a limpeza do cartão conforme o procedimento da área e confirme que a rota ficou livre.
-3. Na mesma CPU de simulação, restaure o valor original se necessário e confirme leitura válida/estável. Não use sempre 0: NF pode exigir 1.
+3. Na mesma CPU de simulação, confirme por leitura estável o valor esperado. Num ensaio de nível alto, use o campo `original`. Se o registro tem tipo `rearme-plcsim`, use o campo `destino`, que representa o valor normal, e confirme Alm/Aviso inativos.
 4. Só após conferência, renomeie o arquivo para escrita-pendente-conferida-DATA.json. Preserve o registro.
 5. Recarregue o projeto/execute novamente. Se reaparecer, investigar a nova pendência.
 

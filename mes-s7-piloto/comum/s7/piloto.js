@@ -129,7 +129,7 @@ function criarPiloto(raiz, consultarRota = codigo => require('./consultarRota').
   }
 
   const catalogoProjeto = criarCatalogoProjeto(raiz, local, chamar)
-  const controleNivel = criarControleNivel({ getContext: () => contexto, chamar, cfg: nivelCfg, contato: contatoLSH, pollMs, registrarEscrita: estadoEscrita.registrar, exigirPropriedade: estadoEscrita.exigirPropriedade })
+  const controleNivel = criarControleNivel({ getContext: () => contexto, chamar, cfg: nivelCfg, contato: contatoLSH, pollMs, registrarEscrita: estadoEscrita.registrar, exigirPropriedade: estadoEscrita.exigirPropriedade, exigirLivre: estadoEscrita.exigirLivre })
   return {
     ...controleNivel,
     async validarCatalogoS7() {

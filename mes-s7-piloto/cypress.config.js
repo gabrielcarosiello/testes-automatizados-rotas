@@ -61,6 +61,7 @@ module.exports = defineConfig({
           execucao,
           pilotoS7,
           nivelAltoHabilitado: nivelAlto.habilitado,
+          rearmarRecusaPlcsim: nivelAlto.rearmarRecusaPlcsim,
           monitorS7,
           validacaoLir: dados.expose.validacaoLir,
           rotas,

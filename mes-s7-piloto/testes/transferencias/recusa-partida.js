@@ -35,7 +35,7 @@ function tratarRecusaPartida({ cy, execucao, visivel, ocultarMonitor, falharTest
       atual.etapa = 'Partida recusada: destino já em nível alto'
       atual.detalhes = [atual.detalhes, aviso.mensagem].filter(Boolean).join(' | ')
       return ocultarMonitor().then(() => {
-        const nome = `${execucao.pasta}/mes-recusa-nivel-alto-rota-${atual.rota.codigo}`
+        const nome = `${execucao.pasta}/mes-recusa-nivel-alto-rota-${atual.rota.codigo}${atual.rearmeTentado ? '-tentativa-2' : ''}`
         atual.captura = nome
         return cy.screenshot(nome, { capture: 'viewport', overwrite: false })
       }).then(() => cy.document({ log: false })).then(documento => {

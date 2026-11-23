@@ -198,11 +198,36 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
       return iniciar(rota, 1)
     })
   }
-  function verificarRecusaPartida(falharTeste = true) {
-    return tratarRecusaPartida({ cy, execucao, visivel: Cypress.dom.isVisible, ocultarMonitor, falharTeste })
+  function verificarRecusaPartida(falharTeste = true, durantePartidaS7 = false) {
+    const atual = execucao.atual
+    const rearmar = falharTeste && durantePartidaS7 && Cypress.expose('rearmarRecusaPlcsim') === true &&
+      atual.rota.nivelAlto?.aplicavel && atual.rota.nivelAlto.status !== '---' && !atual.rearmeTentado
+    return tratarRecusaPartida({ cy, execucao, visivel: Cypress.dom.isVisible, ocultarMonitor, falharTeste: falharTeste && !rearmar })
+      .then(recusou => {
+        if (!recusou || !rearmar) return recusou
+        atual.rearmeTentado = true
+        const { rota } = atual
+        const primeiraRecusa = `Primeira partida recusada: nível alto em ${rota.destino}. Evidência: ${atual.captura}.`
+        return etapa(primeiraRecusa).then(() => {
+          // A tarefa pode escrever na LSH antes de falhar. Libere o lote só com retorno confirmado.
+          execucao.restauracaoFalhou = true
+          return cy.task('rearmarRecusaNivelAltoS7', { codigo: rota.codigo }, { timeout: 25000 })
+        }).then(resultado => {
+          execucao.restauracaoFalhou = false
+          const detalhe = `Rearme PLCSIM ${resultado.address}: ${Number(resultado.anterior)} → ${Number(resultado.valorNormal)}, ${resultado.escrita ? 'escrita confirmada' : 'entrada já normal'}, Alm/Aviso inativos. Nova tentativa da mesma rota.`
+          atual.detalhes += ' | ' + detalhe
+          return etapa(detalhe)
+        }).then(() => {
+          atual.recusaPartida = false
+          preparar(rota)
+          prepararLeituraS7(rota)
+          iniciar(rota)
+          mostrarMonitor(rota.codigo)
+        })
+      })
   }
   function acompanharS7() {
-    return verificarRecusaPartida().then(() => cy.task('confirmarS7', {
+    return cy.then(() => verificarRecusaPartida(true, true)).then(() => cy.task('confirmarS7', {
       inicio: execucao.atual.inicioRota
     }, { timeout: 10000 })).then(resultado => {
       return informarResultado(resultado).then(() => {
@@ -233,20 +258,22 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
     return cy.then(() => { execucao.atual.inicio = segundos(execucao.atual.inicioStatus) })
   }
 
+  function prepararLeituraS7(rota) {
+    etapa('Preparar leitura S7')
+    cy.log('S7: consultando SQL, carregando catálogo do projeto e verificando as saídas antes da partida')
+    return cy.task('prepararS7', rota.codigo, { timeout: 150000 }).then(tags => {
+      cy.log(`S7: ${tags.length} retornos mapeados; preparação conforme perfil de cada equipamento`)
+      tags.forEach(tag => cy.log(`${tag.label} → ${tag.address} · modo ${tag.modoValidacao} · perfil ${tag.perfil} · tipo(s) SQL ${tag.equipamentos.map(e => e.tip_equipamento).join(", ")}`))
+    })
+  }
+
   function testar(rota) {
     cy.task('validarRotaLir', rota.codigo).then(info => {
       execucao.atual.validacaoLir = info
       cy.log(`LIR: rota ${info.codigo} · ${info.tipoExecucao} · Teste anterior ${info.statusInicial}`)
     })
     preparar(rota)
-    if (pilotoS7) {
-      etapa('Preparar leitura S7')
-      cy.log('S7: consultando SQL, carregando catálogo do projeto e verificando as saídas antes da partida')
-      cy.task('prepararS7', rota.codigo, { timeout: 150000 }).then(tags => {
-        cy.log(`S7: ${tags.length} retornos mapeados; preparação conforme perfil de cada equipamento`)
-        tags.forEach(tag => cy.log(`${tag.label} → ${tag.address} · modo ${tag.modoValidacao} · perfil ${tag.perfil} · tipo(s) SQL ${tag.equipamentos.map(e => e.tip_equipamento).join(", ")}`))
-      })
-    }
+    if (pilotoS7) prepararLeituraS7(rota)
     iniciar(rota)
     if (pilotoS7) {
       etapa('Acompanhar saídas S7 desde a partida')

@@ -1,5 +1,6 @@
 const { indiceCatalogo } = require('./indice-catalogo')
 const { randomUUID } = require('node:crypto')
+const { setTimeout: dormir } = require('node:timers/promises')
 'use strict'
 const normalizar = text => String(text ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().replace(/\s+/g, ' ').toLowerCase()
 function configuracaoNivel(local) {
@@ -7,6 +8,10 @@ function configuracaoNivel(local) {
   if (!value || typeof value !== 'object' || Array.isArray(value) || typeof value.habilitado !== 'boolean') throw new Error('nivelAlto.habilitado deve ser true ou false.')
   const cfg = { habilitado: value.habilitado, campoAlarme: value.campoAlarme ?? 'Dig.str_Dig.Alm', statusMes: value.statusMes ?? 'Nível Alto', prazoMs: value.prazoMs ?? 60000, alarmesConfirmados: value.alarmesConfirmados ?? {} }
   if (typeof cfg.campoAlarme !== 'string' || !cfg.campoAlarme || typeof cfg.statusMes !== 'string' || !cfg.statusMes || !Number.isInteger(cfg.prazoMs) || cfg.prazoMs < 1000 || cfg.prazoMs > 180000 || !cfg.alarmesConfirmados || typeof cfg.alarmesConfirmados !== 'object' || Array.isArray(cfg.alarmesConfirmados)) throw new Error('Revise campoAlarme, statusMes, prazoMs (1000..180000) e alarmesConfirmados em nivelAlto.')
+  cfg.rearmarRecusaPlcsim = value.rearmarRecusaPlcsim ?? false
+  if (typeof cfg.rearmarRecusaPlcsim !== 'boolean' || (cfg.rearmarRecusaPlcsim && !cfg.habilitado)) {
+    throw new Error('rearmarRecusaPlcsim deve ser booleano e exige ensaio de nível alto habilitado no PLCSIM.')
+  }
   cfg.offsetsConfirmacao = value.offsetsConfirmacao ?? ['1.0', '1.1']
   if (!Array.isArray(cfg.offsetsConfirmacao) || !cfg.offsetsConfirmacao.length || cfg.offsetsConfirmacao.length > 8 || cfg.offsetsConfirmacao.some(v => typeof v !== 'string' || !/^\d+\.[0-7]$/.test(v) || Number(v.split('.')[0]) > 2097151)) throw new Error('nivelAlto.offsetsConfirmacao deve conter offsets como 1.0 e 1.1.')
   return cfg
@@ -39,7 +44,7 @@ function resolverAlarme(rota, arrays, cfg) {
   const alternativas = offsets.filter(offset => `DB${tag.dbNumber},X${offset}` !== address).map((offset, i) => ({ id: `lsh_alarme_alternativa_${i}`, label: `${io} / ${offset === '1.1' ? 'Aviso' : offset === '1.0' ? 'Alm' : offset}`, address: `DB${tag.dbNumber},X${offset}`, writable: false }))
   return { alternativas, id: 'lsh_alarme', label: `${io} / Alm`, address, bloco: tag.block, campo: tag.name, origem, writable: false }
 }
-function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registrarEscrita = () => {}, exigirPropriedade = () => {} }) {
+function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registrarEscrita = () => {}, exigirPropriedade = () => {}, exigirLivre = () => {} }) {
   function context() {
     const c = getContext()
     if (!cfg.habilitado || !c?.alarme || !c?.lsh) throw new Error('Ensaio de nível alto não está preparado para esta rota.')
@@ -56,6 +61,47 @@ function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registra
     return { data, points }
   }
   const controls = {
+    async rearmarRecusaNivelAltoS7({ codigo } = {}) {
+      const c = context()
+      if (!cfg.rearmarRecusaPlcsim || !c.lsh.writable || String(c.codigo) !== String(codigo) || c.nivel || c.rearmeTentado) {
+        throw new Error('Rearme de recusa indisponível para esta rota ou já tentado.')
+      }
+      c.rearmeTentado = true
+      exigirLivre()
+      const anterior = await sample(c)
+      if (getContext() !== c || anterior.data.sequence <= c.baseline) throw new Error('Rearme exige amostra posterior à preparação da mesma rota.')
+      const [entrada, ...alarmes] = anterior.points
+      const normal = contato.valorSemNivelAlto
+      const resultado = { address: c.lsh.address, anterior: entrada.value, valorNormal: normal, escrita: false }
+      if (entrada.value === normal) {
+        if (alarmes.some(a => a.value)) throw new Error('LSH já está normal e Alm/Aviso continuam ativos. Verifique a origem do alarme.')
+        return resultado
+      }
+
+      const operacao = {
+        tipoEscrita: 'rearme-plcsim', codigo: c.codigo, lsh: { ...c.lsh, valorInicial: entrada.value },
+        nivel: { id: randomUUID(), valorSolicitado: normal },
+      }
+      registrarEscrita('solicitada', operacao)
+      const resposta = await chamar('/api/escrita', {
+        body: JSON.stringify({ id: c.lsh.id, connection: c.connection, expected: entrada.value, value: normal }),
+      })
+      if (!resposta.acknowledged || !resposta.verified || resposta.observed !== normal) {
+        throw new Error('Rearme da LSH sem confirmação por releitura. A escrita permanece pendente.')
+      }
+      registrarEscrita('confirmada', operacao)
+      const limite = Date.now() + Math.min(cfg.prazoMs, 8000)
+      do {
+        const { data, points } = await sample(c)
+        if (data.sequence > anterior.data.sequence && data.sequence >= (resposta.sequence ?? 0) &&
+            points[0].value === normal && points.slice(1).every(p => !p.value)) {
+          registrarEscrita('restaurada', operacao)
+          return { ...resultado, escrita: true, amostra: data.sequence }
+        }
+        await dormir(Math.min(pollMs, 500))
+      } while (Date.now() < limite)
+      throw new Error('Rearme sem confirmação de LSH normal e Alm/Aviso inativos. Não será feita nova partida.')
+    },
     // Fase 1: um comando explícito, apenas após partida normal aprovada.
     async acionarNivelAltoS7() {
       const c = context()
