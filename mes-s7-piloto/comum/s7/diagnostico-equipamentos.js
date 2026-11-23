@@ -3,7 +3,7 @@ const { consultarDbsDaRotaSql } = require('./gerarRotaCLP')
 
 const tipos = { BOOL: 'X', BYTE: 'BYTE', USINT: 'BYTE', SINT: 'SINT', WORD: 'WORD',
   UINT: 'WORD', INT: 'INT', DWORD: 'DWORD', UDINT: 'DWORD', DINT: 'DINT' }
-const camposComuns = /^(?:[bxi])?(?:estado|status|situacao|emergencia|emergency|manutencao|maintenance|suspensao|suspenso|suspensa|suspended|falha|fault|alarme|alm|alarm|bloqueado|bloqueio|blocked|intertravamento|intertravado|interlock|inoperante|indisponivel)$/
+const camposComuns = /^(?:[bxi])?(?:estado|status|situacao|emergencia|alarmeemergencia|emergency|manutencao|maintenance|suspensao|suspenso|suspensa|suspended|falha|fault|alarme|alm|alarm|bloqueado|bloqueio|blocked|intertravamento|intertravado|interlock|inoperante|indisponivel)$/
 const normalizar = nome => nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/gi, '').toLowerCase()
 const campoDeEstado = nome => camposComuns.test(normalizar(nome.split('.').at(-1)))
 
@@ -83,6 +83,9 @@ async function lerDiagnosticoEquipamentos({ equipamentos, cpu, chamar }) {
     const campos = lidas.map(tag => tag.nome + '=' + valores.get(tag.id).value)
     if (!campos.length) campos.push('nenhum campo de estado confirmado')
     const nomesLidos = lidas.map(tag => normalizar(tag.nome.split('.').at(-1)))
+    const emergenciaAtiva = lidas.find((tag, i) =>
+      /^(?:[bxi])?(?:emergencia|alarmeemergencia|emergency)$/.test(nomesLidos[i]) && valores.get(tag.id).value === true)
+    if (emergenciaAtiva) campos.push('Equipamento em emergência (' + emergenciaAtiva.address + ')')
     const naoVerificadas = [
       ['emergência', /emergencia|emergency/],
       ['manutenção', /manutencao|maintenance/],

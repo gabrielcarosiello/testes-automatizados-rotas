@@ -92,3 +92,7 @@ Na LIR.04 da bancada, as rotas 180, 161, 142, 123, 104 e 85 de RG01 tinham Teste
 No lote de 23/11/2026, as 12 falhas de nível alto se concentraram em RG08 e RG11. O Monitor confirmou a LSH e o Aviso nos DBs digitais. Nos cartões acompanhados, o MES permaneceu em Iniciado durante o prazo. O RG16 apresentou Nível Alto com a mesma combinação de Alm e Aviso.
 
 Quando o prazo termina com nível alto confirmado no CLP e sem o estado esperado no MES, o piloto registra a rota, o caminho, a origem e o destino e alerta para validar a FC do transporte correspondente e a geração do alarme enviado ao MES. O histórico inclui a categoria `nivel-alto-confirmado-clp-sem-mes`. A rota continua com falha e segue a restauração e o encerramento de recuperação.
+
+## Alarme de emergência dos equipamentos
+
+O TIA mostra `EquipamentoAlarmes.AlarmeEmergencia` como Bool no offset 7.2 do DB exibido. O diagnóstico procura `AlarmeEmergencia` nos DBs vinculados à rota e usa o endereço declarado no catálogo. Quando o Monitor confirma o bit ativo, o piloto registra **Equipamento em emergência** com o endereço lido. Layout sem confirmação continua registrado como tal. A consulta é somente de leitura e não reconhece nem rearma alarmes.

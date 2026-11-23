@@ -47,6 +47,29 @@ test('consulta Monitor somente com endereços de leitura e registra valores e c�
   assert.match(r.detalhes, /ME06.*Emergencia=true.*Estado=7.*Manutencao=false.*Suspenso=false/)
 })
 
+test('identifica a emergência pelo AlarmeEmergencia do DB validado no catálogo', async () => {
+  const nome = 'Eqp.EquipamentoAlarmes.AlarmeEmergencia'
+  const equipamentos = mapearCamposDiagnostico(vinculos, [
+    tag(nome, 'BOOL', 58),
+    tag('Eqp.EquipamentoAlarmes.ReconheceAlarmeM_G', 'BOOL', 54),
+  ])
+  assert.deepEqual(equipamentos[0].tags.map(t => [t.nome, t.address]), [[nome, 'DB1403,X7.2']])
+  const cpu = { host: '127.0.0.1' }
+  for (const ativo of [true, false]) {
+    const leitura = await lerDiagnosticoEquipamentos({ equipamentos, cpu, chamar: async (url, options) => {
+      assert.equal(url, '/api/diagnostico-dbs')
+      const { tags } = JSON.parse(options.body)
+      return { host: cpu.host, tags: tags.map(tag => ({ ...tag, good: true, value: ativo })) }
+    } })
+    assert.match(leitura.detalhes, new RegExp('AlarmeEmergencia=' + ativo))
+    assert.equal(leitura.detalhes.includes('Equipamento em emergência (DB1403,X7.2)'), ativo)
+    assert.doesNotMatch(leitura.detalhes, /não verificadas: emergência/)
+  }
+  const [semLayout] = mapearCamposDiagnostico(vinculos, [{ ...tag(nome, 'BOOL', 58), unverifiedLayout: true }])
+  assert.deepEqual(semLayout.tags, [])
+  assert.deepEqual(semLayout.semEndereco, [nome])
+})
+
 test('CPU divergente, endereço divergente ou ausência de campos preserva diagnóstico incompleto', async () => {
   const cpu = { host: '127.0.0.1' }
   const equipamentos = mapearCamposDiagnostico(vinculos, catalogo)
