@@ -23,13 +23,12 @@ function fixture({ aoRegistrar, conclui = true, completo = true } = {}) {
       const nome = botao.textContent
       eventos.push(nome)
       if (nome === 'Limpar') doc.body.insertAdjacentHTML('beforeend', '<section role="dialog"><p>Deseja realmente limpar a transferência</p><button>Sim</button></section>')
+      if (nome === 'Sim') {
+        doc.querySelector('[role=dialog]').remove()
+        if (conclui) doc.body.innerHTML = '<p>Não há nenhuma transferência em uso</p>'
+      }
     } }),
-    elementoMes: (_, nome) => ({ click: async () => {
-      assert.equal(nome, 'Sim')
-      eventos.push(nome)
-      doc.querySelector('[role=dialog]').remove()
-      if (conclui) doc.body.innerHTML = '<p>Não há nenhuma transferência em uso</p>'
-    } }),
+    wait: async () => { throw new Error('Encerramento não confirmado ao limpar a transferência.') },
     contains: texto => ({ should: async () => { assert.ok(doc.body.textContent.includes(texto)) } }),
     get: () => ({ should: fn => { fn([doc.body]); return Promise.resolve() } }),
     task: async (tarefa, dados) => {
@@ -76,7 +75,7 @@ test('cartão trocado após o diagnóstico não recebe Limpar', async () => {
 test('sem confirmação de local vazio conserva o bloqueio', async () => {
   const f = fixture({ conclui: false })
   try {
-    await assert.rejects(f.executar(), /encerramento.*não foi confirmado/)
+    await assert.rejects(f.executar(), /encerramento.*não confirmado/i)
     assert.ok(f.execucao.anterior)
   } finally { f.fechar() }
 })

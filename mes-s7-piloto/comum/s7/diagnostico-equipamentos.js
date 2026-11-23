@@ -82,6 +82,13 @@ async function lerDiagnosticoEquipamentos({ equipamentos, cpu, chamar }) {
     const lidas = e.tags.filter(tag => valores.get(tag.id)?.address === tag.address)
     const campos = lidas.map(tag => tag.nome + '=' + valores.get(tag.id).value)
     if (!campos.length) campos.push('nenhum campo de estado confirmado')
+    const nomesLidos = lidas.map(tag => normalizar(tag.nome.split('.').at(-1)))
+    const naoVerificadas = [
+      ['emergência', /emergencia|emergency/],
+      ['manutenção', /manutencao|maintenance/],
+      ['suspensão', /suspensao|suspenso|suspensa|suspended/],
+    ].filter(([, padrao]) => !nomesLidos.some(nome => padrao.test(nome))).map(([rotulo]) => rotulo)
+    if (naoVerificadas.length) campos.push('não verificadas: ' + naoVerificadas.join(', '))
     const faltam = e.tags.length - lidas.length
     if (faltam) campos.push(faltam + ' leitura(s) indisponível(is)')
     if (e.semEndereco.length) campos.push('layout não confirmado: ' + e.semEndereco.join(', '))

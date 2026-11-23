@@ -61,6 +61,7 @@ test('CPU divergente, endereço divergente ou ausência de campos preserva diagn
   const semCampos = await lerDiagnosticoEquipamentos({ equipamentos: mapearCamposDiagnostico(vinculos, [catalogo[4]]), cpu,
     chamar: async () => assert.fail('consulta sem campo') })
   assert.equal(semCampos.completo, false)
+  assert.match(semCampos.detalhes, /não verificadas: emergência, manutenção, suspensão/)
 })
 
 test('Monitor anterior à API informa a atualização necessária e mantém o resultado incompleto', async () => {

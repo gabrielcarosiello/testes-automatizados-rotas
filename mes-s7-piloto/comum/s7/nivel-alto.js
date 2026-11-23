@@ -61,6 +61,13 @@ function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registra
     return { data, points }
   }
   const controls = {
+    async verificarEstadoNivelS7({ codigo } = {}) {
+      const c = context()
+      if (String(c.codigo) !== String(codigo)) throw new Error('Leitura de nível alto para rota diferente da preparada.')
+      const { points } = await sample(c)
+      return { normal: points[0].value === contato.valorSemNivelAlto && points.slice(1).every(p => !p.value),
+        detalhe: points.map(p => `${p.label} (${p.address})=${Number(p.value)}`).join(', ') }
+    },
     async rearmarRecusaNivelAltoS7({ codigo } = {}) {
       const c = context()
       if (!cfg.rearmarRecusaPlcsim || !c.lsh.writable || String(c.codigo) !== String(codigo) || c.nivel || c.rearmeTentado) {

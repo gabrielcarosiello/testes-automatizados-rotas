@@ -1,6 +1,7 @@
 const { indiceCatalogo } = require('./indice-catalogo')
 const { criarClienteMonitor } = require('./cliente-monitor')
 const { mapearCamposDiagnostico, lerDiagnosticoEquipamentos } = require('./diagnostico-equipamentos')
+const { gravarEvento } = require('../registro-execucao')
 const { criarEstadoEscrita } = require('./estado-escrita')
 const { readFileSync, writeFileSync, mkdirSync } = require('node:fs')
 const path = require('node:path')
@@ -169,7 +170,9 @@ function criarPiloto(raiz, consultarRota = codigo => require('./consultarRota').
         return { completo: false, detalhes: erro.message }
       }
     },
-    async prepararS7(codigo) {
+    async prepararS7(entrada) {
+      const fluxo = entrada && typeof entrada === 'object' ? entrada : null
+      const codigo = fluxo?.codigo ?? entrada
       estadoEscrita.exigirLivre()
       if (contexto?.nivel?.restauracaoPendente) throw new Error('A LSH da rota anterior ainda precisa ser restaurada.')
       contexto = undefined
@@ -194,17 +197,46 @@ function criarPiloto(raiz, consultarRota = codigo => require('./consultarRota').
       const sessao = await chamar('/api/conexao', { body: JSON.stringify({ host, rack, slot, pollMs, tags: tagsConexao }) })
       if (!sessao.connection || sessao.host !== host) throw new Error('O Monitor não confirmou a sessão configurada.')
       if (lsh?.writable && !sessao.tags?.some(tag => tag.id === lsh.id && tag.address === lsh.address && tag.writeType === 'X')) throw new Error('O Monitor não habilitou a escrita da LSH. Utilize a versão 0.12 ou posterior com escrita de I/O.')
-      const inicial = await aguardar({ connection: sessao.connection, tags: [...tags, ...(lsh ? [{ ...lsh, exigirDesligadoAntes: false }] : []), ...alarmes], esperado: false })
-      if (lsh) {
-        lsh.valorInicial = inicial.tags.find(tag => tag.id === lsh.id).value
-        if (lsh.valorInicial !== contatoLSH.valorSemNivelAlto) throw new Error(`LSH ${lsh.label} já indica nível alto. Restaure a entrada para ${Number(contatoLSH.valorSemNivelAlto)} antes de preparar a rota.`)
-      }
+      const podeRearmar = Boolean(fluxo?.pasta && fluxo.rearmar !== false && nivelCfg.rearmarRecusaPlcsim && lsh?.writable && alarme)
+      const tagsPreparo = [...tags, ...(lsh ? [{ ...lsh, exigirDesligadoAntes: false }] : []),
+        ...alarmes.map(tag => podeRearmar ? { ...tag, exigirDesligadoAntes: false } : tag)]
+      let inicial = await aguardar({ connection: sessao.connection, tags: tagsPreparo, esperado: false })
+      const valor = (amostra, tag) => amostra.tags.find(lida => lida.id === tag.id).value
+      if (lsh) lsh.valorInicial = valor(inicial, lsh)
       contexto = {
         codigo, vinculos, perfis, catalogoInfo, sinaisLir, lsh, alarme, connection: sessao.connection, tags, baseline: inicial.sequence,
         observadas: Object.fromEntries(tags.map(tag => [tag.id, { jaLigou: false, primeiroTrue: null, ultimoTrue: null }])),
         historico: [], iniciadoEm: null, resultado: null,
       }
-      return tags
+      let rearme = null
+      if (lsh) {
+        const normal = contatoLSH.valorSemNivelAlto
+        const alto = lsh.valorInicial !== normal
+        const alarmesAtivos = alarmes.some(tag => valor(inicial, tag))
+        if (alto || alarmesAtivos) {
+          const leituras = [lsh, ...alarmes].map(tag => `${tag.label} (${tag.address})=${Number(valor(inicial, tag))}`).join(', ')
+          const detalhe = `Nível alto na pré-partida em ${rota?.destino ?? lsh.label}. ${leituras}.`
+          if (!alto || !podeRearmar) {
+            throw new Error(detalhe + (alto ? ` A LSH já indica nível alto. Restabeleça o valor normal ${Number(normal)}.` :
+              ' LSH normal com Alm/Aviso ativo. Verifique a origem do alarme.'))
+          }
+          gravarEvento(raiz, fluxo.pasta, 'etapa', { codigo, etapa: detalhe })
+          await aguardar({ connection: sessao.connection, tags: tagsPreparo, esperado: false, depoisDe: inicial.sequence })
+          try {
+            rearme = await controleNivel.rearmarRecusaNivelAltoS7({ codigo })
+          } catch (erro) {
+            if (estadoEscrita.ler()?.tipo === 'rearme-plcsim') return { tags, erro: erro.message, pendente: true }
+            throw erro
+          }
+          inicial = await aguardar({ connection: sessao.connection,
+            tags: [...tags, { ...lsh, exigirDesligadoAntes: false }, ...alarmes], esperado: false,
+            depoisDe: inicial.sequence })
+          if (valor(inicial, lsh) !== normal) throw new Error('LSH voltou a indicar nível alto após o rearme de pré-partida.')
+          lsh.valorInicial = normal
+          contexto.baseline = inicial.sequence
+        }
+      }
+      return fluxo ? { tags, rearme } : tags
     },
     async confirmarS7({ inicio } = {}) {
       if (!contexto) return { ok: false, concluido: true, detalhe: 'Mapeamento da rota indisponível.', tags: [] }

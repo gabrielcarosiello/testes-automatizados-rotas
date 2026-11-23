@@ -4,9 +4,10 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
   const { mostrarMonitor, informarResultado, ocultarMonitor } = require('../../comum/visualizacao-monitor')
   const { abrirMonitorERetornar } = require('../../comum/abrir-monitor')
   const { acompanharNivelAlto } = require('../../comum/nivel-alto-mes')
-  const { limparTransferencia } = require('../../comum/limpar-transferencia')
+  const { limparTransferencia, aguardarEncerramento } = require('../../comum/limpar-transferencia')
   const { aguardarEstadoTransferencias } = require('../../comum/aguardar-transferencias')
   const { identificarTransferenciaInterrompida, diagnosticarELimparInterrompida } = require('../../comum/impedimento-transferencia')
+  const { confirmarVazio } = require('../../comum/cartoes-mes')
   const { recuperarEncerramento } = require('../../comum/recuperar-encerramento')
   const { preencherBusca } = require('../../comum/preencher-busca')
   const { avaliarResultadoBusca } = require('./resultado-busca')
@@ -23,6 +24,7 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
   }
   const execucao = { pronta: false, login: false, pasta: '', atual: null, anterior: null, inicioExecucao: null, inicioLogin: null, restauracaoFalhou: false, loginSeg: '', cardSeg: '', campoSeg: '' }
   const bloqueiosDePreparacao = new Map()
+  const divergenciasNivel = new Map()
   const busca = 'input[placeholder="Buscar..."]:visible:enabled'
 
   function etapa(nome) { return cy.then(() => {
@@ -44,13 +46,13 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
     }).then(arquivo => { execucao.atual.captura = arquivo })
   }
   // Usa somente a lista associada ao campo de busca aberto.
-  function aguardarResultado(valor, prazo) {
+  function aguardarResultado(valor, prazo, metricas) {
     return cy.get('body').then($body => {
       const entradas = $body.find(busca).filter((_, el) => el.value === valor)
       const focadas = entradas.filter(':focus')
       const entrada = focadas.length === 1 ? focadas : entradas
       if (entrada.length !== 1) {
-        if (Date.now() < prazo) return cy.wait(500, { log: false }).then(() => aguardarResultado(valor, prazo))
+        if (Date.now() < prazo) return cy.wait(500, { log: false }).then(() => aguardarResultado(valor, prazo, metricas))
         throw new Error('Campo de busca ambíguo ou ainda não atualizado; opção não selecionada')
       }
       const paineis = entrada.parents().filter((_, elemento) => {
@@ -66,15 +68,23 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
         const opcoes = painel.find('.dropdown-column:visible').filter((_, el) => el.textContent.trim() === valor)
         const vazio = painel.find(':visible').filter((__, el) => el.textContent.trim() === 'Nenhum item encontrado.')
         const decisao = avaliarResultadoBusca({ correspondencias: opcoes.length, vazio: vazio.length > 0, agora: Date.now(), prazo })
-        if (decisao === 'encontrada') return cy.elementoMes('.dropdown-column', valor).click().then(() => 'encontrada')
+        if (decisao === 'encontrada') {
+          const inicioClique = Date.now()
+          metricas.respostaMs = inicioClique - metricas.inicioResultado
+          return cy.elementoMes('.dropdown-column', valor).click().then(() => {
+            metricas.cliqueMs = Date.now() - inicioClique
+            return 'encontrada'
+          })
+        }
         if (decisao === 'vazia') return 'vazia'
 
       }
       if (Date.now() >= prazo) return 'nao-confirmada'
-      return cy.wait(500, { log: false }).then(() => aguardarResultado(valor, prazo))
+      return cy.wait(500, { log: false }).then(() => aguardarResultado(valor, prazo, metricas))
     })
   }
   function selecionar(campoSeletor, valor, tipo) {
+    const metricas = {}
     etapa(`Selecionar ${tipo}`)
     cy.get(campoSeletor, { timeout: 30000 }).should('be.visible').click()
     // Reidentifica o campo após a atualização da tela; se houver mais de um,
@@ -84,10 +94,20 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
         'campo de busca único ou em foco').to.eq(true)
     }).then($entradas => {
       const seletor = $entradas.length === 1 ? busca : busca + ':focus'
+      const inicio = Date.now()
       return preencherBusca({ cy, seletor, valor, modo: opcoesExecucao.modoBusca || 'estavel' })
+        .then(() => { metricas.preencherMs = Date.now() - inicio })
     })
     if (opcoesExecucao.esperaBuscaMs) cy.wait(opcoesExecucao.esperaBuscaMs)
-    return cy.then(() => aguardarResultado(valor, Date.now() + 8000)).then(resultado => {
+    return cy.then(() => {
+      metricas.inicioResultado = Date.now()
+      return aguardarResultado(valor, metricas.inicioResultado + 8000, metricas)
+    }).then(resultado => {
+      const { preencherMs, respostaMs = Date.now() - metricas.inicioResultado, cliqueMs = 0 } = metricas
+      const atual = execucao.atual
+      const tentativa = atual.rearmeTentado ? 2 : 1
+      const etapaBusca = `Busca ${tipo}, tentativa ${tentativa}, ${resultado}: preencher=${preencherMs} ms, resultado=${respostaMs} ms, selecionar=${cliqueMs} ms.`
+      if (execucao.pasta) cy.task('registrarEtapa', { pasta: execucao.pasta, codigo: atual.rota.codigo, etapa: etapaBusca }, { log: false })
       if (resultado === 'encontrada') return cy.get(campoSeletor, { timeout: 30000 }).should('contain.text', valor)
       return capturar(`${tipo}-busca-sem-opcao-exata`).then(() => {
         return cy.get(campoSeletor).should('be.visible').click().then(() => {
@@ -117,6 +137,10 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
         return diagnosticarELimparInterrompida({ cy, execucao, atual, identificada: interrompida, visivel })
       }
       if (cartoes.some(c => c.ambiguo)) throw new Error('Cartão de transferência com identificação ambígua.')
+      if (!somenteLimpar && vazio && nomePermitido && (atual.cartaoIniciado || atual.nivelAlto?.ok === true)) {
+        atual.detalhes = [atual.detalhes, 'MES já confirmou o local vazio antes do comando de encerramento.'].filter(Boolean).join(' | ')
+        return
+      }
       let decisao
       try {
         decisao = avaliarCartoes({
@@ -146,7 +170,7 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
           execucao.atual.detalhes = [execucao.atual.detalhes, 'Limpeza confirmada: ' + cartao.nome].filter(Boolean).join(' | ')
         })
       }
-      return solicitarParada(cartao).then(() => cy.contains('Não há nenhuma transferência em uso', { timeout: 30000 }).should('be.visible')).then(() => {
+      return solicitarParada(cartao).then(() => {
         execucao.atual.detalhes = [execucao.atual.detalhes, 'Parada confirmada: ' + cartao.nome].filter(Boolean).join(' | ')
       })
     })
@@ -160,9 +184,7 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
     const parar = botaoConfirmado
       ? cy.wrap(botaoConfirmado, { log: false })
       : cy.elementoMes('button', 'Parar', { cartao: cartao.nome })
-    return parar.click({ timeout: 30000 }).then(() =>
-      cy.elementoMes('button', 'Sim').click({ timeout: 30000 })
-    )
+    return parar.click({ timeout: 5000 }).then(() => aguardarEncerramento({ cy, acao: 'parar', visivel: Cypress.dom.isVisible }))
   }
   function transferencia(rota) {
     etapa('Selecionar transferência')
@@ -193,11 +215,23 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
     selecionar(campo.rota, rota.rota, 'rota')
     cy.get(campo.rota, { timeout: 30000 }).should('contain.text', rota.rota)
   }
-  function iniciar(rota, tentativa = 0) {
-    etapa('Verificar botão Iniciar')
+  function iniciar(rota, tentativa = 0, prazo = null) {
+    if (prazo === null) {
+      etapa('Verificar botão Iniciar')
+      return cy.then(() => iniciar(rota, tentativa, Date.now() + 4000))
+    }
     return cy.get('body').then($body => {
       const botoes = $body.find('button:visible').filter((_, el) => el.textContent.trim() === 'Iniciar')
       if (botoes.length === 1) {
+        if (botoes[0].matches(':disabled, [aria-disabled="true"]')) {
+          if (Date.now() < prazo) return cy.wait(250, { log: false }).then(() => iniciar(rota, tentativa, prazo))
+          const condicoes = $body.find('[role="alert"]:visible, .validation-message:visible, .alert:visible')
+            .toArray().map(el => el.textContent.trim()).filter(Boolean).join(' | ').slice(0, 500)
+          const atual = execucao.atual
+          atual.detalhes = [atual.detalhes, `Iniciar desabilitado para ${rota.origem} → ${rota.destino}.`,
+            condicoes || 'O formulário não exibiu condição de bloqueio identificável.'].filter(Boolean).join(' | ')
+          return capturar('iniciar-desabilitado').then(() => { throw new Error('Botão Iniciar desabilitado no MES.') })
+        }
         execucao.atual.inicioRota = Date.now()
         execucao.anterior = { local: rota.local, nome: rota.nome }
         cy.elementoMes('button', 'Iniciar').click()
@@ -215,9 +249,19 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
   function verificarRecusaPartida(falharTeste = true, durantePartidaS7 = false) {
     const atual = execucao.atual
     const rearmar = falharTeste && durantePartidaS7 && Cypress.expose('rearmarRecusaPlcsim') === true &&
-      atual.rota.nivelAlto?.aplicavel && atual.rota.nivelAlto.status !== '---' && !atual.rearmeTentado
-    return tratarRecusaPartida({ cy, execucao, visivel: Cypress.dom.isVisible, ocultarMonitor, falharTeste: falharTeste && !rearmar })
+      atual.rota.nivelAlto?.aplicavel && atual.rota.nivelAlto.status !== '---' && !atual.rearmeTentado && !atual.rearmePrePartida
+    const segundaComS7Normal = falharTeste && durantePartidaS7 && atual.rearmeTentado && atual.s7NormalNaRecusa
+    return tratarRecusaPartida({ cy, execucao, visivel: Cypress.dom.isVisible, ocultarMonitor, falharTeste: falharTeste && !rearmar && !segundaComS7Normal })
       .then(recusou => {
+        if (recusou && segundaComS7Normal) {
+          return cy.task('verificarEstadoNivelS7', { codigo: atual.rota.codigo }).then(estado => {
+            const detalhe = `Segunda recusa do MES em ${atual.rota.destino}. ${estado.detalhe}.`
+            const registro = estado.normal ? detalhe + ' Divergência persistente com S7 normal. Destino adiado até o próximo lote.' : detalhe
+            if (estado.normal) divergenciasNivel.set(JSON.stringify([atual.rota.local, atual.rota.destino]), registro)
+            atual.detalhes += ' | ' + registro
+            throw new Error(registro)
+          })
+        }
         if (!recusou || !rearmar) return recusou
         atual.rearmeTentado = true
         const { rota } = atual
@@ -228,6 +272,7 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
           return cy.task('rearmarRecusaNivelAltoS7', { codigo: rota.codigo }, { timeout: 25000 })
         }).then(resultado => {
           execucao.restauracaoFalhou = false
+          atual.s7NormalNaRecusa = !resultado.escrita
           const detalhe = `Rearme PLCSIM ${resultado.address}: ${Number(resultado.anterior)} → ${Number(resultado.valorNormal)}, ${resultado.escrita ? 'escrita confirmada' : 'entrada já normal'}, Alm/Aviso inativos. Nova tentativa da mesma rota.`
           atual.detalhes += ' | ' + detalhe
           return etapa(detalhe)
@@ -237,7 +282,7 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
           prepararLeituraS7(rota)
           iniciar(rota)
           mostrarMonitor(rota.codigo)
-        })
+        }).then(() => true)
       })
   }
   function acompanharS7() {
@@ -245,7 +290,9 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
       inicio: execucao.atual.inicioRota
     }, { timeout: 10000 })).then(resultado => {
       return informarResultado(resultado).then(() => {
-        if (resultado.concluido) return resultado
+        if (resultado.concluido) {
+          return verificarRecusaPartida(true, true).then(repetiu => repetiu ? acompanharS7() : resultado)
+        }
         return cy.wait(resultado.intervaloConsultaMs, { log: false }).then(() => acompanharS7())
       })
     })
@@ -275,7 +322,20 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
   function prepararLeituraS7(rota) {
     etapa('Preparar leitura S7')
     cy.log('S7: consultando SQL, carregando catálogo do projeto e verificando as saídas antes da partida')
-    return cy.task('prepararS7', rota.codigo, { timeout: 150000 }).then(tags => {
+    const entrada = execucao.pasta ? { codigo: rota.codigo, pasta: execucao.pasta, rearmar: !execucao.atual.rearmeTentado } : rota.codigo
+    return cy.task('prepararS7', entrada, { timeout: 150000 }).then(resultado => {
+      if (resultado.erro) {
+        if (resultado.pendente) execucao.restauracaoFalhou = true
+        throw new Error(resultado.erro)
+      }
+      const tags = Array.isArray(resultado) ? resultado : resultado.tags
+      if (resultado.rearme) {
+        execucao.atual.rearmePrePartida = true
+        const r = resultado.rearme
+        const detalhe = `Rearme na pré-partida ${r.address}: ${Number(r.anterior)} → ${Number(r.valorNormal)}. LSH normal e Alm/Aviso inativos.`
+        execucao.atual.detalhes = [execucao.atual.detalhes, detalhe].filter(Boolean).join(' | ')
+        cy.task('registrarEtapa', { pasta: execucao.pasta, codigo: rota.codigo, etapa: detalhe }, { log: false })
+      }
       cy.log(`S7: ${tags.length} retornos mapeados; preparação conforme perfil de cada equipamento`)
       tags.forEach(tag => cy.log(`${tag.label} → ${tag.address} · modo ${tag.modoValidacao} · perfil ${tag.perfil} · tipo(s) SQL ${tag.equipamentos.map(e => e.tip_equipamento).join(", ")}`))
     })
@@ -327,15 +387,15 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
     if (pilotoS7 && Cypress.expose('nivelAltoHabilitado') && rota.nivelAlto?.aplicavel && rota.nivelAlto.status !== '---') {
       cy.then(() => {
         if (!execucao.atual.normalConfirmado) return
-        execucao.atual.etapa = 'Acionar LSH para nível alto'
+        etapa('Acionar LSH para nível alto')
         execucao.atual.nivelAltoExecutado = true
         return cy.task('acionarNivelAltoS7', null, { timeout: 10000 }).then(() => {
-          execucao.atual.etapa = 'Aguardar Alm e Nível Alto no MES'
+          etapa('Aguardar Alm e Nível Alto no MES')
           mostrarMonitor(rota.codigo)
           return acompanharNivelAlto(rota, informarResultado)
         }).then(resultado => {
           execucao.atual.nivelAlto = resultado
-          execucao.atual.etapa = 'Registrar reação ao nível alto'
+          etapa('Registrar reação ao nível alto')
           return informarResultado(resultado).then(paginas => cy.wrap(Array.from({ length: paginas }, (_, i) => i), { log: false }).each(pagina => {
             informarResultado(resultado, pagina)
             cy.screenshot(`${execucao.pasta}/nivel-alto-${rota.codigo}-${pagina + 1}`, { capture: 'viewport', overwrite: false })
@@ -343,7 +403,7 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
         }).then(() => ocultarMonitor()).then(() => {
           cy.screenshot(`${execucao.pasta}/mes-nivel-alto-${rota.codigo}`, { capture: 'viewport', overwrite: false })
           return capturar('nivel-alto')
-        }).then(() => cy.task('restaurarNivelAltoS7')).then(resultado => {
+        }).then(() => etapa('Restaurar LSH após ensaio')).then(() => cy.task('restaurarNivelAltoS7')).then(resultado => {
           execucao.atual.restauracaoLSH = resultado
           if (!resultado.ok) { execucao.restauracaoFalhou = true; throw new Error(resultado.detalhe) }
           execucao.atual.detalhes += ' | LSH, Alm e Nível Alto no MES confirmados; entrada restaurada.'
@@ -442,12 +502,19 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
         atual.restauracaoLSH = result
         if (!result.ok) { execucao.restauracaoFalhou = true; cy.log('RESTAURAÇÃO PENDENTE: ' + result.detalhe) }
         if (pilotoS7 && (atual.s7 || atual.nivelAltoExecutado)) return cy.task('salvarEvidenciaS7', { pasta: execucao.pasta })
-      }).then(() => verificarRecusaPartida(false)).then(() => cy.task('registrarRev00', {
+      }).then(() => verificarRecusaPartida(false)).then(() => {
+        if (!falhou || !atual.inicioParada) return
+        return cy.document({ log: false }).then(doc => {
+          if (!confirmarVazio(doc, Cypress.dom.isVisible)) return
+          atual.detalhes = [atual.detalhes, 'Encerramento confirmado por observação do MES após a falha do comando.'].filter(Boolean).join(' | ')
+          if (!execucao.restauracaoFalhou) execucao.anterior = null
+        })
+      }).then(() => cy.task('registrarRev00', {
         pasta: execucao.pasta, data: new Date().toLocaleString('pt-BR'), ...atual.rota,
         resultado: falhou || execucao.restauracaoFalhou ? 'Falhou' : 'Concluída', etapa: atual.etapa,
         resultadoNormal: atual.nivelAltoExecutado ? (atual.normalConfirmado ? 'Concluída' : 'Falhou') : (falhou || execucao.restauracaoFalhou ? 'Falhou' : 'Concluída'),
         nivelAltoExecutado: atual.nivelAltoExecutado === true,
-        resultadoNivelAlto: atual.nivelAltoExecutado ? (!falhou && atual.nivelAlto?.ok && atual.restauracaoLSH?.ok ? 'Concluída' : 'Falhou') : null,
+        resultadoNivelAlto: atual.nivelAltoExecutado ? (atual.nivelAlto?.ok && atual.restauracaoLSH?.ok ? 'Concluída' : 'Falhou') : null,
         tipoExecucao: atual.validacaoLir?.tipoExecucao || atual.rota.tipoExecucao,
         statusInicial: atual.validacaoLir?.statusInicial || atual.rota.statusInicial,
         detalhes: [atual.detalhes, erro].filter(Boolean).join(' | '),
@@ -471,6 +538,13 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
     })
     rotas.forEach((rota, indice) => {
       it(`${indice + 1}/${rotas.length} | ${rota.codigo} | ${rota.local} | ${rota.nome} | ${rota.origem} → ${rota.destino} | Rev 00`, function () {
+        const divergencia = divergenciasNivel.get(JSON.stringify([rota.local, rota.destino]))
+        if (divergencia) {
+          const etapa = 'Rota adiada: ' + divergencia
+          Cypress.log({ name: 'Destino adiado', message: etapa })
+          return cy.task('registrarEtapa', { pasta: execucao.pasta, codigo: rota.codigo, etapa }, { log: false })
+            .then(() => this.skip())
+        }
         const bloqueio = bloqueiosDePreparacao.get(rota.local)
         if (bloqueio) {
           Cypress.log({ name: 'Local bloqueado', message: bloqueio })

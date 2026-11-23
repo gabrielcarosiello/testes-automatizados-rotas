@@ -6,14 +6,14 @@ const { spawn } = require('node:child_process')
 const { once } = require('node:events')
 const { createServer } = require('node:net')
 const { Readable } = require('node:stream')
-const { mkdtemp, writeFile, readFile, rm } = require('node:fs/promises')
+const { mkdtemp, mkdir, writeFile, readFile, rm } = require('node:fs/promises')
 const { join, resolve } = require('node:path')
 const { pathToFileURL } = require('node:url')
 const { tmpdir } = require('node:os')
 const monitorRoot = resolve(process.env.MONITOR_SOURCE_DIR || join(__dirname, 'monitor-s7'))
 const pilotRoot = resolve(process.env.PILOTO_SOURCE_DIR || join(__dirname, 'mes-s7-piloto'))
 
-async function executarEnsaio(automatico, bit = 1) {
+async function executarEnsaio(automatico, bit = 1, prePartida = null) {
   const { CatalogStore } = await import(pathToFileURL(join(monitorRoot, 'catalog-store.mjs')).href)
   const { simulatedPeer } = await import(pathToFileURL(join(monitorRoot, 'test/helpers/s7-simulated-peer.mjs')).href)
   const { criarPiloto } = require(join(pilotRoot, 'comum/s7/piloto'))
@@ -33,13 +33,33 @@ async function executarEnsaio(automatico, bit = 1) {
     await Promise.race([once(processMonitor.stdout, 'data'), once(processMonitor, 'exit').then(([code]) => { throw new Error('Monitor encerrou: ' + code) })])
     const home = await (await fetch(base)).text()
     assert.ok(!home.includes('id="tia-confirm"')); assert.ok(!home.includes('id="write-dialog"'))
-    const config = { monitor: base, host: '127.0.0.1', rack: 0, slot: 1, pollMs: 100, fonteCatalogo: 'monitor', tipoContatoLSH: 0, incluirLSHNoMonitor: true, escritaManualLSH: true, nivelAlto: { habilitado: automatico, prazoMs: 5000 } }
+    const config = { monitor: base, host: '127.0.0.1', rack: 0, slot: 1, pollMs: 100, fonteCatalogo: 'monitor', tipoContatoLSH: 0, incluirLSHNoMonitor: true, escritaManualLSH: true, nivelAlto: { habilitado: automatico, prazoMs: 5000, rearmarRecusaPlcsim: Boolean(prePartida) } }
     await writeFile(join(directory, 's7.local.json'), JSON.stringify(config))
     await writeFile(join(directory, 'perfis-s7.json'), await readFile(join(pilotRoot, 'perfis-s7.json')))
     const rotas = [{ codigo: '91', nivelAlto: { aplicavel: true, io: 'LSH_MG14', idDigital: 31, status: 'NT' } }]
     const sqlFixture = async () => [{ cod_equipamento: 13, des_tag: 'RG18', tip_equipamento: 1, val_comando: 1, espelhos_entrada: ['DB1012,X1.5', 'DB1012,X1.6'] }]
     const piloto = criarPiloto(directory, sqlFixture, { rotas })
     assert.equal((await piloto.validarCatalogoS7()).catalogo.id, imported.catalogo.id)
+    if (prePartida) {
+      await mkdir(join(directory, 'resultados', 'ensaio'), { recursive: true })
+      const entradas = peer.bytes(peer.constants.proto.area.INPUTS)
+      if (prePartida === 'alto') entradas[34] |= 0x40
+      else peer.bytes(peer.constants.proto.area.DB, 3031)[1] |= 0x02
+      const preparar = () => piloto.prepararS7({ codigo: 91, pasta: 'ensaio' })
+      if (prePartida === 'aviso') {
+        await assert.rejects(preparar(), /Nível alto na pré-partida.*LSH_MG14.*Aviso.*LSH normal/)
+        assert.equal(peer.writes.length, 0)
+      } else {
+        const resultado = await preparar()
+        assert.equal(resultado.rearme.escrita, true)
+        assert.equal(resultado.tags.length, 1)
+        assert.equal(entradas[34] & 0x40, 0)
+        assert.equal(peer.writes.length, 1)
+        assert.match(await readFile(join(directory, 'resultados', 'ensaio', 'eventos.jsonl'), 'utf8'), /Nível alto na pré-partida/)
+        await assert.rejects(readFile(join(directory, 'resultados', 'controle', 'escrita-pendente.json')), e => e.code === 'ENOENT')
+      }
+      return
+    }
     const tags = await piloto.prepararS7(91)
     assert.equal(tags.length, 1)
     let snapshot = await (await fetch(base + '/api/tags')).json()
@@ -84,3 +104,6 @@ test('Monitor + Piloto: catálogo salvo, LSH manual e evidência', { timeout: 15
 test('Monitor + Piloto: aciona LSH, confirma Alm/MES simulado e restaura', { timeout: 15000 }, () => executarEnsaio(true))
 
 test('Monitor + Piloto: confirma somente Aviso 1.1 com Alm 1.0 desligado e restaura', { timeout: 15000 }, () => executarEnsaio(true, 2))
+
+test('Monitor + Piloto: rearme de pré-partida escreve uma vez e verifica a entrada normal', { timeout: 15000 }, () => executarEnsaio(true, 1, 'alto'))
+test('Monitor + Piloto: Aviso ativo com LSH normal impede partida sem escrita', { timeout: 15000 }, () => executarEnsaio(true, 2, 'aviso'))

@@ -57,3 +57,24 @@ O diagnóstico procura campos de estado, emergência, manutenção, suspensão, 
 Antes de Limpar, o piloto grava o impedimento no log e relê o cartão para confirmar o mesmo número de transferência. Um diagnóstico incompleto mantém o cartão para conferência. Após a limpeza, a rota permanece com resultado Falhou. As próximas rotas seguem somente quando o MES confirma o local vazio.
 
 Se o diagnóstico retornar HTTP 404 ou 405, encerre o Monitor S7 em execução na VM e rode `npm start` na pasta `monitor-s7` da versão atual do projeto. Na pasta `mes-s7-piloto`, rode `npm run diagnostico -- --monitor` e confira a mensagem API de diagnóstico de DBs disponível. A verificação da API usa uma lista vazia e não abre conexão com a CPU. A suíte de 167 testes passou no Windows com MES e S7 simulados. A leitura dos endereços de diagnóstico do catálogo CL373.01 no PLCSIM ainda precisa ser conferida na VM.
+
+## Melhorias após o lote de 1h18min20s
+
+O lote de 23/11/2026 selecionou 99 rotas. Foram 79 concluídas, 20 falhas e 99 resultados persistidos.
+
+| Caso observado | Correção e regressão |
+| --- | --- |
+| RG08 bloqueado seis vezes na pré-partida com Aviso ativo | LSH, Alm e Aviso são registrados na mesma amostra. No PLCSIM habilitado, entrada em nível alto admite um rearme persistido e confirmado antes de Iniciar. Com LSH normal e alarme ativo, a rota fica bloqueada com os valores lidos. |
+| RG11 recusado seis vezes pelo MES mesmo com S7 normal | Preserva as duas recusas, relê os sinais após a segunda e adia as rotas restantes do destino no lote somente se a divergência persistir. |
+| Segunda busca do caminho levou de 17,21 a 93,72 s | O modo rápido informa o texto em um evento, relê o campo e usa a digitação estável se o valor não permanecer. O log mede preenchimento, resposta e clique por tentativa. |
+| Parar desapareceu ou Sim não foi oferecido em seis encerramentos | Observa o local vazio e confirma somente o diálogo da ação solicitada. Registra separadamente o resultado do ensaio e o encerramento. |
+| Rota 703 encontrou Iniciar desabilitado | Após a janela de espera, salva captura e registra as condições visíveis. |
+| Rota 704 leu apenas Manutencao=false | Marca emergência, manutenção e suspensão como não verificadas quando não houver valor lido para a condição. |
+
+A captura de supervisório, o acionamento, a confirmação e a restauração de nível alto têm etapas próprias no log.
+
+### Validação no Windows e na bancada
+
+Passaram 176 testes, com 146 do Piloto, 25 do Monitor e 5 de integração simulada. A regressão cobre escrita única no rearme, Aviso ativo com LSH normal sem escrita, busca integral, local vazio sem diálogo, confirmação da própria ação e permanência do cartão.
+
+O preenchimento integral foi verificado em Armazenagem no navegador da VM, com opções únicas para transferência, origem RG37, destino RG11 e caminho. No PLCSIM, RG11 apresentou I31.2=1, Alm=0 e Aviso=0. Em RG08, com Armazenagem vazia, o Monitor confirmou uma escrita de I30.7 de 0 para 1. Depois da releitura, Alm e Aviso estavam em 0, o local seguiu vazio e o registro de pendência foi liberado. Nenhuma transferência foi iniciada durante essa validação.

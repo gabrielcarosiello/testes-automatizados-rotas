@@ -20,3 +20,32 @@ test('digitação reconsulta campo recriado/desabilitado pelo MES entre caracter
   const cy = { get() { consultas++; return new Cadeia(atualizacao.then(() => doc.querySelector('input'))) } }
   try { await preencherBusca({ cy, seletor: 'input', valor: 'RC08' }); assert.equal(doc.querySelector('input').value, 'RC08'); assert.equal(tipos, 4); assert.equal(consultas, 6) } finally { dom.window.close() }
 })
+
+test('modo rápido informa o caminho completo em um evento de entrada e relê o campo', async () => {
+  const dom = new JSDOM('<input value="antigo">'), doc = dom.window.document
+  const entrada = doc.querySelector('input')
+  let eventos = 0
+  entrada.addEventListener('input', e => {
+    eventos++
+    assert.equal(e.target.value, 'RG37->RG38->RG11')
+    assert.equal(e.inputType, 'insertText')
+    const novo = entrada.cloneNode()
+    novo.value = entrada.value
+    entrada.replaceWith(novo)
+  })
+  class Cadeia {
+    constructor(p) { this.p = p }
+    should(tipo, valor) { return new Cadeia(this.p.then(els => {
+      if (tipo === 'have.value') assert.equal(els[0].value, valor)
+      return els
+    })) }
+    and(...args) { return this.should(...args) }
+    then(resolve, reject) { return this.p.then(resolve, reject) }
+  }
+  const cy = { get: () => new Cadeia(Promise.resolve([doc.querySelector('input')])) }
+  try {
+    await preencherBusca({ cy, seletor: 'input', valor: 'RG37->RG38->RG11', modo: 'rapida' })
+    assert.equal(eventos, 1)
+    assert.equal(doc.querySelector('input').value, 'RG37->RG38->RG11')
+  } finally { dom.window.close() }
+})
