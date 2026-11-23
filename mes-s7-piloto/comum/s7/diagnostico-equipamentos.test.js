@@ -72,6 +72,21 @@ test('identifica a emergência pelo AlarmeEmergencia do DB validado no catálogo
   assert.deepEqual(semLayout.semEndereco, [nome])
 })
 
+test('Suspender em 2.1 confirma o estado de suspensão do equipamento', async () => {
+  const nome = 'Eqp.EquipamentoDWord1.Suspender'
+  const equipamentos = mapearCamposDiagnostico(vinculos, [tag(nome, 'BOOL', 17)])
+  assert.deepEqual(equipamentos[0].tags.map(t => [t.nome, t.address]), [[nome, 'DB1403,X2.1']])
+  const cpu = { host: '127.0.0.1' }
+  for (const [good, value] of [[true, true], [true, false], [false, true]]) {
+    const resultado = await lerDiagnosticoEquipamentos({ equipamentos, cpu, chamar: async (_url, { body }) => ({
+      host: cpu.host, tags: JSON.parse(body).tags.map(t => ({ ...t, good, value })),
+    }) })
+    assert.equal(resultado.detalhes.includes('Equipamento suspenso (DB1403,X2.1)'), good && value)
+    assert.equal(resultado.detalhes.includes('suspensão'), !good)
+    if (good) assert.ok(resultado.detalhes.includes(nome + '=' + value))
+  }
+})
+
 test('CPU divergente, endereço divergente ou ausência de campos preserva diagnóstico incompleto', async () => {
   const cpu = { host: '127.0.0.1' }
   const equipamentos = mapearCamposDiagnostico(vinculos, catalogo)

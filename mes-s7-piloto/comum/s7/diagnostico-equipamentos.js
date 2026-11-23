@@ -3,7 +3,7 @@ const { consultarDbsDaRotaSql } = require('./gerarRotaCLP')
 
 const tipos = { BOOL: 'X', BYTE: 'BYTE', USINT: 'BYTE', SINT: 'SINT', WORD: 'WORD',
   UINT: 'WORD', INT: 'INT', DWORD: 'DWORD', UDINT: 'DWORD', DINT: 'DINT' }
-const camposComuns = /^(?:[bxi])?(?:estado|status|situacao|emergencia|alarmeemergencia|emergency|manutencao|maintenance|suspensao|suspenso|suspensa|suspended|falha|fault|alarme|alm|alarm|bloqueado|bloqueio|blocked|intertravamento|intertravado|interlock|inoperante|indisponivel)$/
+const camposComuns = /^(?:[bxi])?(?:estado|status|situacao|emergencia|alarmeemergencia|emergency|manutencao|maintenance|suspensao|suspender|suspenso|suspensa|suspended|falha|fault|alarme|alm|alarm|bloqueado|bloqueio|blocked|intertravamento|intertravado|interlock|inoperante|indisponivel)$/
 const normalizar = nome => nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/gi, '').toLowerCase()
 const campoDeEstado = nome => camposComuns.test(normalizar(nome.split('.').at(-1)))
 
@@ -86,7 +86,7 @@ async function lerDiagnosticoEquipamentos({ equipamentos, cpu, chamar }) {
     for (const [situacao, padrao] of [
       ['Equipamento em emergência', /^(?:[bxi])?(?:emergencia|alarmeemergencia|emergency)$/],
       ['Equipamento em manutenção', /^(?:[bxi])?(?:manutencao|maintenance)$/],
-      ['Equipamento suspenso', /^(?:[bxi])?(?:suspensao|suspenso|suspensa|suspended)$/],
+      ['Equipamento suspenso', /^(?:[bxi])?(?:suspensao|suspender|suspenso|suspensa|suspended)$/],
       ['Equipamento com falha', /^(?:[bxi])?(?:falha|fault)$/],
       ['Equipamento bloqueado', /^(?:[bxi])?(?:bloqueado|bloqueio|blocked)$/],
     ]) {
@@ -96,7 +96,7 @@ async function lerDiagnosticoEquipamentos({ equipamentos, cpu, chamar }) {
     const naoVerificadas = [
       ['emergência', /emergencia|emergency/],
       ['manutenção', /manutencao|maintenance/],
-      ['suspensão', /suspensao|suspenso|suspensa|suspended/],
+      ['suspensão', /suspensao|suspender|suspenso|suspensa|suspended/],
     ].filter(([, padrao]) => !nomesLidos.some(nome => padrao.test(nome))).map(([rotulo]) => rotulo)
     if (naoVerificadas.length) campos.push('não verificadas: ' + naoVerificadas.join(', '))
     const faltam = e.tags.length - lidas.length
