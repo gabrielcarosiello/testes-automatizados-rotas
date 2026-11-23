@@ -6,6 +6,7 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
   const { acompanharNivelAlto } = require('../../comum/nivel-alto-mes')
   const { limparTransferencia } = require('../../comum/limpar-transferencia')
   const { aguardarEstadoTransferencias } = require('../../comum/aguardar-transferencias')
+  const { identificarTransferenciaInterrompida, diagnosticarELimparInterrompida } = require('../../comum/impedimento-transferencia')
   const { recuperarEncerramento } = require('../../comum/recuperar-encerramento')
   const { preencherBusca } = require('../../comum/preencher-busca')
   const { avaliarResultadoBusca } = require('./resultado-busca')
@@ -105,7 +106,16 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
   // Na preparação S7, só limpa cartão encerrado do nome esperado; não envia Parar.
   // Na parada normal, exige o nome da transferência iniciada pelo teste.
   function verificarEParar(nomePermitido = null, exigeAtiva = false, nivelAltoConfirmado = false, somenteLimpar = false) {
-    return aguardarEstadoTransferencias({ cy, visivel: Cypress.dom.isVisible }).then(({ vazio, cartoes }) => {
+    return aguardarEstadoTransferencias({ cy, visivel: Cypress.dom.isVisible }).then(estado => {
+      const { vazio, cartoes } = estado
+      const visivel = Cypress.dom.isVisible
+      const atual = execucao.atual
+      const interrompida = pilotoS7 && nomePermitido === atual.rota.nome
+        ? identificarTransferenciaInterrompida(estado, atual.rota)
+        : null
+      if (interrompida) {
+        return diagnosticarELimparInterrompida({ cy, execucao, atual, identificada: interrompida, visivel })
+      }
       if (cartoes.some(c => c.ambiguo)) throw new Error('Cartão de transferência com identificação ambígua.')
       let decisao
       try {
@@ -142,6 +152,10 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
     })
   }
   function solicitarParada(cartao, botaoConfirmado = null) {
+    if (cartao.botoes[0]?.matches(':disabled, [aria-disabled="true"]')) {
+      throw new Error('Parar está desabilitado no MES. A transferência requer verificação.')
+    }
+    execucao.atual.tentouParar = true
     execucao.atual.detalhes = [execucao.atual.detalhes, 'Tentativa de parar transferência: ' + cartao.nome].filter(Boolean).join(' | ')
     const parar = botaoConfirmado
       ? cy.wrap(botaoConfirmado, { log: false })
@@ -339,7 +353,6 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
     etapa('Finalizar transferência após as validações')
     cy.then(() => {
       execucao.atual.inicioParada = Date.now()
-      execucao.atual.tentouParar = true
     })
     cy.then(() => verificarEParar(rota.nome, execucao.atual.nivelAlto?.ok !== true, execucao.atual.nivelAlto?.ok === true))
     cy.then(() => {
@@ -449,7 +462,7 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
         if (pilotoS7 && falhou && execucao.anterior && !atual.recusaPartida) {
           return recuperarEncerramento({
             cy, execucao, atual, visivel: Cypress.dom.isVisible,
-            solicitarParada: cartao => solicitarParada(cartao, cartao.botoes[0]),
+            solicitarParada: atual.tentouLimparInterrompida ? undefined : cartao => solicitarParada(cartao, cartao.botoes[0]),
           })
         }
       })

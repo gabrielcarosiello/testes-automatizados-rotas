@@ -52,6 +52,7 @@ test('spec Cypress registra o primeiro local ativo e pula só as rotas do mesmo 
   const aguardarEstadoTransferencias = () => ({ then: conferir => { verificacoes.push(conferir); return cadeia } })
   const modulos = {
     '../../comum/aguardar-transferencias': { aguardarEstadoTransferencias },
+    '../../comum/impedimento-transferencia': require('../../comum/impedimento-transferencia'),
     '../../comum/visualizacao-monitor': { mostrarMonitor() {}, ocultarMonitor() {} },
     './recusa-partida': { tratarRecusaPartida: () => cadeia },
     './seguranca-cartoes': { avaliarCartoes, TransferenciaAtivaNaPreparacao },
