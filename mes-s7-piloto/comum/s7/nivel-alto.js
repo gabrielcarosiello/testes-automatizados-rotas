@@ -44,7 +44,25 @@ function resolverAlarme(rota, arrays, cfg) {
   const alternativas = offsets.filter(offset => `DB${tag.dbNumber},X${offset}` !== address).map((offset, i) => ({ id: `lsh_alarme_alternativa_${i}`, label: `${io} / ${offset === '1.1' ? 'Aviso' : offset === '1.0' ? 'Alm' : offset}`, address: `DB${tag.dbNumber},X${offset}`, writable: false }))
   return { alternativas, id: 'lsh_alarme', label: `${io} / Alm`, address, bloco: tag.block, campo: tag.name, origem, writable: false }
 }
-function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registrarEscrita = () => {}, exigirPropriedade = () => {}, exigirLivre = () => {} }) {
+function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registrarEscrita = () => {}, exigirPropriedade = () => {}, exigirLivre = () => {}, registrarProtecao = () => {} }) {
+  let temporizadorProtecao
+  let restauracaoProtecao
+  const margemEncerramentoMs = 15000
+
+  function agendarProtecao(c) {
+    const atraso = Math.max(0, c.nivel.limite + margemEncerramentoMs - Date.now())
+    temporizadorProtecao = setTimeout(async () => {
+      if (getContext() !== c || !c.nivel.restauracaoPendente) return
+      restauracaoProtecao = controls.restaurarNivelAltoS7()
+      try {
+        registrarProtecao(c, await restauracaoProtecao)
+      } finally {
+        restauracaoProtecao = undefined
+      }
+    }, atraso)
+    temporizadorProtecao.unref()
+  }
+
   function context() {
     const c = getContext()
     if (!cfg.habilitado || !c?.alarme || !c?.lsh) throw new Error('Ensaio de nível alto não está preparado para esta rota.')
@@ -142,6 +160,7 @@ function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registra
       } finally {
         c.nivel.acionamentoEmAndamento = false
         c.nivel.acionamentoEncerradoEm = Date.now()
+        agendarProtecao(c)
       }
       return { valor: contato.valorNivelAlto, statusMes: cfg.statusMes, prazoMs: cfg.prazoMs }
     },
@@ -169,8 +188,9 @@ function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registra
       c.nivel.reacaoConfirmada = true; c.nivel.statusMes = statusMes; c.nivel.confirmadoEm = new Date().toISOString()
       return { ...current, ok: true, concluido: true, detalhe: 'LSH, Alm ou Aviso do DB e Nível Alto no MES confirmados.' }
     },
-    // Fase 4: chamada no sucesso e no afterEach; nunca escrever em outra sessão.
+    // Fase 4: chamada no sucesso, no afterEach e na proteção de prazo.
     async restaurarNivelAltoS7() {
+      if (restauracaoProtecao) return restauracaoProtecao
       const c = getContext()
       if (!c?.nivel?.restauracaoPendente) return { ok: true, necessario: false }
       if (c.nivel.acionamentoEmAndamento || c.nivel.restauracaoEmAndamento) {
@@ -203,6 +223,7 @@ function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registra
         }
         registrarEscrita('restaurada', c)
         c.nivel.restauracaoPendente = false; c.nivel.aprovado = c.nivel.reacaoConfirmada === true; c.nivel.restauradoEm = new Date().toISOString()
+        clearTimeout(temporizadorProtecao)
         return { ok: true, necessario: true, valor: c.lsh.valorInicial }
       } catch (error) {
         c.nivel.erroRestauracao = error.message

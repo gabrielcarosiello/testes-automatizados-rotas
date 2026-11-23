@@ -237,7 +237,7 @@ Alternativa: npm.cmd run recuperar:planilha -- "C:\caminho\arquivo.xlsx". O orig
 
 ## 10. Recuperar escrita pendente
 
-Uma escrita LSH cria resultados/controle/escrita-pendente.json antes do comando e só o remove após restauração confirmada. Em interrupção ou resposta perdida, a próxima execução bloqueia. Fechar/reabrir o Cypress não apaga a pendência. Não é necessariamente uma falha de conexão.
+Uma escrita LSH cria resultados/controle/escrita-pendente.json antes do comando e só o remove após restauração confirmada. Em interrupção ou resposta perdida, a próxima execução bloqueia. Fechar/reabrir o Cypress não apaga a pendência. Durante o ensaio, se o Node continuar ativo após o prazo de nível alto mais 15 segundos, a proteção de prazo usa a rotina de restauração na sessão proprietária e registra o resultado no log do lote. Ela não envia parada ao MES. Se a pendência continuar em disco, siga os passos abaixo.
 
 1. Pare o lote e impeça novas execuções enquanto confere os registros. Preserve o JSON, os temporários correspondentes e as evidências S7/MES com seus horários. Uma falha de `rename` na fase confirmada ocorre após a releitura da escrita pelo Monitor.
 2. Confira host, endereço e valor original no registro. Identifique a transferência exata no MES. Se ela ainda estiver em andamento, peça ao operador autorizado que coordene a parada e a limpeza do cartão conforme o procedimento da área e confirme que a rota ficou livre.

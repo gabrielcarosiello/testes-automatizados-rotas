@@ -96,3 +96,9 @@ Quando o prazo termina com nível alto confirmado no CLP e sem o estado esperado
 ## Alarme de emergência dos equipamentos
 
 O TIA mostra `EquipamentoAlarmes.AlarmeEmergencia` como Bool no offset 7.2 do DB exibido. O diagnóstico procura `AlarmeEmergencia` nos DBs vinculados à rota e usa o endereço declarado no catálogo. Quando o Monitor confirma o bit ativo, o piloto registra **Equipamento em emergência** com o endereço lido. Layout sem confirmação continua registrado como tal. A consulta é somente de leitura e não reconhece nem rearma alarmes.
+
+## Interrupção com restauração pendente na rota 73
+
+Em 23/11/2026, o lote das 14h28 gravou 13 de 14 resultados. Na última rota, RG08 → RG08, a escrita de `I30.7` para `0` foi confirmada às 14h43min45s. O último evento foi a espera por nível alto no MES. O arquivo continuou na fase `confirmada`, com original `1`. O log não registra por que a execução parou nem confirma a restauração ou o encerramento dessa transferência. A tentativa seguinte foi bloqueada antes do login pelo arquivo persistido.
+
+A proteção de prazo no Node usa a mesma rotina de restauração da LSH, na sessão proprietária e com releitura válida. O temporizador roda 15 segundos depois do prazo normal de confirmação, para dar tempo ao encerramento do Cypress. A proteção registra `restauracao-protecao-lsh` no log do lote quando aplicável. Se o processo Node inteiro terminar ou se a releitura ou propriedade não puderem ser confirmadas, aplique a seção 10 do Manual de operação. A proteção atua apenas na LSH e o encerramento do cartão deve ser conferido no MES.

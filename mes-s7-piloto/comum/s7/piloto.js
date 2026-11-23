@@ -131,7 +131,19 @@ function criarPiloto(raiz, consultarRota = codigo => require('./consultarRota').
   }
 
   const catalogoProjeto = criarCatalogoProjeto(raiz, local, chamar)
-  const controleNivel = criarControleNivel({ getContext: () => contexto, chamar, cfg: nivelCfg, contato: contatoLSH, pollMs, registrarEscrita: estadoEscrita.registrar, exigirPropriedade: estadoEscrita.exigirPropriedade, exigirLivre: estadoEscrita.exigirLivre })
+  const controleNivel = criarControleNivel({
+    getContext: () => contexto, chamar, cfg: nivelCfg, contato: contatoLSH, pollMs,
+    registrarEscrita: estadoEscrita.registrar, exigirPropriedade: estadoEscrita.exigirPropriedade, exigirLivre: estadoEscrita.exigirLivre,
+    registrarProtecao(c, resultado) {
+      const evento = { codigo: c.codigo, endereco: c.lsh.address, original: c.lsh.valorInicial, ...resultado }
+      try {
+        if (c.pasta) gravarEvento(raiz, c.pasta, 'restauracao-protecao-lsh', evento)
+      } catch (erro) {
+        console.error('[S7] Falha ao registrar restauração de proteção:', erro.message)
+      }
+      console.warn('[S7] Restauração de proteção da LSH:', evento)
+    },
+  })
   return {
     ...controleNivel,
     async validarCatalogoS7() {
@@ -204,7 +216,7 @@ function criarPiloto(raiz, consultarRota = codigo => require('./consultarRota').
       const valor = (amostra, tag) => amostra.tags.find(lida => lida.id === tag.id).value
       if (lsh) lsh.valorInicial = valor(inicial, lsh)
       contexto = {
-        codigo, vinculos, perfis, catalogoInfo, sinaisLir, lsh, alarme, connection: sessao.connection, tags, baseline: inicial.sequence,
+        codigo, pasta: fluxo?.pasta, vinculos, perfis, catalogoInfo, sinaisLir, lsh, alarme, connection: sessao.connection, tags, baseline: inicial.sequence,
         observadas: Object.fromEntries(tags.map(tag => [tag.id, { jaLigou: false, primeiroTrue: null, ultimoTrue: null }])),
         historico: [], iniciadoEm: null, resultado: null,
       }

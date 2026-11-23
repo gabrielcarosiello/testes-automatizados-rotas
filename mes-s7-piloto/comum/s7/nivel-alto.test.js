@@ -18,13 +18,13 @@ test('resolve Alm por DB DIG/nome/ID sem fórmula de número do DB e usa o layou
   assert.throws(() => resolverAlarme(rota, [record], { ...confirmed, alarmesConfirmados: { LSH_MG14: 'DB999,X1.0' } }), /diverge/)
 })
 
-function fixture(tipo = 0) {
+function fixture(tipo = 0, registrarProtecao) {
   const contato = configurarContatoLSH(tipo)
   const c = { connection: 's:0', resultado: { ok: true }, lsh: { id: 'lsh', label: 'LSH', address: 'I34.6', valorInicial: contato.valorSemNivelAlto }, alarme: { id: 'alm', label: 'Alm', address: 'DB3031,X1.0' } }
   const state = { entrada: contato.valorSemNivelAlto, alm: false, aviso: false, connection: 's:0', errorWrite: false, writes: [] }
   let sequence = 0
   const cfg = configuracaoNivel({ nivelAlto: { habilitado: true, prazoMs: 1000 } })
-  const controls = criarControleNivel({ getContext: () => c, contato, cfg, pollMs: 100, chamar: async (route, options) => {
+  const controls = criarControleNivel({ getContext: () => c, contato, cfg, pollMs: 100, registrarProtecao, chamar: async (route, options) => {
     if (route === '/api/escrita') {
       const cmd = JSON.parse(options.body); state.writes.push(cmd)
       state.entrada = cmd.value
@@ -51,6 +51,35 @@ for (const tipo of [0, 1]) test(`aciona NA/NF=${tipo}, exige Alm + MES e restaur
   assert.equal(state.writes.length, 2)
   assert.equal((await controls.restaurarNivelAltoS7()).necessario, false)
 })
+test('proteção restaura uma vez após o prazo sem chamada do navegador', async t => {
+  t.mock.timers.enable({ apis: ['Date', 'setTimeout'] })
+  const eventos = []
+  const { c, state, controls } = fixture(0, (contexto, resultado) => eventos.push([contexto, resultado]))
+  await controls.acionarNivelAltoS7()
+  t.mock.timers.tick(15999)
+  assert.equal(state.writes.length, 1)
+
+  t.mock.timers.tick(1)
+  const restaurado = await controls.restaurarNivelAltoS7()
+  assert.deepEqual(restaurado, { ok: true, necessario: true, valor: false })
+  assert.deepEqual(eventos, [[c, restaurado]])
+  assert.deepEqual(state.writes.map(c => c.value), [true, false])
+  assert.equal(c.nivel.aprovado, false)
+})
+
+test('proteção preserva a pendência sem escrever quando a sessão mudou', async t => {
+  t.mock.timers.enable({ apis: ['Date', 'setTimeout'] })
+  const eventos = []
+  const { c, state, controls } = fixture(0, (_contexto, resultado) => eventos.push(resultado))
+  await controls.acionarNivelAltoS7()
+  state.connection = 'outra'
+  t.mock.timers.tick(16000)
+  assert.equal((await controls.restaurarNivelAltoS7()).ok, false)
+  assert.match(eventos[0].detalhe, /Sessão ou leitura atualizada/)
+  assert.equal(c.nivel.restauracaoPendente, true)
+  assert.equal(state.writes.length, 1)
+})
+
 test('não aciona antes de confirmar equipamentos, não repete e restaura após perda de resposta', async () => {
   const { c, state, controls } = fixture()
   c.resultado.ok = false
