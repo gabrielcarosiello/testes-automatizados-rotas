@@ -3,6 +3,7 @@
 ## Piloto-12 — 23/11/2026
 
 - Atualizada a identificação do piloto nos logs do Cypress, no evento inicial de novos lotes e na documentação.
+- Medidos os tempos de referência da Etapa 1 e adicionado o [coletor offline](mes-s7-piloto/docs/DESEMPENHO_PILOTO_12.md).
 
 ## Revisão documental 02 — 23/11/2026
 
