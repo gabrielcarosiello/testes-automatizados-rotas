@@ -2,11 +2,14 @@ const { confirmarVazio } = require('../../comum/cartoes-mes')
 'use strict'
 const normalizar = valor => String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase()
 
+// O MES pode separar as frases com <br>, que textContent extrai sem espaço.
+const textoAviso = el => el.textContent.replace(/\.(?=O destino\b)/i, '. ').replace(/\s+/g, ' ').trim()
+
 // Não confundir uma recusa de partida com o nível alto provocado pelo ensaio.
 function detectarRecusaNivelAlto(documento, destino, visivel) {
   const esperado = normalizar(`Não foi possível iniciar a transferência. O destino ${destino} está em nível alto.`)
   const encontrados = [...documento.body.querySelectorAll('*')].filter(el =>
-    !el.closest('#integracao-visualizacao-s7') && visivel(el) && normalizar(el.textContent) === esperado)
+    !el.closest('#integracao-visualizacao-s7') && visivel(el) && normalizar(textoAviso(el)) === esperado)
   const folhas = encontrados.filter(el => !encontrados.some(outro => outro !== el && el.contains(outro)))
   if (!folhas.length) return null
   if (folhas.length !== 1) throw new Error('Mais de um aviso de recusa por nível alto; intervenção necessária.')
@@ -14,7 +17,7 @@ function detectarRecusaNivelAlto(documento, destino, visivel) {
   while (painel && painel !== documento.body) {
     const botoes = [...painel.querySelectorAll('button, input[type="button"]')].filter(el => visivel(el) && normalizar(el.textContent || el.value) === 'ok')
     if (botoes.length > 1) throw new Error('Aviso de nível alto com botão OK ambíguo.')
-    if (botoes.length === 1) return { mensagem: folhas[0].textContent.replace(/\s+/g, ' ').trim(), botao: botoes[0] }
+    if (botoes.length === 1) return { mensagem: textoAviso(folhas[0]), botao: botoes[0] }
     painel = painel.parentElement
   }
   throw new Error('Recusa por nível alto identificada, mas o botão OK não foi localizado no aviso.')

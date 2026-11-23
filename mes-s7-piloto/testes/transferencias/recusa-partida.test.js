@@ -66,3 +66,17 @@ test('ignora aviso oculto e rejeita OK ambíguo ou ausente', () => {
     assert.throws(() => confirmarLocalVazio(f.doc, visivel), /não confirmada/)
   } finally { f.dom.window.close() }
 })
+
+test('recusa RG11 com as duas frases em linhas separadas é registrada e libera o próximo teste', async () => {
+  const f = fixture()
+  try {
+    const mensagem = f.doc.querySelector('#mensagem')
+    mensagem.innerHTML = 'Não foi possível iniciar a transferência.<br>O destino RG11 está em nível alto.'
+    assert.match(mensagem.textContent, /transferência\.O destino/)
+    await assert.rejects(f.executar(), /Partida recusada.*RG11/)
+    assert.deepEqual(f.eventos, ['ocultar', 'captura', 'OK'])
+    assert.equal(f.execucao.atual.recusaPartida, true)
+    assert.equal(f.execucao.anterior, null)
+    assert.match(f.execucao.atual.detalhes, /transferência\. O destino RG11/)
+  } finally { f.dom.window.close() }
+})
