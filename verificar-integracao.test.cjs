@@ -36,9 +36,12 @@ async function executarEnsaio(automatico, bit = 1, prePartida = null) {
     const config = { monitor: base, host: '127.0.0.1', rack: 0, slot: 1, pollMs: 100, fonteCatalogo: 'monitor', tipoContatoLSH: 0, incluirLSHNoMonitor: true, escritaManualLSH: true, nivelAlto: { habilitado: automatico, prazoMs: 5000, rearmarRecusaPlcsim: Boolean(prePartida) } }
     await writeFile(join(directory, 's7.local.json'), JSON.stringify(config))
     await writeFile(join(directory, 'perfis-s7.json'), await readFile(join(pilotRoot, 'perfis-s7.json')))
-    const rotas = [{ codigo: '91', nivelAlto: { aplicavel: true, io: 'LSH_MG14', idDigital: 31, status: 'NT' } }]
+    const rotas = [{ codigo: '91', destino: 'MG14', nivelAlto: { aplicavel: true, io: 'LSH_MG14', idDigital: 31, status: 'NT' } }]
     const sqlFixture = async () => [{ cod_equipamento: 13, des_tag: 'RG18', tip_equipamento: 1, val_comando: 1, espelhos_entrada: ['DB1012,X1.5', 'DB1012,X1.6'] }]
-    const piloto = criarPiloto(directory, sqlFixture, { rotas })
+    const piloto = criarPiloto(directory, sqlFixture, { rotas, consultarSilo: async destino => {
+      assert.equal(destino, 'MG14')
+      return [{ cod_silo: 12, num_silo_clp: 12, des_string_conexao: 'DB11,INT480' }]
+    } })
     assert.equal((await piloto.validarCatalogoS7()).catalogo.id, imported.catalogo.id)
     if (prePartida) {
       await mkdir(join(directory, 'resultados', 'ensaio'), { recursive: true })
@@ -82,6 +85,10 @@ async function executarEnsaio(automatico, bit = 1, prePartida = null) {
       let reaction
       do { reaction = await piloto.consultarNivelAltoS7(); if (reaction.ok) break; await new Promise(r => setTimeout(r, 20)) } while (Date.now() < limit)
       assert.equal(reaction.ok, true)
+      assert.deepEqual([reaction.silo.address, reaction.silo.good, reaction.silo.value], ['DB11,X481.4', true, false])
+      peer.bytes(peer.constants.proto.area.DB, 11)[481] |= 0x10
+      do { reaction = await piloto.consultarNivelAltoS7(); if (reaction.silo.value === true) break; await new Promise(r => setTimeout(r, 20)) } while (Date.now() < limit)
+      assert.equal(reaction.silo.value, true)
       assert.equal((await piloto.confirmarNivelAltoMesS7({ statusMes: 'Nível Alto' })).ok, true)
       assert.equal((await piloto.restaurarNivelAltoS7()).ok, true)
       await assert.rejects(readFile(pendencia), e => e.code === 'ENOENT')
@@ -92,7 +99,10 @@ async function executarEnsaio(automatico, bit = 1, prePartida = null) {
     const file = piloto.salvarEvidenciaS7({ pasta: 'ensaio' })
     const evidence = JSON.parse(await readFile(join(directory, file), 'utf8'))
     assert.equal(evidence.lshManual.valorInicial, false); assert.equal(evidence.lshManual.ensaioNivelAltoExecutado, automatico)
-    if (automatico) assert.equal(evidence.nivelAlto.aprovado, true)
+    if (automatico) {
+      assert.equal(evidence.nivelAlto.aprovado, true)
+      assert.equal(evidence.nivelAlto.ultima.silo.value, true)
+    }
     assert.equal(evidence.catalogoProjeto.catalogo.id, imported.catalogo.id)
     assert.deepEqual(peer.errors, [])
   } finally {

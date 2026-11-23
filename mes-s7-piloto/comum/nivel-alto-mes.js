@@ -18,10 +18,15 @@ function acompanharNivelAlto(rota, informarResultado) {
       const statusMes = statusNivelNoMes(doc, rota.nome, resultado.statusMes, el => Cypress.dom.isVisible(el))
       if (falhou) {
         if (statusMes) throw new Error(resultado.detalhe)
-        throw new Error(
-          `Nível alto confirmado no CLP e não confirmado no MES para a rota ${rota.codigo} (${rota.origem} → ${rota.destino}). ` +
-          `Validar a FC do transporte correspondente à transferência "${rota.nome}", caminho "${rota.rota}", e a geração do alarme de nível alto enviado ao MES.`
-        )
+        const silo = resultado.silo
+        const validarFc = `Validar a FC do transporte correspondente à transferência "${rota.nome}", caminho "${rota.rota}", e a geração do alarme de nível alto enviado ao MES.`
+        let diagnostico = silo ? `DB11 sem leitura confirmada. ${silo.detalhe || ''} ${validarFc}` : validarFc
+        if (silo?.good) {
+          const leitura = `${silo.label} (${silo.address})=${Number(silo.value)}.`
+          diagnostico = silo.value ? `${leitura} Validar a leitura do DB11 e a atualização do estado da transferência no MES.` :
+            `${leitura} Alm ou Aviso ativo sem propagação ao silo. ${validarFc}`
+        }
+        throw new Error(`Nível alto confirmado no CLP e não confirmado no MES para a rota ${rota.codigo} (${rota.origem} → ${rota.destino}). ${diagnostico}`)
       }
       if (resultado.ok && statusMes) return cy.task('confirmarNivelAltoMesS7', { statusMes })
       return cy.wait(resultado.intervaloConsultaMs, { log: false }).then(() => acompanharNivelAlto(rota, informarResultado))

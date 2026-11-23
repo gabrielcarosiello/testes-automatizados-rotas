@@ -395,6 +395,11 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
           return acompanharNivelAlto(rota, informarResultado)
         }).then(resultado => {
           execucao.atual.nivelAlto = resultado
+          const silo = resultado.silo
+          if (silo) {
+            const leitura = silo.good ? `${silo.label} (${silo.address})=${Number(silo.value)}` : (silo.detalhe || 'leitura indisponível')
+            execucao.atual.detalhes += ' | DB11: ' + leitura + '.'
+          }
           etapa('Registrar reação ao nível alto')
           return informarResultado(resultado).then(paginas => cy.wrap(Array.from({ length: paginas }, (_, i) => i), { log: false }).each(pagina => {
             informarResultado(resultado, pagina)

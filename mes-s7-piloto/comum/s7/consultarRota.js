@@ -19,11 +19,7 @@ function lerConfiguracaoLocal() {
   }
 }
 
-async function consultarRota(codigoRota) {
-  if (!Number.isInteger(codigoRota) || codigoRota < 1 || codigoRota > 32767) {
-    throw new Error('Informe um código de rota inteiro entre 1 e 32767.')
-  }
-
+async function consultarBanco(consulta) {
   const local = lerConfiguracaoLocal()
   const user = process.env.FMS_SQL_USER || local.user
   const password = process.env.FMS_SQL_PASSWORD || local.password
@@ -70,7 +66,18 @@ async function consultarRota(codigoRota) {
 
   try {
     await pool.connect()
-    const { recordset } = await pool.request()
+    return await consulta(pool.request())
+  } finally {
+    await pool.close()
+  }
+}
+
+async function consultarRota(codigoRota) {
+  if (!Number.isInteger(codigoRota) || codigoRota < 1 || codigoRota > 32767) {
+    throw new Error('Informe um código de rota inteiro entre 1 e 32767.')
+  }
+  return consultarBanco(async request => {
+    const { recordset } = await request
       .input('CodRota', sql.SmallInt, codigoRota)
       .query(`
         SELECT rse.cod_rota, rse.cod_segmento,
@@ -91,9 +98,20 @@ async function consultarRota(codigoRota) {
       ...vinculo,
       espelhos_entrada: [entrada1?.trim() ?? '', entrada2?.trim() ?? ''],
     }))
-  } finally {
-    await pool.close()
-  }
+  })
 }
 
-module.exports = { consultarRota }
+async function consultarSilo(destino) {
+  const nome = destino.toUpperCase().replace(/[- ]/g, '')
+  return consultarBanco(async request => {
+    const { recordset } = await request.input('Destino', sql.NVarChar(128), nome).query(`
+      SELECT TOP (2) cod_silo, nom_silo, num_silo_clp, des_string_conexao
+      FROM dbo.Silo
+      WHERE REPLACE(REPLACE(UPPER(nom_silo), '-', ''), ' ', '') = @Destino
+      ORDER BY cod_silo
+    `)
+    return recordset
+  })
+}
+
+module.exports = { consultarRota, consultarSilo }

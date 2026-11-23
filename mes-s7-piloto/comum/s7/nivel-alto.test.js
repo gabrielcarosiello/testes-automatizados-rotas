@@ -1,6 +1,6 @@
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
-const { configuracaoNivel, resolverAlarme, criarControleNivel } = require('./nivel-alto')
+const { configuracaoNivel, resolverAlarme, resolverNivelSilo, criarControleNivel } = require('./nivel-alto')
 const { configurarContatoLSH } = require('./contato-lsh')
 const rota = { codigo: '91', nivelAlto: { aplicavel: true, io: 'LSH_MG14', idDigital: 31, status: 'NT' } }
 const record = { block: 'DIG031_LSH_MG14', name: 'Dig.str_Dig.Alm', type: 'Bool', dbNumber: 3031, offsetBits: 8 }
@@ -16,6 +16,18 @@ test('resolve Alm por DB DIG/nome/ID sem fórmula de número do DB e usa o layou
   const confirmed = configuracaoNivel({ nivelAlto: { habilitado: true, alarmesConfirmados: { LSH_MG14: 'DB3031,X1.0' } } })
   assert.equal(resolverAlarme(rota, [suggested], confirmed).origem, 'confirmado-na-configuracao')
   assert.throws(() => resolverAlarme(rota, [record], { ...confirmed, alarmesConfirmados: { LSH_MG14: 'DB999,X1.0' } }), /diverge/)
+})
+
+test('DB11 usa o cadastro do destino e recusa vínculo ambíguo ou layout divergente', () => {
+  const rg08 = { cod_silo: 1, num_silo_clp: 1, des_string_conexao: 'DB11,INT40' }
+  const rg11 = { cod_silo: 2, num_silo_clp: 2, des_string_conexao: 'DB11,INT80' }
+  assert.equal(resolverNivelSilo([rg08]).address, 'DB11,X41.4')
+  assert.equal(resolverNivelSilo([rg11]).address, 'DB11,X81.4')
+  assert.equal(resolverNivelSilo([rg11]).writable, false)
+  assert.match(resolverNivelSilo([]).detalhe, /único/)
+  assert.match(resolverNivelSilo([rg08, rg11]).detalhe, /único/)
+  assert.match(resolverNivelSilo([{ ...rg08, num_silo_clp: 2 }]).detalhe, /incompatível/)
+  assert.match(resolverNivelSilo([{ ...rg08, des_string_conexao: 'DB11,INT80' }]).detalhe, /incompatível/)
 })
 
 function fixture(tipo = 0, registrarProtecao) {

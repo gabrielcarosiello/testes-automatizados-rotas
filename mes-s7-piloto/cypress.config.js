@@ -50,7 +50,9 @@ module.exports = defineConfig({
           pilotoS7 = s7.habilitado
           monitorS7 = s7.monitor
           if (pilotoS7 && dados.expose.retomarPasta) throw new Error('Inicie a integração S7 sem retomar resultados de outra execução.')
-          if (pilotoS7) on('task', criarPiloto(config.projectRoot, undefined, { rotas, prevalidarSql: true }))
+          if (pilotoS7) on('task', criarPiloto(config.projectRoot, undefined, {
+            rotas, prevalidarSql: true, consultarSilo: destino => require('./comum/s7/consultarRota').consultarSilo(destino),
+          }))
           console.log(`[Piloto 11] Modo ${pilotoS7 ? 'MES + S7' : 'MES'}; rotas ${rotas.map(rota => rota.codigo).join(', ')}`)
           if (pilotoS7) console.log(`[S7] Monitor ${s7.monitor}. A leitura ocorre pela API enquanto a tela permanece no MES.`)
         }

@@ -44,6 +44,18 @@ function resolverAlarme(rota, arrays, cfg) {
   const alternativas = offsets.filter(offset => `DB${tag.dbNumber},X${offset}` !== address).map((offset, i) => ({ id: `lsh_alarme_alternativa_${i}`, label: `${io} / ${offset === '1.1' ? 'Aviso' : offset === '1.0' ? 'Alm' : offset}`, address: `DB${tag.dbNumber},X${offset}`, writable: false }))
   return { alternativas, id: 'lsh_alarme', label: `${io} / Alm`, address, bloco: tag.block, campo: tag.name, origem, writable: false }
 }
+function resolverNivelSilo(registros) {
+  if (registros.length !== 1) return { detalhe: 'Destino sem cadastro de silo único no SQL.' }
+  const { cod_silo: codigo, num_silo_clp: indice, des_string_conexao: conexao } = registros[0]
+  const base = /^DB11,INT(\d+)$/i.exec(conexao?.trim() ?? '')
+  if (!Number.isSafeInteger(codigo) || codigo <= 0 || codigo !== indice || !base ||
+      Number(base[1]) !== 40 * indice || Number(base[1]) + 1 > 2097151) {
+    return { detalhe: 'Cadastro do silo incompatível com o índice e o layout do DB11.' }
+  }
+  return { codigo, indice, id: 'silo_nivel_alto', label: `Silo[${indice}].Niveis.Alto`,
+    address: `DB11,X${Number(base[1]) + 1}.4`, writable: false }
+}
+
 function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registrarEscrita = () => {}, exigirPropriedade = () => {}, exigirLivre = () => {}, registrarProtecao = () => {} }) {
   let temporizadorProtecao
   let restauracaoProtecao
@@ -176,9 +188,12 @@ function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registra
       const dbOk = fresh && inputOk && points.slice(1).some(p => p.value === true)
       const expired = Date.now() >= c.nivel.limite
       const error = fresh && !inputOk ? 'A LSH não permaneceu no valor de nível alto.' : expired ? 'Prazo para confirmar nível alto no DB e no MES esgotado.' : ''
-      c.nivel.ultima = { sequence: data.sequence, receivedAt: data.receivedAt, entrada: points[0].value, alm: points[1].value, confirmacoes: points.slice(1).map(p => ({ address: p.address, value: p.value })) }
+      const tagSilo = c.silo?.address && data.tags.find(t => t.id === c.silo.id && t.address === c.silo.address)
+      const siloValido = fresh && tagSilo?.good === true && typeof tagSilo.value === 'boolean'
+      const silo = c.silo && { ...c.silo, good: siloValido, value: siloValido ? tagSilo.value : null }
+      c.nivel.ultima = { sequence: data.sequence, receivedAt: data.receivedAt, entrada: points[0].value, alm: points[1].value, confirmacoes: points.slice(1).map(p => ({ address: p.address, value: p.value })), silo }
       if (c.nivel.historico.at(-1)?.sequence !== data.sequence) c.nivel.historico.push(c.nivel.ultima)
-      return { ok: dbOk && !error, confirmadoClp: dbOk, concluido: Boolean(error), detalhe: error || (dbOk ? 'Alm ou Aviso confirmado; aguardando Nível Alto no MES.' : 'Aguardando LSH e Alm ou Aviso.'), tags: points, sequence: data.sequence, receivedAt: data.receivedAt, intervaloConsultaMs: 1000, statusMes: cfg.statusMes, fase: 'nivel-alto' }
+      return { ok: dbOk && !error, confirmadoClp: dbOk, silo, concluido: Boolean(error), detalhe: error || (dbOk ? 'Alm ou Aviso confirmado; aguardando Nível Alto no MES.' : 'Aguardando LSH e Alm ou Aviso.'), tags: points, sequence: data.sequence, receivedAt: data.receivedAt, intervaloConsultaMs: 1000, statusMes: cfg.statusMes, fase: 'nivel-alto' }
     },
     // Fase 3: juntar a evidência S7 ao estado lido no cartão correto do MES.
     async confirmarNivelAltoMesS7({ statusMes } = {}) {
@@ -235,4 +250,4 @@ function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registra
   }
   return controls
 }
-module.exports = { configuracaoNivel, resolverAlarme, criarControleNivel }
+module.exports = { configuracaoNivel, resolverAlarme, resolverNivelSilo, criarControleNivel }

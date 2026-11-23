@@ -57,12 +57,19 @@ test('timeout só indica validação da FC quando o CLP confirmou e o MES segue 
       return true
     })
 
+    resultado.silo = { address: 'DB11,X81.4', label: 'Silo[2].Niveis.Alto', good: true, value: false }
+    await assert.rejects(conferir(), /DB11,X81\.4\)=0.*sem propagação ao silo.*Validar a FC/)
+    resultado.silo.value = true
+    await assert.rejects(conferir(), /DB11,X81\.4\)=1.*Validar a leitura do DB11/)
+    resultado.silo.good = false
+    await assert.rejects(conferir(), /DB11 sem leitura confirmada/)
+
     dom.window.document.querySelector('.card-situations').textContent = 'Nível Alto'
     await assert.rejects(conferir(), { message: resultado.detalhe })
 
     resultado.confirmadoClp = false
     await assert.rejects(conferir(), { message: resultado.detalhe })
-    assert.equal(consultasMes, 2)
+    assert.equal(consultasMes, 5)
   } finally {
     delete global.cy
     delete global.Cypress

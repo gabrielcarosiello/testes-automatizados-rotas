@@ -10,7 +10,7 @@ const { setTimeout: dormir } = require('node:timers/promises')
 const { selecionarValidacao } = require('./perfis')
 const { configurarContatoLSH } = require('./contato-lsh')
 const { criarCatalogoProjeto, conferirSinaisLir } = require('./catalogo-projeto')
-const { configuracaoNivel, resolverAlarme, criarControleNivel } = require('./nivel-alto')
+const { configuracaoNivel, resolverAlarme, resolverNivelSilo, criarControleNivel } = require('./nivel-alto')
 const perfisPadrao = require('../../perfis-s7.json')
 const { consultarDbsDaRotaSql } = require('./gerarRotaCLP')
 
@@ -206,6 +206,19 @@ function criarPiloto(raiz, consultarRota = codigo => require('./consultarRota').
       const alarmes = alarme ? [alarme, ...(alarme.alternativas || [])] : []
       if (tags.length + (lsh ? 1 : 0) + alarmes.length > 32) throw new Error('Nível alto excede 32 tags incluindo entrada e sinais de confirmação.')
       const tagsConexao = [...tags.map(({ id, label, address }) => ({ id, label, address })), ...(lsh ? [lsh] : []), ...alarmes]
+      let silo
+      if (lsh && alarme && rota?.destino && opcoes.consultarSilo) {
+        if (tagsConexao.length === 32) {
+          silo = { detalhe: 'Sem espaço na amostra do Monitor para incluir o DB11.' }
+        } else {
+          try {
+            silo = resolverNivelSilo(await opcoes.consultarSilo(rota.destino))
+          } catch {
+            silo = { detalhe: 'Consulta do cadastro de silo no SQL indisponível.' }
+          }
+          if (silo.address) tagsConexao.push(silo)
+        }
+      }
       const sessao = await chamar('/api/conexao', { body: JSON.stringify({ host, rack, slot, pollMs, tags: tagsConexao }) })
       if (!sessao.connection || sessao.host !== host) throw new Error('O Monitor não confirmou a sessão configurada.')
       if (lsh?.writable && !sessao.tags?.some(tag => tag.id === lsh.id && tag.address === lsh.address && tag.writeType === 'X')) throw new Error('O Monitor não habilitou a escrita da LSH. Utilize a versão 0.12 ou posterior com escrita de I/O.')
@@ -216,7 +229,7 @@ function criarPiloto(raiz, consultarRota = codigo => require('./consultarRota').
       const valor = (amostra, tag) => amostra.tags.find(lida => lida.id === tag.id).value
       if (lsh) lsh.valorInicial = valor(inicial, lsh)
       contexto = {
-        codigo, pasta: fluxo?.pasta, vinculos, perfis, catalogoInfo, sinaisLir, lsh, alarme, connection: sessao.connection, tags, baseline: inicial.sequence,
+        codigo, pasta: fluxo?.pasta, vinculos, perfis, catalogoInfo, sinaisLir, lsh, alarme, silo, connection: sessao.connection, tags, baseline: inicial.sequence,
         observadas: Object.fromEntries(tags.map(tag => [tag.id, { jaLigou: false, primeiroTrue: null, ultimoTrue: null }])),
         historico: [], iniciadoEm: null, resultado: null,
       }
@@ -313,7 +326,7 @@ function criarPiloto(raiz, consultarRota = codigo => require('./consultarRota').
         catalogoProjeto: contexto.catalogoInfo, sinaisLir: contexto.sinaisLir,
         inicio: contexto.iniciadoEm, prazoS7Ms, intervaloConsultaMs, modoValidacao, contatoLSH,
         lshManual: contexto.lsh ? { ...contexto.lsh, ensaioNivelAltoExecutado: Boolean(contexto.nivel) } : null,
-        nivelAlto: contexto.nivel || null, alarme: contexto.alarme,
+        nivelAlto: contexto.nivel || null, alarme: contexto.alarme, silo: contexto.silo,
         resultado: contexto.resultado, observadas: contexto.observadas, historico: contexto.historico,
       }, null, 2))
       return path.join('resultados', pasta, nome).split(path.sep).join('/')
