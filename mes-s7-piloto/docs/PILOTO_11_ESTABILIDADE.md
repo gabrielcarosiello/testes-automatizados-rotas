@@ -48,10 +48,12 @@ Validação no Windows com MES e S7 simulados. Passaram 158 testes, incluindo es
 
 ## Transferência interrompida por impedimento de equipamento
 
-Na execução da rota 704, ME06 e ME32 ficaram sem confirmação de retorno no S7. A tentativa de Parar expirou porque o MES mantinha o botão desabilitado. Um retorno ausente indica falta de confirmação. O diagnóstico de emergência depende da situação exibida para o equipamento no MES.
+Na execução da rota 704, ME06 e ME32 ficaram sem confirmação de retorno no S7. Na VM, o cartão 12137 de ME29 para ME07 aparecia como Interrompido, com Parar desabilitado e Limpar habilitado. Mais Informações exibia apenas a rota.
 
-No modo MES + S7, o piloto reconhece um cartão Interrompido da rota em teste antes da partida ou na finalização. Exige cartão único, número da transferência, origem e destino correspondentes, Parar indisponível e Limpar habilitado. Quando disponível em diálogo identificado, consulta Mais Informações e registra os estados de falha apresentados para os equipamentos. Os retornos S7 não confirmados são registrados separadamente na coluna Detalhes do histórico Rev 00.
+No modo MES + S7, o piloto reconhece um cartão Interrompido da rota em teste antes da partida ou na finalização. Exige cartão único, número da transferência, origem e destino correspondentes, Parar indisponível e Limpar habilitado. A situação dos equipamentos vem dos DBs vinculados à rota pelo SQL e dos campos com endereço confirmado no catálogo TIA. O Monitor faz a consulta em conexão de leitura separada. O painel mantém seu mapeamento.
 
-Antes de Limpar, o piloto grava o impedimento no log e relê o cartão para confirmar o mesmo número de transferência. A rota permanece com resultado Falhou. As próximas rotas seguem somente depois que o MES confirma o local vazio. Se houver troca de cartão, confirmação ambígua ou restauração de LSH pendente, a limpeza fica bloqueada.
+O diagnóstico procura campos de estado, emergência, manutenção, suspensão, falha e bloqueio. Campos específicos do projeto podem ser acrescentados pela lista opcional `camposDiagnosticoEquipamentos` em `s7.local.json` com os nomes completos do catálogo. Códigos numéricos são gravados com o valor lido. A coluna Detalhes do histórico Rev 00 identifica o equipamento, o DB e os campos lidos, além de listar separadamente os retornos S7 que ficaram sem confirmação.
 
-Validação local no Windows com 162 testes aprovados, incluindo diagnóstico, identificação do cartão, registro, ausência de confirmação e limpeza simulada. A tela de detalhes de um cartão interrompido ainda precisa ser validada na bancada.
+Antes de Limpar, o piloto grava o impedimento no log e relê o cartão para confirmar o mesmo número de transferência. Um diagnóstico incompleto mantém o cartão para conferência. Após a limpeza, a rota permanece com resultado Falhou. As próximas rotas seguem somente quando o MES confirma o local vazio.
+
+Reinicie o Monitor S7 na VM após atualizar o projeto, para disponibilizar a leitura de diagnóstico. A suíte de 167 testes passou no Windows com MES e S7 simulados. A leitura dos endereços de diagnóstico do catálogo CL373.01 no PLCSIM ainda precisa ser conferida na VM.

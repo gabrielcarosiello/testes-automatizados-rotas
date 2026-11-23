@@ -11,7 +11,7 @@ const cartao = '<div class="row"><div><span>Local Transferência</span><div>' + 
   '</div></div>\nTransferência\n12127\nOrigem / Destino Atual\nME29 -> ME07\n<div class="card-situations">Interrompido</div>' +
   '<button disabled>Parar</button><button>Limpar</button><button>Mais Informações</button></div>'
 
-function fixture({ aoRegistrar, conclui = true } = {}) {
+function fixture({ aoRegistrar, conclui = true, completo = true } = {}) {
   const dom = new JSDOM('<body>' + cartao + '</body>')
   const doc = dom.window.document
   const eventos = []
@@ -22,8 +22,6 @@ function fixture({ aoRegistrar, conclui = true } = {}) {
     wrap: botao => ({ click: async () => {
       const nome = botao.textContent
       eventos.push(nome)
-      if (nome === 'Mais Informações') doc.body.insertAdjacentHTML('beforeend', '<section role="dialog"><table><tr><td>ME06</td><td>Emergência</td></tr><tr><td>ME32</td><td>Normal</td></tr><tr><td>ME29</td><td>Sem emergência</td></tr></table><button>Fechar</button></section>')
-      if (nome === 'Fechar') botao.closest('[role=dialog]').remove()
       if (nome === 'Limpar') doc.body.insertAdjacentHTML('beforeend', '<section role="dialog"><p>Deseja realmente limpar a transferência</p><button>Sim</button></section>')
     } }),
     elementoMes: (_, nome) => ({ click: async () => {
@@ -35,8 +33,13 @@ function fixture({ aoRegistrar, conclui = true } = {}) {
     contains: texto => ({ should: async () => { assert.ok(doc.body.textContent.includes(texto)) } }),
     get: () => ({ should: fn => { fn([doc.body]); return Promise.resolve() } }),
     task: async (tarefa, dados) => {
+      if (tarefa === 'diagnosticarEquipamentosS7') {
+        assert.equal(dados, rota.codigo)
+        eventos.push('diagnóstico S7')
+        return { completo, detalhes: completo ? 'ME06 (DB1403): Emergência=true' : 'Leitura indisponível' }
+      }
       assert.equal(tarefa, 'registrarEtapa')
-      assert.match(dados.etapa, /12127.*ME06.*Emergência/)
+      assert.match(dados.etapa, completo ? /12127.*ME06.*Emergência/ : /12127.*Leitura indisponível/)
       eventos.push('registro')
       aoRegistrar?.(doc)
     },
@@ -52,8 +55,8 @@ test('registra situação do MES e retorno S7, limpa o cartão interrompido e ma
   const f = fixture()
   try {
     await assert.rejects(f.executar(), /local liberado/i)
-    assert.deepEqual(f.eventos, ['Mais Informações', 'Fechar', 'registro', 'Limpar', 'Sim'])
-    assert.match(f.atual.detalhes, /ME06 · Emergência/)
+    assert.deepEqual(f.eventos, ['diagnóstico S7', 'registro', 'Limpar', 'Sim'])
+    assert.match(f.atual.detalhes, /ME06.*Emergência=true/)
     assert.match(f.atual.detalhes, /ME32 \(retorno não confirmado\)/)
     assert.doesNotMatch(f.atual.detalhes, /ME32 · Normal|ME29 · Sem emergência/)
     assert.match(f.atual.detalhes, /Limpeza confirmada/)
@@ -65,7 +68,7 @@ test('cartão trocado após o diagnóstico não recebe Limpar', async () => {
   const f = fixture({ aoRegistrar: doc => { doc.body.innerHTML = cartao.replace('12127', '12128') } })
   try {
     await assert.rejects(f.executar(), /mudou antes/)
-    assert.deepEqual(f.eventos, ['Mais Informações', 'Fechar', 'registro'])
+    assert.deepEqual(f.eventos, ['diagnóstico S7', 'registro'])
     assert.ok(f.execucao.anterior)
   } finally { f.fechar() }
 })
@@ -88,5 +91,15 @@ test('limpeza exige origem e destino corretos, situação interrompida e botão 
     f.doc.querySelector('.card-situations').textContent = 'Interrompido'
     f.doc.querySelector('button').disabled = false
     assert.equal(f.identificar(), null)
+  } finally { f.fechar() }
+})
+
+test('diagnóstico incompleto é registrado e mantém o cartão para conferência', async () => {
+  const f = fixture({ completo: false })
+  try {
+    await assert.rejects(f.executar(), /Diagnóstico dos DBs incompleto/)
+    assert.deepEqual(f.eventos, ['diagnóstico S7', 'registro'])
+    assert.match(f.atual.detalhes, /Leitura indisponível/)
+    assert.ok(f.execucao.anterior)
   } finally { f.fechar() }
 })

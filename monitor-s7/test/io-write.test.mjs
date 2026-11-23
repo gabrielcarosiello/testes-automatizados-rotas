@@ -40,6 +40,19 @@ test('HTTP + driver S7 real escrevem I/Q/M/DB, preservam bits vizinhos e disting
     const deadline = Date.now() + 5000;
     do { snapshot = await (await fetch(base + '/api/tags')).json(); if (snapshot.state === 'ok') break; await new Promise(r => setTimeout(r, 20)); } while (Date.now() < deadline);
     assert.equal(snapshot.state, 'ok', snapshot.diagnostic);
+    const leituraDb = { host: '127.0.0.1', rack: 0, slot: 1,
+      tags: [{ id: 'estado', label: 'Estado', address: 'DB5,X0.1' }] };
+    const antesDiagnostico = peer.writes.length;
+    const diagnostico = await post('/api/diagnostico-dbs', leituraDb);
+    assert.equal(diagnostico.status, 200, JSON.stringify(diagnostico.data));
+    assert.deepEqual(diagnostico.data.tags, [{ id: 'estado', address: 'DB5,X0.1', good: true, value: false }]);
+    assert.equal((await post('/api/diagnostico-dbs', { ...leituraDb, tags: [
+      { ...leituraDb.tags[0], writable: true },
+    ] })).status, 400);
+    assert.equal(peer.writes.length, antesDiagnostico);
+    const depoisDiagnostico = await (await fetch(base + '/api/tags')).json();
+    assert.equal(depoisDiagnostico.connection, snapshot.connection);
+    assert.deepEqual(depoisDiagnostico.tags.map(tag => tag.id), tags.map(tag => tag.id));
     const write = (id, value, expected) => post('/api/escrita', { id, value, expected, connection: snapshot.connection });
     for (const id of ['lsh', 'saida', 'memoria', 'db']) {
       const result = await write(id, true, false);

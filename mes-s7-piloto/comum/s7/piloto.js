@@ -1,5 +1,6 @@
 const { indiceCatalogo } = require('./indice-catalogo')
 const { criarClienteMonitor } = require('./cliente-monitor')
+const { mapearCamposDiagnostico, lerDiagnosticoEquipamentos } = require('./diagnostico-equipamentos')
 const { criarEstadoEscrita } = require('./estado-escrita')
 const { readFileSync, writeFileSync, mkdirSync } = require('node:fs')
 const path = require('node:path')
@@ -156,6 +157,18 @@ function criarPiloto(raiz, consultarRota = codigo => require('./consultarRota').
     },
     // Pré-partida: SQL + catálogo resolvem os equipamentos, LSH e Alm.
     // Somente a entrada LSH pode receber escrita; retornos/Alm são leitura.
+    async diagnosticarEquipamentosS7(codigo) {
+      try {
+        if (!(opcoes.rotas || []).some(r => String(r.codigo) === String(codigo))) throw new Error('Rota fora da seleção do piloto.')
+        estadoEscrita.exigirLivre()
+        const vinculos = String(contexto?.codigo) === String(codigo) ? contexto.vinculos : await consultarRota(Number(codigo))
+        const { arrays } = await catalogoProjeto.obter()
+        const equipamentos = mapearCamposDiagnostico(vinculos, arrays, local.camposDiagnosticoEquipamentos)
+        return await lerDiagnosticoEquipamentos({ equipamentos, cpu: { host, rack, slot }, chamar })
+      } catch (erro) {
+        return { completo: false, detalhes: erro.message }
+      }
+    },
     async prepararS7(codigo) {
       estadoEscrita.exigirLivre()
       if (contexto?.nivel?.restauracaoPendente) throw new Error('A LSH da rota anterior ainda precisa ser restaurada.')

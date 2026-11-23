@@ -239,6 +239,30 @@ function json(response, status, body) {
   response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' }).end(JSON.stringify(body));
 }
 
+async function readDiagnosticDbs(config) {
+  if (!Array.isArray(config?.tags) || !config.tags.length ||
+      config.tags.some(tag => tag?.writable === true || !/^DB[1-9]\d*,(?:X\d+\.[0-7]|(?:BYTE|SINT|WORD|INT|DWORD|DINT)\d+)$/i.test(tag?.address ?? ''))) {
+    throw new Error('Diagnóstico aceita somente leituras escalares de DB.');
+  }
+  const { host, rack, slot, tags, items } = validate({ ...config, pollMs: 1000 });
+  const endpoint = new S7Endpoint({ host, rack, slot, port: s7Port, autoReconnect: 0 });
+  endpoint.on('error', () => {});
+  const group = new S7ItemGroup(endpoint);
+  try {
+    group.addItems(items);
+    await endpoint.connect();
+    const values = await group.readAllItems();
+    return { host, tags: tags.map(({ id, address }) => {
+      const type = extendedAddress(address);
+      const value = type ? decodeExtended(type, values[id]) : values[id];
+      return { id, address, good: value != null, value: value ?? null };
+    }) };
+  } finally {
+    group.destroy();
+    void endpoint.disconnect().catch(() => {});
+  }
+}
+
 async function readBody(request, limit) {
   let size = 0;
   const chunks = [];
@@ -286,12 +310,17 @@ const server = createServer(async (request, response) => {
     } catch (error) { json(response, 400, { error: error.message }); }
     return;
   }
-  if (request.method === 'POST' && ['/api/conexao', '/api/mapeamento', '/api/simulacao', '/api/escrita'].includes(route)) {
+  if (request.method === 'POST' && ['/api/conexao', '/api/mapeamento', '/api/simulacao', '/api/escrita', '/api/diagnostico-dbs'].includes(route)) {
     if (request.headers.origin !== `http://${host}` || request.headers['content-type'] !== 'application/json') {
       response.writeHead(403).end();
       return;
     }
     try {
+      if (route === '/api/diagnostico-dbs') {
+        const config = JSON.parse((await readBody(request, 16384)).toString('utf8'));
+        json(response, 200, await readDiagnosticDbs(config));
+        return;
+      }
       if (route === '/api/escrita') {
         const config = JSON.parse((await readBody(request, 2048)).toString('utf8'));
         json(response, 200, await writeTag(config));
