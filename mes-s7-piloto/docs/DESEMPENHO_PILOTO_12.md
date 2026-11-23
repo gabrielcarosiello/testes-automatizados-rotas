@@ -42,6 +42,33 @@ Tempos em segundos. P90 usa a posição de ordem `ceil(0,90 × n)`. Os cortes po
 
 Nenhuma redução de tempo foi medida. Antes de escolher a primeira mudança, medir o trecho candidato com marcadores locais de início e fim ou com o Command Log quando disponível. Para leituras repetidas, contar por operação, rota e amostra sem registrar payload, credenciais ou valores do CLP. Para limpeza, medir desde a ação autorizada até a confirmação de local vazio e manter a confirmação da parada como marco independente.
 
+## Validação no lote anterior
+
+O coletor foi executado no lote `Teste_rotas_Rev00_2026-11-23-16-20-24-127`, registrado como Piloto `11`. O último evento disponível é de 17h26min03s de 23/11/2026 (São Paulo). O registro contém **174 resultados persistidos de 265 selecionados**, com 172 aprovações e duas falhas. O restante da seleção fica fora do recorte.
+
+| Etapa | n | Mediana (s) | P90 (s) |
+| --- | ---: | ---: | ---: |
+| Rota aprovada | 172 | 22,25 | 23,37 |
+| Preparação da rota | 172 | 5,16 | 5,89 |
+| Busca por rota | 172 | 1,74 | 2,29 |
+| Preparação S7 | 172 | 1,95 | 2,02 |
+| Retornos S7 e evidências iniciais | 172 | 3,66 | 3,79 |
+| Confirmação **Iniciado** no MES | 172 | 0,03 | 0,03 |
+| Nível alto até a confirmação conjunta | 171 | 5,97 | 7,07 |
+| Evidências após confirmar nível alto | 171 | 2,77 | 2,97 |
+| Parada e encerramento no MES | 172 | 2,73 | 3,76 |
+| Persistência | 174 | 0,30 | 0,33 |
+
+O login e acesso levaram 3,81 s nesse lote. As 688 buscas das rotas aprovadas ocorreram sem tentativas adicionais registradas. A primeira amostra positiva de `Alm` ou `Aviso` e a primeira amostra positiva do DB11 tiveram mediana de 5,69 s. O intervalo calculado por rota da primeira amostra digital positiva à confirmação conjunta teve mediana de 1,26 s. Limpeza continua sem um cronômetro isolado.
+
+A amostra maior sustenta a prioridade de **separar renderização e captura de evidências** (T03, T05, T08). A preparação S7 é o próximo trecho a decompor. As rotas e condições dos dois lotes são diferentes, e o intervalo de evidências inclui várias operações. Os valores observados ainda não demonstram economia com a remoção de uma renderização nem ganho entre versões.
+
+Reprodução offline a partir de `mes-s7-piloto`:
+
+```powershell
+node scripts/medir-tempos.cjs Teste_rotas_Rev00_2026-11-23-16-20-24-127
+```
+
 ## Execução controlada e coleta
 
 1. Na VM de simulação, prepare uma cópia de trabalho com uma cópia da LIR e as configurações locais autorizadas. Selecione uma rota por vez pelo `codigoRota` de `s7.local.json`. Use a mesma revisão, estado inicial do MES/CLP, rota, modo de busca, captura e cadência do Monitor em cada repetição. Compare pares equivalentes, com pelo menos três execuções por cenário, identificando sucesso, falha e recuperação. Para recuperação, siga a seção 10 do [manual](../../MANUAL_OPERACAO.md).
