@@ -43,6 +43,9 @@ test('HTTP + driver S7 real escrevem I/Q/M/DB, preservam bits vizinhos e disting
     const leituraDb = { host: '127.0.0.1', rack: 0, slot: 1,
       tags: [{ id: 'estado', label: 'Estado', address: 'DB5,X0.1' }] };
     const antesDiagnostico = peer.writes.length;
+    const probe = await post('/api/diagnostico-dbs', { tags: [] });
+    assert.equal(probe.status, 400);
+    assert.match(probe.data.error, /somente leituras escalares de DB/);
     const diagnostico = await post('/api/diagnostico-dbs', leituraDb);
     assert.equal(diagnostico.status, 200, JSON.stringify(diagnostico.data));
     assert.deepEqual(diagnostico.data.tags, [{ id: 'estado', address: 'DB5,X0.1', good: true, value: false }]);

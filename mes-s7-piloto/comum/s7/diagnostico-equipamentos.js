@@ -43,6 +43,25 @@ function mapearCamposDiagnostico(vinculos, catalogo, campos = []) {
   })
 }
 
+function detalheErroDiagnostico(erro) {
+  if (erro.status === 404 || erro.status === 405) {
+    return `API de diagnóstico de DBs indisponível (HTTP ${erro.status}). Na VM, encerre a instância atual do Monitor S7 e inicie npm start na pasta monitor-s7 da versão atual do projeto.`
+  }
+  return erro.message
+}
+
+async function verificarApiDiagnostico(chamar) {
+  // Lista vazia é rejeitada pelo Monitor antes de abrir qualquer conexão S7.
+  try {
+    await chamar('/api/diagnostico-dbs', { body: '{"tags":[]}' })
+  } catch (erro) {
+    if (erro.status === 400 && erro.message.includes('Diagnóstico aceita somente leituras escalares de DB')) return
+    const detalhe = detalheErroDiagnostico(erro)
+    throw new Error(detalhe, { cause: erro })
+  }
+  throw new Error('Resposta inesperada do Monitor à verificação de diagnóstico de DBs.')
+}
+
 async function lerDiagnosticoEquipamentos({ equipamentos, cpu, chamar }) {
   const tags = equipamentos.flatMap(e => e.tags)
   const valores = new Map()
@@ -55,7 +74,7 @@ async function lerDiagnosticoEquipamentos({ equipamentos, cpu, chamar }) {
       for (const tag of resposta.tags) if (tag.good === true &&
           (typeof tag.value === 'boolean' || Number.isFinite(tag.value))) valores.set(tag.id, tag)
     } catch (error) {
-      avisos.push(error.message)
+      avisos.push(detalheErroDiagnostico(error))
       break
     }
   }
@@ -73,4 +92,4 @@ async function lerDiagnosticoEquipamentos({ equipamentos, cpu, chamar }) {
     detalhes: observacoes.length ? [...observacoes.map(o => o.texto), ...avisos].join(' | ') :
       'A rota não retornou equipamentos vinculados para diagnóstico.' }
 }
-module.exports = { mapearCamposDiagnostico, lerDiagnosticoEquipamentos }
+module.exports = { mapearCamposDiagnostico, lerDiagnosticoEquipamentos, verificarApiDiagnostico }

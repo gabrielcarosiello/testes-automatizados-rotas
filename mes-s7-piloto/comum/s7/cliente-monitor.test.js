@@ -28,12 +28,14 @@ test('porta fechada informa endereço, operação e causa; não devolve fetch fa
 test('timeout real é limitado e HTTP/JSON inválido permanece diagnóstico distinto', async t => {
   const url = await servidor(t, (req, res) => {
     if (req.url === '/lento') return
+    if (req.url === '/api/diagnostico-dbs') { res.writeHead(405); res.end(); return }
     if (req.url === '/html') { res.end('<html>Erro</html>'); return }
     res.writeHead(req.url === '/api/tags' ? 503 : 404); res.end('{"error":"não conectado"}')
   })
   const chamar = criarClienteMonitor(url, { pausa: async () => {}, timeoutPadrao: 40 })
   await assert.rejects(chamar('/lento'), /limite 40 ms/)
   await assert.rejects(chamar('/html'), /JSON inválida/)
+  await assert.rejects(chamar('/api/diagnostico-dbs', { body: '{}' }), e => e.status === 405 && /JSON inválida/.test(e.message))
   await assert.rejects(chamar('/ausente'), e => e.status === 404)
   assert.equal((await chamar('/api/tags')).error, 'não conectado')
 })

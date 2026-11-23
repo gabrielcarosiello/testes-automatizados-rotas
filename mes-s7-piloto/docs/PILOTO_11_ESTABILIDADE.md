@@ -56,4 +56,4 @@ O diagnóstico procura campos de estado, emergência, manutenção, suspensão, 
 
 Antes de Limpar, o piloto grava o impedimento no log e relê o cartão para confirmar o mesmo número de transferência. Um diagnóstico incompleto mantém o cartão para conferência. Após a limpeza, a rota permanece com resultado Falhou. As próximas rotas seguem somente quando o MES confirma o local vazio.
 
-Reinicie o Monitor S7 na VM após atualizar o projeto, para disponibilizar a leitura de diagnóstico. A suíte de 167 testes passou no Windows com MES e S7 simulados. A leitura dos endereços de diagnóstico do catálogo CL373.01 no PLCSIM ainda precisa ser conferida na VM.
+Se o diagnóstico retornar HTTP 404 ou 405, encerre o Monitor S7 em execução na VM e rode `npm start` na pasta `monitor-s7` da versão atual do projeto. Na pasta `mes-s7-piloto`, rode `npm run diagnostico -- --monitor` e confira a mensagem API de diagnóstico de DBs disponível. A verificação da API usa uma lista vazia e não abre conexão com a CPU. A suíte de 167 testes passou no Windows com MES e S7 simulados. A leitura dos endereços de diagnóstico do catálogo CL373.01 no PLCSIM ainda precisa ser conferida na VM.

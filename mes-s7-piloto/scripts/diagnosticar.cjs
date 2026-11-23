@@ -4,6 +4,7 @@ const { ler } = require('../testes/transferencias/lir-rotas')
 const { selecionarRotas, resumirLir } = require('../testes/transferencias/selecao-lir')
 const { criarEstadoEscrita } = require('../comum/s7/estado-escrita')
 const { criarClienteMonitor } = require('../comum/s7/cliente-monitor')
+const { verificarApiDiagnostico } = require('../comum/s7/diagnostico-equipamentos')
 async function principal() {
   const raiz = path.resolve(__dirname, '..'), config = lerExecucao(raiz), s7 = JSON.parse(fs.readFileSync(path.join(raiz, 's7.local.json'), 'utf8').replace(/^\uFEFF/, ''))
   const lir = ler(raiz, config.planilha ? path.resolve(raiz, config.planilha) : undefined)
@@ -14,6 +15,8 @@ async function principal() {
     const chamar = criarClienteMonitor(url)
     const catalogos = await chamar('/api/tia/catalogos')
     console.log('Monitor acessível. Metadados dos catálogos: ' + JSON.stringify(catalogos))
+    await verificarApiDiagnostico(chamar)
+    console.log('API de diagnóstico de DBs disponível.')
   }
 }
 principal().catch(e => { console.error(e.message); process.exitCode = 1 })

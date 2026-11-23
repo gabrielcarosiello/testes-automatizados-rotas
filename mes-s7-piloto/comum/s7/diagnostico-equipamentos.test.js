@@ -1,7 +1,7 @@
 'use strict'
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
-const { mapearCamposDiagnostico, lerDiagnosticoEquipamentos } = require('./diagnostico-equipamentos')
+const { mapearCamposDiagnostico, lerDiagnosticoEquipamentos, verificarApiDiagnostico } = require('./diagnostico-equipamentos')
 
 const vinculos = [
   { val_comando: 1, cod_equipamento: 404, des_tag: 'ME06', espelhos_entrada: ['DB1403,X1.5', 'DB1403,X1.6'] },
@@ -61,4 +61,22 @@ test('CPU divergente, endereço divergente ou ausência de campos preserva diagn
   const semCampos = await lerDiagnosticoEquipamentos({ equipamentos: mapearCamposDiagnostico(vinculos, [catalogo[4]]), cpu,
     chamar: async () => assert.fail('consulta sem campo') })
   assert.equal(semCampos.completo, false)
+})
+
+test('Monitor anterior à API informa a atualização necessária e mantém o resultado incompleto', async () => {
+  const cpu = { host: '127.0.0.1' }
+  const equipamentos = mapearCamposDiagnostico(vinculos, catalogo)
+  const chamar = async () => { throw Object.assign(new Error('HTTP 405, resposta JSON inválida'), { status: 405 }) }
+  const r = await lerDiagnosticoEquipamentos({ equipamentos, cpu, chamar })
+  assert.equal(r.completo, false)
+  assert.match(r.detalhes, /HTTP 405.*npm start.*monitor-s7/)
+  await assert.rejects(verificarApiDiagnostico(chamar), /HTTP 405.*Monitor S7/)
+})
+
+test('verifica a API sem enviar CPU ou tags para leitura', async () => {
+  await verificarApiDiagnostico(async (url, { body }) => {
+    assert.equal(url, '/api/diagnostico-dbs')
+    assert.deepEqual(JSON.parse(body), { tags: [] })
+    throw Object.assign(new Error('Diagnóstico aceita somente leituras escalares de DB.'), { status: 400 })
+  })
 })
