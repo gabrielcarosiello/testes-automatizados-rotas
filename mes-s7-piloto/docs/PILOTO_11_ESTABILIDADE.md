@@ -116,3 +116,17 @@ No lote das 15h51 de 23/11/2026, as rotas 704 e 703 foram selecionadas no MES e 
 Após confirmar o botão desabilitado, o piloto preserva a captura e consulta os DBs dos equipamentos vinculados à rota no modo MES + S7. O histórico Rev 00 grava em **Detalhes** os estados confirmados, os endereços, os campos lidos e as leituras indisponíveis. Na LIR, **Falha Identificada** agrupa os equipamentos afetados por condição, por exemplo, **Identificados equipamentos em emergência — ME06, ME32**. O resultado continua NOK. O diagnóstico faz somente leitura.
 
 O campo `Eqp.EquipamentoDWord1.Suspender` indica o estado de suspensão no CLP. Quando a leitura válida confirma `true`, o piloto registra **Equipamento suspenso** e o endereço lido. Leituras válidas em `false` registram o valor do campo e leituras indisponíveis mantêm a suspensão como não verificada.
+
+## Revisão b5f2168 — regressão e conferência na VM
+
+Em 23/11/2026, a regressão do commit `b5f2168` foi executada em uma cópia local do Git no Windows, com Node `24.22.1`. Passaram **192 testes**, com zero falhas e zero ignorados.
+
+| Grupo | Aprovados | O que verifica |
+| --- | ---: | --- |
+| Piloto | 162 | Seleção de rotas e gravação da LIR, navegação e estados do MES em DOM simulado, catálogo e retornos S7, alarmes de equipamento, leitura diagnóstica do DB11, restauração da LSH e recuperação de falhas de persistência. |
+| Monitor | 25 | API local, catálogo e interface, mapeamento, ciclo de leitura S7 e regras de escrita. |
+| Integração simulada | 5 | Piloto e Monitor executados juntos, com um peer S7 local e dados SQL/MES simulados. |
+
+Os cinco ensaios integrados cobrem o uso do catálogo com escrita manual da LSH e evidência, a confirmação com `Alm` e MES simulado seguida de restauração, a confirmação apenas com `Aviso` e leitura do DB11, o rearme de pré-partida com uma única escrita e o bloqueio com `Aviso` ativo e LSH normal.
+
+A conferência da VM às 16h38 registrou **49 de 265 resultados persistidos** no lote iniciado às 16h20min24s. A descoberta de sessões via `cypress tap` retornou sem sessões disponíveis nesta estação. A revisão do lote será concluída com o cruzamento dos resultados persistidos, os estados SQL/DB11, os diagnósticos de emergência e suspensão e a confirmação da restauração da LSH e do encerramento no MES. A revisão documental não exigiu autoria de novos testes Cypress.

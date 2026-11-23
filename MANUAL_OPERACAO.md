@@ -308,6 +308,21 @@ Ou VERIFICAR_REGRESSAO.cmd. Requer dependências de teste nos dois projetos; qua
 
 A auditoria recebida registra pendência alta em xlsx. O patch XML não a resolve. Não executar npm audit fix --force como troca cega de dependência; planejar substituição/atualização com regressão da LIR. Esta organização não atualiza bibliotecas nem declara a vulnerabilidade resolvida.
 
+### Revisão de versão com as Cypress AI Skills
+
+Execute `node verificar-tudo.cjs` na raiz de uma cópia local da revisão. Guarde o commit testado, a versão do Node, a contagem por grupo e os limites da validação. No piloto, o fluxo de revisão usa as skills abaixo.
+
+| Skill | Uso na revisão | Evidência |
+| --- | --- | --- |
+| `$cypress-explain` | Relacionar os testes e as tarefas do Node ao comportamento esperado. No spec de transferências, o login e a navegação preparam a sessão, cada rota valida partida e retornos e o encerramento registra a LIR e recupera a transferência quando necessário. | Seletor, tarefa, condição esperada e artefato que sustentam a conclusão. |
+| `$cypress-docs` | Confirmar a sintaxe e o comportamento de comandos na documentação oficial para a versão instalada. Na revisão atual, a CLI 16.2.1 oferece `cypress tap`. | Versão conferida e referência oficial. |
+| `$cypress-author` | Quando a revisão encontrar comportamento sem cobertura ou uma regressão, criar ou ajustar o teste usando os comandos, helpers e fixtures do projeto. Reexecutar o teste afetado e a suíte completa. | Cenário reproduzido, asserção e resultado de regressão. |
+| `$cypress-tap` | Na VM com o Cypress aberto, localizar a sessão com `npx.cmd cypress tap sessions --json`, conferir `status --json` e ler `reporter` após o término. Para várias sessões, informar o PID com `--session`. Ao conferir uma reexecução, validar o spec, o novo `startedAt` e a contagem de testes executados antes de aceitar o resultado. | Resultado da sessão e Command Log da rota cruzado com os arquivos gravados pelo piloto. |
+
+O spec de bancada usa a sessão preparada pelo login e pela navegação. Um filtro que execute só a rota pode omitir essa preparação. Consulte [Cypress AI Skills](https://docs.cypress.io/app/tooling/ai-skills) e [Cypress Tap](https://docs.cypress.io/app/tooling/cypress-tap).
+
+O detalhamento da suíte e a execução desta revisão estão no [registro de revisão do Piloto 11](mes-s7-piloto/docs/PILOTO_11_ESTABILIDADE.md#revisão-b5f2168--regressão-e-conferência-na-vm).
+
 ## 15. Histórico consolidado e limites
 
 | Marco | Comportamento incorporado |
