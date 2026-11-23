@@ -78,3 +78,11 @@ A captura de supervisório, o acionamento, a confirmação e a restauração de 
 Passaram 176 testes, com 146 do Piloto, 25 do Monitor e 5 de integração simulada. A regressão cobre escrita única no rearme, Aviso ativo com LSH normal sem escrita, busca integral, local vazio sem diálogo, confirmação da própria ação e permanência do cartão.
 
 O preenchimento integral foi verificado em Armazenagem no navegador da VM, com opções únicas para transferência, origem RG37, destino RG11 e caminho. No PLCSIM, RG11 apresentou I31.2=1, Alm=0 e Aviso=0. Em RG08, com Armazenagem vazia, o Monitor confirmou uma escrita de I30.7 de 0 para 1. Depois da releitura, Alm e Aviso estavam em 0, o local seguiu vazio e o registro de pendência foi liberado. Nenhuma transferência foi iniciada durante essa validação.
+
+## Recusas por destino e rotas sem ensaio de nível alto
+
+O aviso do MES é comparado com o destino da rota em execução. A regressão inclui RG11, RG08, RG01, MG09 e TQ-ME19, além de avisos de outro destino e avisos em duas linhas.
+
+Quando a LIR tem IO e ID de nível alto vazios ou marcados com `---`, o piloto executa o teste normal se ele estiver selecionado e registra Não aplicável no histórico Rev 00. A coluna Nível Alto recebe `---` quando estiver pendente ou vazia e a revisão da planilha contiver as duas colunas de especificação. Um `---` explícito em Nível Alto também desabilita o ensaio. Uma recusa do MES para o destino continua sendo registrada como recusa de partida.
+
+Na LIR.04 da bancada, as rotas 180, 161, 142, 123, 104 e 85 de RG01 tinham Teste OK e Nível Alto NT, sem IO nem ID. A marcação foi validada em cópia e atinge as células K166, K185, K204, K223, K242 e K261. A regressão cobre também a gravação pelo fluxo normal e a reaplicação da marcação.

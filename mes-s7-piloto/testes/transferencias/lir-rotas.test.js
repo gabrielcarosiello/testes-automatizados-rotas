@@ -98,3 +98,51 @@ test('registro real separa normal OK de nível alto NOK sem alterar ID H', () =>
     assert.deepEqual(rows.gravacaoLir.celulas.sort(), ['J', 'K', 'M', 'N'].map(c => c + rota.linha).sort())
   } finally { fs.rmSync(dir, { recursive: true, force: true }) }
 })
+
+test('RG01 sem IO e ID recebe --- no nível alto após o teste normal, sem simular ensaio', () => {
+  const { dir, copia } = copiaReal()
+  try {
+    const { registrar } = require('./lir-rotas')
+    const rota = ler(dir, copia).rotas.find(r => r.destino === 'RG01' && r.status === 'OK')
+    assert.equal(rota.nivelAlto.aplicavel, false)
+    const dados = { ...rota, pasta: 'ensaio', resultado: 'Concluída', resultadoNivelAlto: 'Não aplicável' }
+    const opcoes = { rotaInicial: { ...rota, tipoExecucao: 'reteste' }, permitirNivelAlto: true }
+    assert.throws(() => registrar(dir, { ...dados, nivelAltoExecutado: true }, copia, opcoes), /não autorizado/)
+    const resultado = registrar(dir, dados, copia, opcoes)
+    assert.equal(resultado.find(r => r.codigo === rota.codigo).status, 'OK')
+    assert.equal(resultado.find(r => r.codigo === rota.codigo).nivelAlto.status, '---')
+    assert.ok(resultado.gravacaoLir.celulas.includes('K' + rota.linha))
+  } finally { fs.rmSync(dir, { recursive: true, force: true }) }
+})
+
+test('reconciliação de RG01 altera somente Nível Alto e é idempotente', () => {
+  const { dir, copia } = copiaReal()
+  try {
+    const { reconciliarNivelNaoAplicavel } = require('./lir-rotas')
+    const antes = ler(dir, copia).rotas
+    const alvo = antes.filter(r => r.destino === 'RG01')
+    assert.equal(alvo.length, 6)
+    const r = reconciliarNivelNaoAplicavel(dir, copia, { destino: 'RG01' })
+    assert.deepEqual(r.rotas, alvo.map(rota => rota.codigo))
+    assert.deepEqual(r.gravacao.celulas, alvo.map(rota => 'K' + rota.linha))
+    const depois = ler(dir, copia).rotas
+    assert.deepEqual(depois, antes.map(rota => r.rotas.includes(rota.codigo) ? {
+      ...rota, nivelAlto: { ...rota.nivelAlto, status: '---' },
+    } : rota))
+    assert.deepEqual(reconciliarNivelNaoAplicavel(dir, copia, { destino: 'RG01' }), { rotas: [], gravacao: null })
+  } finally { fs.rmSync(dir, { recursive: true, force: true }) }
+})
+
+test('Nível Alto explicitamente --- exclui o ensaio mesmo com IO e ID cadastrados', () => {
+  const { dir, copia } = copiaReal()
+  try {
+    const { marcarNivelAltoNaoAplicavel } = require('../../comum/gravar-lir')
+    const leitura = ler(dir, copia)
+    const rota = leitura.rotas.find(r => r.codigo === '91')
+    marcarNivelAltoNaoAplicavel({ arquivo: copia, hash: leitura.hash, coluna: 'K', linhas: [rota.linha] })
+    const atual = ler(dir, copia).rotas.find(r => r.codigo === '91')
+    assert.equal(atual.nivelAlto.aplicavel, false)
+    assert.equal(atual.nivelAlto.io, rota.nivelAlto.io)
+    assert.equal(atual.status, rota.status)
+  } finally { fs.rmSync(dir, { recursive: true, force: true }) }
+})

@@ -3,13 +3,14 @@ const assert = require('node:assert/strict')
 const { JSDOM } = require('jsdom')
 const { detectarRecusaNivelAlto, confirmarLocalVazio, tratarRecusaPartida } = require('./recusa-partida')
 const visivel = el => !el.closest('[hidden]')
-function fixture({ mensagem = 'Não foi possível iniciar a transferência. O destino RG11 está em nível alto.', ativo = false } = {}) {
+const recusa = destino => `Não foi possível iniciar a transferência. O destino ${destino} está em nível alto.`
+function fixture({ destino = 'RG11', mensagem = recusa(destino), ativo = false } = {}) {
   const dom = new JSDOM(`<body><div id="aviso"><h3>Erro</h3><div id="mensagem"></div><button>OK</button></div><p>Não há nenhuma transferência em uso</p></body>`)
   const doc = dom.window.document
   doc.querySelector('#mensagem').textContent = mensagem
   if (ativo) doc.body.insertAdjacentHTML('beforeend', '<div class="row"><div><span>Nome</span><div>Outra transferência</div></div><div class="card-situations">Iniciado</div><button>Parar</button></div>')
   const eventos = []
-  const execucao = { pasta: 'lote', atual: { inicioRota: Date.now(), rota: { codigo: '169', destino: 'RG11' }, detalhes: '' }, anterior: { local: 'Armazenagem' }, restauracaoFalhou: false }
+  const execucao = { pasta: 'lote', atual: { inicioRota: Date.now(), rota: { codigo: '169', destino }, detalhes: '' }, anterior: { local: 'Armazenagem' }, restauracaoFalhou: false }
   // Executa a função usada pelo Cypress com DOM real e adaptador de comandos local.
   // Não equivale a executar o navegador Cypress/MES no Windows.
   const cy = {
@@ -80,3 +81,17 @@ test('recusa RG11 com as duas frases em linhas separadas é registrada e libera 
     assert.match(f.execucao.atual.detalhes, /transferência\. O destino RG11/)
   } finally { f.dom.window.close() }
 })
+
+for (const destino of ['RG08', 'RG01', 'MG09', 'TQ-ME19']) {
+  test('reconhece recusa no destino da rota ' + destino + ' com aviso em duas linhas', async () => {
+    const f = fixture({ destino })
+    try {
+      f.doc.querySelector('#mensagem').innerHTML = recusa(destino).replace('. O destino', '.<br>O destino')
+      assert.equal(detectarRecusaNivelAlto(f.doc, '', visivel), null)
+      assert.equal(detectarRecusaNivelAlto(f.doc, 'RG11', visivel), null)
+      assert.equal(await f.executar(false), true)
+      assert.deepEqual(f.eventos, ['ocultar', 'captura', 'OK'])
+      assert.ok(f.execucao.atual.detalhes.includes('destino ' + destino))
+    } finally { f.dom.window.close() }
+  })
+}

@@ -7,9 +7,11 @@ const textoAviso = el => el.textContent.replace(/\.(?=O destino\b)/i, '. ').repl
 
 // Não confundir uma recusa de partida com o nível alto provocado pelo ensaio.
 function detectarRecusaNivelAlto(documento, destino, visivel) {
-  const esperado = normalizar(`Não foi possível iniciar a transferência. O destino ${destino} está em nível alto.`)
+  const destinoEsperado = normalizar(destino)
+  if (!destinoEsperado) return null
+  const padrao = /^nao foi possivel iniciar a transferencia\. o destino (.+) esta em nivel alto\.$/
   const encontrados = [...documento.body.querySelectorAll('*')].filter(el =>
-    !el.closest('#integracao-visualizacao-s7') && visivel(el) && normalizar(textoAviso(el)) === esperado)
+    !el.closest('#integracao-visualizacao-s7') && visivel(el) && padrao.exec(normalizar(textoAviso(el)))?.[1] === destinoEsperado)
   const folhas = encontrados.filter(el => !encontrados.some(outro => outro !== el && el.contains(outro)))
   if (!folhas.length) return null
   if (folhas.length !== 1) throw new Error('Mais de um aviso de recusa por nível alto; intervenção necessária.')

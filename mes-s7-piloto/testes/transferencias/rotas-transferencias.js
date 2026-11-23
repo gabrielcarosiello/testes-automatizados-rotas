@@ -514,7 +514,8 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
         resultado: falhou || execucao.restauracaoFalhou ? 'Falhou' : 'Concluída', etapa: atual.etapa,
         resultadoNormal: atual.nivelAltoExecutado ? (atual.normalConfirmado ? 'Concluída' : 'Falhou') : (falhou || execucao.restauracaoFalhou ? 'Falhou' : 'Concluída'),
         nivelAltoExecutado: atual.nivelAltoExecutado === true,
-        resultadoNivelAlto: atual.nivelAltoExecutado ? (atual.nivelAlto?.ok && atual.restauracaoLSH?.ok ? 'Concluída' : 'Falhou') : null,
+        resultadoNivelAlto: atual.nivelAltoExecutado ? (atual.nivelAlto?.ok && atual.restauracaoLSH?.ok ? 'Concluída' : 'Falhou') :
+          (atual.rota.nivelAlto?.aplicavel === false ? 'Não aplicável' : null),
         tipoExecucao: atual.validacaoLir?.tipoExecucao || atual.rota.tipoExecucao,
         statusInicial: atual.validacaoLir?.statusInicial || atual.rota.statusInicial,
         detalhes: [atual.detalhes, erro].filter(Boolean).join(' | '),
