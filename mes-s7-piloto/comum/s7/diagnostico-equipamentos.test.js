@@ -41,10 +41,12 @@ test('consulta Monitor somente com endereços de leitura e registra valores e c�
     const body = JSON.parse(options.body)
     assert.equal(body.host, cpu.host)
     assert.ok(body.tags.every(t => !('writable' in t)))
-    return { host: cpu.host, tags: body.tags.map((t, i) => ({ ...t, good: true, value: [true, 7, false, false][i] })) }
+    return { host: cpu.host, tags: body.tags.map((t, i) => ({ ...t, good: true, value: [true, 7, true, true][i] })) }
   } })
   assert.equal(r.completo, true)
-  assert.match(r.detalhes, /ME06.*Emergencia=true.*Estado=7.*Manutencao=false.*Suspenso=false/)
+  assert.match(r.detalhes, /ME06.*Emergencia=true.*Estado=7.*Manutencao=true.*Suspenso=true/)
+  assert.match(r.detalhes, /Equipamento em manutenção \(DB1403,X2\.7\)/)
+  assert.match(r.detalhes, /Equipamento suspenso \(DB1403,X3\.0\)/)
 })
 
 test('identifica a emergência pelo AlarmeEmergencia do DB validado no catálogo', async () => {

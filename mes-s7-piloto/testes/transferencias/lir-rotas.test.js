@@ -76,6 +76,30 @@ test('gravação real Node atualiza J/M/N e preserva ID, nível alto, fórmulas 
   } finally { fs.rmSync(dir, { recursive: true, force: true }) }
 })
 
+test('Iniciar desabilitado grava equipamento e status do diagnóstico na coluna Falha Identificada', async () => {
+  const { diagnosticarInicioDesabilitado } = require('../../comum/impedimento-transferencia')
+  const { registrar } = require('./lir-rotas')
+  const { dir, copia } = copiaReal()
+  try {
+    const rota = ler(dir, copia).rotas.find(r => r.codigo === '74')
+    const atual = { rota, etapa: 'Verificar botão Iniciar' }
+    const eventos = []
+    await assert.rejects(diagnosticarInicioDesabilitado({
+      atual, pilotoS7: true, capturar: async sufixo => eventos.push(sufixo),
+      cy: { task: async (nome, codigo) => {
+        assert.equal(codigo, rota.codigo)
+        eventos.push(nome)
+        return { completo: false, detalhes: 'ME32 (DB1402): Equipamento em emergência (DB1402,X7.2) | ME06 (DB1403): leitura indisponível' }
+      } },
+    }), /Botão Iniciar desabilitado/)
+    assert.deepEqual(eventos, ['iniciar-desabilitado', 'diagnosticarEquipamentosS7'])
+    registrar(dir, { ...rota, pasta: 'ensaio', resultado: 'Falhou', etapa: atual.etapa, detalhes: atual.detalhes }, copia)
+    const falha = XLSX.readFile(copia).Sheets[nomeAba]['N' + rota.linha].v
+    assert.match(falha, /Iniciar desabilitado.*ME32 .*Equipamento em emergência.*ME06 .*leitura indisponível/)
+    assert.equal(ler(dir, copia).rotas.find(r => r.codigo === '74').status, 'NOK')
+  } finally { fs.rmSync(dir, { recursive: true, force: true }) }
+})
+
 test('cópia real da rota NT é gravada em qualquer sistema sem PowerShell', () => {
   const { dir, copia } = copiaReal()
   try {

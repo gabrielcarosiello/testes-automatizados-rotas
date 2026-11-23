@@ -6,7 +6,7 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
   const { acompanharNivelAlto } = require('../../comum/nivel-alto-mes')
   const { limparTransferencia, aguardarEncerramento } = require('../../comum/limpar-transferencia')
   const { aguardarEstadoTransferencias } = require('../../comum/aguardar-transferencias')
-  const { identificarTransferenciaInterrompida, diagnosticarELimparInterrompida } = require('../../comum/impedimento-transferencia')
+  const { identificarTransferenciaInterrompida, diagnosticarELimparInterrompida, diagnosticarInicioDesabilitado } = require('../../comum/impedimento-transferencia')
   const { confirmarVazio } = require('../../comum/cartoes-mes')
   const { recuperarEncerramento } = require('../../comum/recuperar-encerramento')
   const { preencherBusca } = require('../../comum/preencher-busca')
@@ -227,10 +227,7 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
           if (Date.now() < prazo) return cy.wait(250, { log: false }).then(() => iniciar(rota, tentativa, prazo))
           const condicoes = $body.find('[role="alert"]:visible, .validation-message:visible, .alert:visible')
             .toArray().map(el => el.textContent.trim()).filter(Boolean).join(' | ').slice(0, 500)
-          const atual = execucao.atual
-          atual.detalhes = [atual.detalhes, `Iniciar desabilitado para ${rota.origem} → ${rota.destino}.`,
-            condicoes || 'O formulário não exibiu condição de bloqueio identificável.'].filter(Boolean).join(' | ')
-          return capturar('iniciar-desabilitado').then(() => { throw new Error('Botão Iniciar desabilitado no MES.') })
+          return diagnosticarInicioDesabilitado({ cy, atual: execucao.atual, pilotoS7, condicoes, capturar })
         }
         execucao.atual.inicioRota = Date.now()
         execucao.anterior = { local: rota.local, nome: rota.nome }

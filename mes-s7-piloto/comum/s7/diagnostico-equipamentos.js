@@ -83,9 +83,16 @@ async function lerDiagnosticoEquipamentos({ equipamentos, cpu, chamar }) {
     const campos = lidas.map(tag => tag.nome + '=' + valores.get(tag.id).value)
     if (!campos.length) campos.push('nenhum campo de estado confirmado')
     const nomesLidos = lidas.map(tag => normalizar(tag.nome.split('.').at(-1)))
-    const emergenciaAtiva = lidas.find((tag, i) =>
-      /^(?:[bxi])?(?:emergencia|alarmeemergencia|emergency)$/.test(nomesLidos[i]) && valores.get(tag.id).value === true)
-    if (emergenciaAtiva) campos.push('Equipamento em emergência (' + emergenciaAtiva.address + ')')
+    for (const [situacao, padrao] of [
+      ['Equipamento em emergência', /^(?:[bxi])?(?:emergencia|alarmeemergencia|emergency)$/],
+      ['Equipamento em manutenção', /^(?:[bxi])?(?:manutencao|maintenance)$/],
+      ['Equipamento suspenso', /^(?:[bxi])?(?:suspensao|suspenso|suspensa|suspended)$/],
+      ['Equipamento com falha', /^(?:[bxi])?(?:falha|fault)$/],
+      ['Equipamento bloqueado', /^(?:[bxi])?(?:bloqueado|bloqueio|blocked)$/],
+    ]) {
+      const ativo = lidas.find((tag, i) => padrao.test(nomesLidos[i]) && valores.get(tag.id).value === true)
+      if (ativo) campos.push(situacao + ' (' + ativo.address + ')')
+    }
     const naoVerificadas = [
       ['emergência', /emergencia|emergency/],
       ['manutenção', /manutencao|maintenance/],

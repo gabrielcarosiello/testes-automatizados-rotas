@@ -17,6 +17,23 @@ function identificarTransferenciaInterrompida(estado, rota) {
   return { id, cartao }
 }
 
+function registrarDiagnosticoS7(cy, atual) {
+  return cy.task('diagnosticarEquipamentosS7', atual.rota.codigo, { timeout: 100000 }).then(diagnostico => {
+    const complemento = 'DBs dos equipamentos no Monitor S7: ' + diagnostico.detalhes
+    atual.detalhes = [atual.detalhes, complemento].filter(Boolean).join(' | ')
+    return { completo: diagnostico.completo, complemento }
+  })
+}
+
+function diagnosticarInicioDesabilitado({ cy, atual, pilotoS7, condicoes, capturar }) {
+  const { origem, destino } = atual.rota
+  atual.detalhes = [atual.detalhes, `Iniciar desabilitado para ${origem} → ${destino}.`,
+    condicoes || 'O formulário não exibiu condição de bloqueio identificável.'].filter(Boolean).join(' | ')
+  return capturar('iniciar-desabilitado').then(() => {
+    if (pilotoS7) return registrarDiagnosticoS7(cy, atual)
+  }).then(() => { throw new Error('Botão Iniciar desabilitado no MES.') })
+}
+
 function diagnosticarELimparInterrompida({ cy, execucao, atual, identificada, visivel }) {
   const { rota } = atual
   const { cartao, id } = identificada
@@ -32,11 +49,9 @@ function diagnosticarELimparInterrompida({ cy, execucao, atual, identificada, vi
   atual.detalhes = [atual.detalhes, resumo, sinaisS7].filter(Boolean).join(' | ')
   if (execucao.restauracaoFalhou) throw new Error('Limpeza bloqueada por restauração pendente.')
 
-  return cy.task('diagnosticarEquipamentosS7', rota.codigo, { timeout: 100000 }).then(diagnostico => {
-    const complemento = 'DBs dos equipamentos no Monitor S7: ' + diagnostico.detalhes
-    atual.detalhes += ' | ' + complemento
+  return registrarDiagnosticoS7(cy, atual).then(({ completo, complemento }) => {
     return registrar((resumo + ' ' + complemento).slice(0, 300)).then(() => {
-      if (!diagnostico.completo) throw new Error('Diagnóstico dos DBs incompleto. Transferência mantida para conferência.')
+      if (!completo) throw new Error('Diagnóstico dos DBs incompleto. Transferência mantida para conferência.')
     })
   }).then(() => cy.document({ log: false })).then(documento => {
     const atualizada = identificarTransferenciaInterrompida(diagnosticarLocal(documento, visivel), rota)
@@ -49,4 +64,4 @@ function diagnosticarELimparInterrompida({ cy, execucao, atual, identificada, vi
   })
 }
 
-module.exports = { identificarTransferenciaInterrompida, diagnosticarELimparInterrompida }
+module.exports = { identificarTransferenciaInterrompida, diagnosticarELimparInterrompida, diagnosticarInicioDesabilitado }

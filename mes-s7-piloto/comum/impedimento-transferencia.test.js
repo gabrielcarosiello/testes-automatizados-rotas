@@ -3,7 +3,7 @@ const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const { JSDOM } = require('jsdom')
 const { diagnosticarLocal } = require('./cartoes-mes')
-const { identificarTransferenciaInterrompida, diagnosticarELimparInterrompida } = require('./impedimento-transferencia')
+const { identificarTransferenciaInterrompida, diagnosticarELimparInterrompida, diagnosticarInicioDesabilitado } = require('./impedimento-transferencia')
 
 const rota = { codigo: '704', nome: 'Transferência Remoagem Extrusão EX', local: 'Remoagem', origem: 'ME29', destino: 'ME07' }
 const visivel = el => !el.closest('[hidden]')
@@ -61,6 +61,15 @@ test('registra situação do MES e retorno S7, limpa o cartão interrompido e ma
     assert.match(f.atual.detalhes, /Limpeza confirmada/)
     assert.equal(f.execucao.anterior, null)
   } finally { f.fechar() }
+})
+
+test('Iniciar desabilitado sem S7 preserva a captura e o motivo do MES', async () => {
+  const atual = { rota }
+  await assert.rejects(diagnosticarInicioDesabilitado({
+    cy: { task: () => assert.fail('Consulta S7 no modo MES') }, atual, pilotoS7: false,
+    condicoes: 'Destino indisponível', capturar: async sufixo => assert.equal(sufixo, 'iniciar-desabilitado'),
+  }), /Botão Iniciar desabilitado/)
+  assert.match(atual.detalhes, /ME29 → ME07.*Destino indisponível/)
 })
 
 test('cartão trocado após o diagnóstico não recebe Limpar', async () => {

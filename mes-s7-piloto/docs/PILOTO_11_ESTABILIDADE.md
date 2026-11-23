@@ -108,3 +108,9 @@ A proteção de prazo no Node usa a mesma rotina de restauração da LSH, na ses
 A consulta de leitura em `dbo.Silo` usa o destino da rota e o nome `nom_silo`. O piloto exige um registro único para diagnosticar o DB11 e confere se `cod_silo`, `num_silo_clp` e o endereço base cadastrado em `des_string_conexao` são coerentes com o passo de 40 bytes. O bit `Niveis.Alto` fica no byte seguinte à base, bit 4. Os prints do TIA confirmaram `DB11,X41.4` para RG08 e `DB11,X81.4` para RG11.
 
 O piloto lê esse ponto na mesma amostra dos bits digitais e salva o valor no histórico. Se Alm ou Aviso ficar ativo e o MES não confirmar nível alto no prazo, DB11 em 0 direciona a investigação para a propagação na FC. DB11 em 1 direciona para a leitura e atualização no MES. Mapeamento ausente, inválido ou sem espaço no Monitor é informado como leitura do DB11 indisponível. O DB11 é usado para diagnóstico. Os critérios de aprovação e o fluxo de escrita e restauração da LSH permanecem os mesmos.
+
+## Diagnóstico quando Iniciar está desabilitado
+
+No lote das 15h51 de 23/11/2026, as rotas 704 e 703 foram selecionadas no MES e o botão Iniciar permaneceu desabilitado sem aviso visível. A espera por retornos e o painel S7 só eram alcançados depois do clique, por isso essas rotas foram gravadas sem estados dos DBs.
+
+Após confirmar o botão desabilitado, o piloto preserva a captura e consulta os DBs dos equipamentos vinculados à rota no modo MES + S7. Os estados confirmados, os campos lidos e as leituras indisponíveis são gravados em **Falha Identificada** na LIR e em **Detalhes** no histórico Rev 00. O resultado continua NOK. O diagnóstico faz somente leitura.
