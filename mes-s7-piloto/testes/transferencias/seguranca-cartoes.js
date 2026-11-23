@@ -1,4 +1,11 @@
 'use strict'
+class TransferenciaAtivaNaPreparacao extends Error {
+  constructor(nome) {
+    super('Já existe uma transferência ativa no local. Preparação não enviará Parar.')
+    this.nomeCartao = nome
+  }
+}
+
 function avaliarCartoes({ vazio, cartoes, nomePermitido = null, exigeAtiva = false, nivelAltoConfirmado = false, somenteLimpar = false }) {
   if (cartoes.length > 1) throw new Error('Mais de uma transferência no local; intervenção necessária')
   if (cartoes.length === 0) {
@@ -14,7 +21,7 @@ function avaliarCartoes({ vazio, cartoes, nomePermitido = null, exigeAtiva = fal
   if (nivelAltoConfirmado && nomePermitido && c.quantidadeLimpar === 1 && c.quantidadeBotoes === 0) return 'limpar'
   if (!exigeAtiva && !c.quantidadeSituacoes && c.quantidadeBotoes === 0 && c.quantidadeLimpar === 1) return 'limpar'
   if (c.quantidadeBotoes !== 1 || c.quantidadeSituacoes !== 1) throw new Error(`Cartão ou botão Parar não identificado de forma única: ${c.nome}; Parar=${c.quantidadeBotoes}, Limpar=${c.quantidadeLimpar}, situações reais=${c.quantidadeSituacoes}.`)
-  if (somenteLimpar) throw new Error('Já existe uma transferência ativa no local. Preparação não enviará Parar.')
+  if (somenteLimpar) throw new TransferenciaAtivaNaPreparacao(c.nome)
   return 'parar'
 }
-module.exports = { avaliarCartoes }
+module.exports = { avaliarCartoes, TransferenciaAtivaNaPreparacao }

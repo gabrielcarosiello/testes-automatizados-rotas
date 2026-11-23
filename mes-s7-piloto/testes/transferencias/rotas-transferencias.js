@@ -9,7 +9,7 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
   const { recuperarEncerramento } = require('../../comum/recuperar-encerramento')
   const { preencherBusca } = require('../../comum/preencher-busca')
   const { avaliarResultadoBusca } = require('./resultado-busca')
-  const { avaliarCartoes } = require('./seguranca-cartoes')
+  const { avaliarCartoes, TransferenciaAtivaNaPreparacao } = require('./seguranca-cartoes')
   const { tratarRecusaPartida } = require('./recusa-partida')
   const opcoesExecucao = Cypress.expose('execucao') || {}
   const pilotoS7 = Cypress.expose('pilotoS7') === true
@@ -21,6 +21,7 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
     rota: '[style="width: 31rem"] > .custom-dropdown > .form-select'
   }
   const execucao = { pronta: false, login: false, pasta: '', atual: null, anterior: null, inicioExecucao: null, inicioLogin: null, restauracaoFalhou: false, loginSeg: '', cardSeg: '', campoSeg: '' }
+  const bloqueiosDePreparacao = new Map()
   const busca = 'input[placeholder="Buscar..."]:visible:enabled'
 
   function etapa(nome) { return cy.then(() => {
@@ -106,12 +107,24 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
   function verificarEParar(nomePermitido = null, exigeAtiva = false, nivelAltoConfirmado = false, somenteLimpar = false) {
     return aguardarEstadoTransferencias({ cy, visivel: Cypress.dom.isVisible }).then(({ vazio, cartoes }) => {
       if (cartoes.some(c => c.ambiguo)) throw new Error('Cartão de transferência com identificação ambígua.')
-      const decisao = avaliarCartoes({
-        vazio,
-        cartoes: cartoes.map(c => ({ nome: c.nome, quantidadeBotoes: c.botoes.length,
-          quantidadeLimpar: c.limpar.length, quantidadeSituacoes: c.situacoes })),
-        nomePermitido, exigeAtiva, nivelAltoConfirmado, somenteLimpar
-      })
+      let decisao
+      try {
+        decisao = avaliarCartoes({
+          vazio,
+          cartoes: cartoes.map(c => ({ nome: c.nome, quantidadeBotoes: c.botoes.length,
+            quantidadeLimpar: c.limpar.length, quantidadeSituacoes: c.situacoes })),
+          nomePermitido, exigeAtiva, nivelAltoConfirmado, somenteLimpar
+        })
+      } catch (erro) {
+        if (erro instanceof TransferenciaAtivaNaPreparacao) {
+          const { local, codigo } = execucao.atual.rota
+          const situacao = cartoes[0].textosSituacoes.join(', ')
+          const diagnostico = `Local ${local}; cartão ${erro.nomeCartao}; situação ${situacao}; primeira rota bloqueada ${codigo}.`
+          bloqueiosDePreparacao.set(local, diagnostico)
+          erro.message += ' ' + diagnostico
+        }
+        throw erro
+      }
       if (decisao === 'vazio') return
       if (pilotoS7 && !nomePermitido) {
         throw new Error('Já existe uma transferência no local. Libere o local antes do piloto.')
@@ -123,13 +136,19 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
           execucao.atual.detalhes = [execucao.atual.detalhes, 'Limpeza confirmada: ' + cartao.nome].filter(Boolean).join(' | ')
         })
       }
-      execucao.atual.detalhes = [execucao.atual.detalhes, 'Tentativa de parar transferência: ' + cartao.nome].filter(Boolean).join(' | ')
-      return cy.elementoMes('button', 'Parar', { cartao: cartao.nome }).click({ timeout: 30000 }).then(() =>
-        cy.elementoMes('button', 'Sim').click({ timeout: 30000 })
-      ).then(() => cy.contains('Não há nenhuma transferência em uso', { timeout: 30000 }).should('be.visible')).then(() => {
+      return solicitarParada(cartao).then(() => cy.contains('Não há nenhuma transferência em uso', { timeout: 30000 }).should('be.visible')).then(() => {
         execucao.atual.detalhes = [execucao.atual.detalhes, 'Parada confirmada: ' + cartao.nome].filter(Boolean).join(' | ')
       })
     })
+  }
+  function solicitarParada(cartao, botaoConfirmado = null) {
+    execucao.atual.detalhes = [execucao.atual.detalhes, 'Tentativa de parar transferência: ' + cartao.nome].filter(Boolean).join(' | ')
+    const parar = botaoConfirmado
+      ? cy.wrap(botaoConfirmado, { log: false })
+      : cy.elementoMes('button', 'Parar', { cartao: cartao.nome })
+    return parar.click({ timeout: 30000 }).then(() =>
+      cy.elementoMes('button', 'Sim').click({ timeout: 30000 })
+    )
   }
   function transferencia(rota) {
     etapa('Selecionar transferência')
@@ -202,7 +221,10 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
         const nomes = $body.find('.row > :nth-child(1) > :nth-child(2):visible').filter((_, el) => el.textContent.trim() === rota.nome)
         if (nomes.length > 1) throw new Error('Cartão da transferência ambíguo.')
         const situacoes = nomes.eq(0).closest('.row').find('.card-situations:visible').filter((_, el) => el.textContent.trim() === 'Iniciado')
-        if (nomes.length === 1 && situacoes.length === 1) return
+        if (nomes.length === 1 && situacoes.length === 1) {
+          execucao.atual.cartaoIniciado = nomes.eq(0).closest('.row')[0]
+          return
+        }
         if (Date.now() >= limite) throw new Error('Prazo para confirmar Iniciado no MES esgotado.')
         return cy.wait(500, { log: false }).then(acompanharMes)
       })
@@ -398,13 +420,21 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
           cy.log('REGISTRO PENDENTE: ' + resultado.aviso)
         }
         if (pilotoS7 && falhou && execucao.anterior && !atual.recusaPartida) {
-          // A ação pode ter sido aplicada antes da renderização falhar. Somente observar.
-          return recuperarEncerramento({ cy, execucao, atual, visivel: Cypress.dom.isVisible })
+          return recuperarEncerramento({
+            cy, execucao, atual, visivel: Cypress.dom.isVisible,
+            solicitarParada: cartao => solicitarParada(cartao, cartao.botoes[0]),
+          })
         }
       })
     })
     rotas.forEach((rota, indice) => {
-      it(`${indice + 1}/${rotas.length} | ${rota.codigo} | ${rota.local} | ${rota.nome} | ${rota.origem} → ${rota.destino} | Rev 00`, () => {
+      it(`${indice + 1}/${rotas.length} | ${rota.codigo} | ${rota.local} | ${rota.nome} | ${rota.origem} → ${rota.destino} | Rev 00`, function () {
+        const bloqueio = bloqueiosDePreparacao.get(rota.local)
+        if (bloqueio) {
+          Cypress.log({ name: 'Local bloqueado', message: bloqueio })
+          this.skip()
+          return
+        }
         execucao.atual = { rota, etapa: 'Preparação', detalhes: '', captura: '', inicioTeste: Date.now() }
         testar(rota)
       })

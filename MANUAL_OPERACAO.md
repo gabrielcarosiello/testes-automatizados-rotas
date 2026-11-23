@@ -239,8 +239,8 @@ Alternativa: npm.cmd run recuperar:planilha -- "C:\caminho\arquivo.xlsx". O orig
 
 Uma escrita LSH cria resultados/controle/escrita-pendente.json antes do comando e só o remove após restauração confirmada. Em interrupção ou resposta perdida, a próxima execução bloqueia. Fechar/reabrir o Cypress não apaga a pendência. Não é necessariamente uma falha de conexão.
 
-1. Pare o lote. Abra o JSON no projeto indicado pelo erro atual.
-2. Confira host, endereço e original, além do estado das transferências.
+1. Pare o lote e impeça novas execuções enquanto confere os registros. Preserve o JSON, os temporários correspondentes e as evidências S7/MES com seus horários. Uma falha de `rename` na fase confirmada ocorre após a releitura da escrita pelo Monitor.
+2. Confira host, endereço e valor original no registro. Identifique a transferência exata no MES. Se ela ainda estiver em andamento, peça ao operador autorizado que coordene a parada e a limpeza do cartão conforme o procedimento da área e confirme que a rota ficou livre.
 3. Na mesma CPU de simulação, restaure o valor original se necessário e confirme leitura válida/estável. Não use sempre 0: NF pode exigir 1.
 4. Só após conferência, renomeie o arquivo para escrita-pendente-conferida-DATA.json. Preserve o registro.
 5. Recarregue o projeto/execute novamente. Se reaparecer, investigar a nova pendência.

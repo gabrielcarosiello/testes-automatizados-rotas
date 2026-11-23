@@ -39,7 +39,7 @@ function resolverAlarme(rota, arrays, cfg) {
   const alternativas = offsets.filter(offset => `DB${tag.dbNumber},X${offset}` !== address).map((offset, i) => ({ id: `lsh_alarme_alternativa_${i}`, label: `${io} / ${offset === '1.1' ? 'Aviso' : offset === '1.0' ? 'Alm' : offset}`, address: `DB${tag.dbNumber},X${offset}`, writable: false }))
   return { alternativas, id: 'lsh_alarme', label: `${io} / Alm`, address, bloco: tag.block, campo: tag.name, origem, writable: false }
 }
-function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registrarEscrita = () => {} }) {
+function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registrarEscrita = () => {}, exigirPropriedade = () => {} }) {
   function context() {
     const c = getContext()
     if (!cfg.habilitado || !c?.alarme || !c?.lsh) throw new Error('Ensaio de nível alto não está preparado para esta rota.')
@@ -63,14 +63,33 @@ function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registra
       if (c.nivel) throw new Error('O acionamento de nível alto já foi solicitado nesta rota; não será repetido.')
       const { data, points } = await sample(c)
       if (points[0].value !== c.lsh.valorInicial || points.slice(1).some(p => p.value !== false)) throw new Error('A LSH ou o alarme mudou desde a preparação. Entrada não foi acionada.')
+      if (getContext() !== c) throw new Error('A rota mudou durante a preparação do acionamento.')
       if (c.nivel) throw new Error('Já existe um acionamento de nível alto em andamento.')
       // Mark cleanup as required BEFORE sending: a lost response can hide a successful write.
-      c.nivel = { id: randomUUID(), valorSolicitado: contato.valorNivelAlto, inicio: Date.now(), baseline: data.sequence, limite: Date.now() + cfg.prazoMs, restauracaoPendente: true, restauracaoTentada: false, historico: [], aprovado: false }
-      registrarEscrita('solicitada', c)
-      const result = await chamar('/api/escrita', { body: JSON.stringify({ id: c.lsh.id, connection: c.connection, expected: points[0].value, value: contato.valorNivelAlto }) })
-      c.nivel.escrita = result
-      if (!result.acknowledged || !result.verified || result.observed !== contato.valorNivelAlto) throw new Error('A escrita da LSH não foi confirmada por releitura. Não será repetida automaticamente.')
-      registrarEscrita('confirmada', c)
+      c.nivel = { id: randomUUID(), valorSolicitado: contato.valorNivelAlto, inicio: Date.now(), baseline: data.sequence, limite: Date.now() + cfg.prazoMs, restauracaoPendente: false, restauracaoTentada: false, historico: [], aprovado: false }
+      try {
+        registrarEscrita('solicitada', c)
+      } catch (erro) {
+        c.nivel.erroPersistencia = erro.message
+        throw erro
+      }
+      // Uma resposta perdida pode ocultar uma escrita efetiva.
+      c.nivel.restauracaoPendente = true
+      c.nivel.acionamentoEmAndamento = true
+      try {
+        const result = await chamar('/api/escrita', { body: JSON.stringify({ id: c.lsh.id, connection: c.connection, expected: points[0].value, value: contato.valorNivelAlto }) })
+        c.nivel.escrita = result
+        if (!result.acknowledged || !result.verified || result.observed !== contato.valorNivelAlto) throw new Error('A escrita da LSH não foi confirmada por releitura. Não será repetida automaticamente.')
+        try {
+          registrarEscrita('confirmada', c)
+        } catch (erro) {
+          c.nivel.erroPersistencia = erro.message
+          throw erro
+        }
+      } finally {
+        c.nivel.acionamentoEmAndamento = false
+        c.nivel.acionamentoEncerradoEm = Date.now()
+      }
       return { valor: contato.valorNivelAlto, statusMes: cfg.statusMes, prazoMs: cfg.prazoMs }
     },
     // Fase 2: observar entrada e Alm em amostra válida; não simular retenção.
@@ -101,20 +120,43 @@ function criarControleNivel({ getContext, chamar, cfg, contato, pollMs, registra
     async restaurarNivelAltoS7() {
       const c = getContext()
       if (!c?.nivel?.restauracaoPendente) return { ok: true, necessario: false }
+      if (c.nivel.acionamentoEmAndamento || c.nivel.restauracaoEmAndamento) {
+        return { ok: false, necessario: true, detalhe: 'Há um acionamento ou uma restauração em andamento.' }
+      }
+      c.nivel.restauracaoEmAndamento = true
       try {
+        exigirPropriedade(c)
         const data = await chamar('/api/tags')
         const read = data.tags?.find(t => t.id === c.lsh.id && t.address === c.lsh.address)
-        if (data.connection !== c.connection || data.state !== 'ok' || !data.connected || !read?.good || typeof read.value !== 'boolean' || !Number.isFinite(Date.parse(data.receivedAt)) || Math.abs(Date.now() - Date.parse(data.receivedAt)) > Math.max(3000, 3 * pollMs)) throw new Error('Sessão ou leitura da entrada indisponível para restaurar.')
+        const lidaEm = Date.parse(data.receivedAt)
+        const escrita = c.nivel.escrita
+        const confirmada = escrita?.acknowledged && escrita.verified && escrita.observed === c.nivel.valorSolicitado
+        if (data.connection !== c.connection || data.mode !== 's7' || data.state !== 'ok' ||
+            !data.connected || !read?.good || typeof read.value !== 'boolean' ||
+            !Number.isInteger(data.sequence) || data.sequence <= c.nivel.baseline ||
+            (confirmada && data.sequence < escrita.sequence) ||
+            (!confirmada && lidaEm < c.nivel.acionamentoEncerradoEm) ||
+            !Number.isFinite(lidaEm) || Math.abs(Date.now() - lidaEm) > Math.max(3000, 3 * pollMs)) {
+          throw new Error('Sessão ou leitura atualizada da entrada indisponível para restaurar.')
+        }
+        c.nivel.amostraRestauracao = { sequence: data.sequence, receivedAt: data.receivedAt, valor: read.value }
         if (read.value !== c.lsh.valorInicial) {
           if (c.nivel.restauracaoTentada) throw new Error('Restauração anterior não confirmada. Não será repetida sem intervenção.')
+          exigirPropriedade(c)
           c.nivel.restauracaoTentada = true
           const result = await chamar('/api/escrita', { body: JSON.stringify({ id: c.lsh.id, connection: c.connection, expected: read.value, value: c.lsh.valorInicial }) })
+          c.nivel.escritaRestauracao = result
           if (!result.verified || result.observed !== c.lsh.valorInicial) throw new Error('Restauração da LSH não confirmada por releitura.')
         }
         registrarEscrita('restaurada', c)
         c.nivel.restauracaoPendente = false; c.nivel.aprovado = c.nivel.reacaoConfirmada === true; c.nivel.restauradoEm = new Date().toISOString()
         return { ok: true, necessario: true, valor: c.lsh.valorInicial }
-      } catch (error) { c.nivel.erroRestauracao = error.message; return { ok: false, necessario: true, detalhe: error.message } }
+      } catch (error) {
+        c.nivel.erroRestauracao = error.message
+        return { ok: false, necessario: true, detalhe: error.message }
+      } finally {
+        c.nivel.restauracaoEmAndamento = false
+      }
     }
   }
   return controls
