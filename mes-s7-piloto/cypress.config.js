@@ -5,6 +5,7 @@ const { criarPiloto } = require('./comum/s7/piloto')
 const { configuracaoNivel } = require('./comum/s7/nivel-alto')
 const base = require('./cypress.base.config')
 const { lerExecucao } = require('./comum/execucao')
+const { lerSenhaMes } = require('./comum/credenciais-mes')
 
 module.exports = defineConfig({
   ...base,
@@ -22,12 +23,8 @@ module.exports = defineConfig({
     // Senha MES permanece no Node e é solicitada pelo teste com cy.env.
     setupNodeEvents(on, config) {
       const resultado = base.e2e.setupNodeEvents(on, config) || config
-      const caminhoCredenciais = path.join(config.projectRoot, 'credenciais.local.json')
-      if (fs.existsSync(caminhoCredenciais)) {
-        const credenciais = JSON.parse(fs.readFileSync(caminhoCredenciais, 'utf8').replace(/^\uFEFF/, ''))
-        if (typeof credenciais.senhaMES !== 'string' || !credenciais.senhaMES) throw new Error('Preencha senhaMES em credenciais.local.json')
-        resultado.env = { ...resultado.env, senhaMES: resultado.env?.senhaMES || credenciais.senhaMES }
-      }
+      const { senha, erro: erroSenhaMes } = lerSenhaMes(config.projectRoot, resultado.env?.senhaMES)
+      if (senha) resultado.env = { ...resultado.env, senhaMES: senha }
       if (!String(config.specPattern || '').includes('testes')) return resultado
       resultado.expose = resultado.expose || {}
       try {
@@ -58,7 +55,7 @@ module.exports = defineConfig({
           if (pilotoS7) console.log(`[S7] Monitor ${s7.monitor}. A leitura ocorre pela API enquanto a tela permanece no MES.`)
         }
         resultado.expose.catalogoRev00 = {
-          execucao,
+          execucao: { ...execucao, erroSenhaMes },
           pilotoS7,
           nivelAltoHabilitado: nivelAlto.habilitado,
           rearmarRecusaPlcsim: nivelAlto.rearmarRecusaPlcsim,

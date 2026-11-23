@@ -21,6 +21,7 @@ function configurar(s7, rotas = [{ codigo: '91', status: 'NT' }, { codigo: '73',
       if (id === 'path') return path
       if (id === 'cypress') return { defineConfig: objeto => objeto }
       if (id === './comum/execucao') return { lerExecucao: () => ({ planilha: null, numTestsKeptInMemory: 5 }) }
+      if (id === './comum/credenciais-mes') return { lerSenhaMes: () => ({ erro: 'Senha MES ausente.' }) }
       if (id === './comum/s7/nivel-alto') return require('./s7/nivel-alto')
       if (id === './comum/s7/piloto') return { criarPiloto: () => ({ prepararS7() {}, confirmarS7() {} }) }
       if (id === './cypress.base.config') return { e2e: { setupNodeEvents: (_, config) => config } }
@@ -38,6 +39,7 @@ function configurar(s7, rotas = [{ codigo: '91', status: 'NT' }, { codigo: '73',
 
 test('S7 ativa por arquivo local, filtra 91 e registra tarefas sem depender de env', () => {
   const { dados, tarefas, mensagens } = configurar({ habilitado: true, codigoRota: 91, monitor: 'http://localhost:3000' })
+  assert.equal(dados.execucao.erroSenhaMes, 'Senha MES ausente.')
   assert.equal(dados.pilotoS7, true)
   assert.equal(dados.rotas.length, 1)
   assert.equal(dados.rotas[0].codigo, '91')

@@ -384,11 +384,13 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
 
         cy.get('.form-select', { timeout: 30000 }).should('be.visible').click()
         cy.get('[title=' + JSON.stringify(opcoesExecucao.usuarioMes || 'ADMIN') + ']', { timeout: 30000 }).should('have.length', 1).should('be.visible').click()
-        cy.env(['senhaMES']).then(({ senhaMES }) => {
-          if (!senhaMES) throw new Error('Senha ausente: configure credenciais.local.json')
+        cy.env(['senhaMES'], { log: false }).then(({ senhaMES }) => {
+          if (typeof senhaMES !== 'string' || !senhaMES.trim()) {
+            throw new Error(opcoesExecucao.erroSenhaMes || 'Senha MES ausente. Confira o credenciais.local.json do projeto aberto no Cypress.')
+          }
           cy.get('[name="loginModel.Password"]', { timeout: 30000 })
             .should('be.visible')
-            .type(senhaMES, { log: false })
+            .type(senhaMES, { log: false, parseSpecialCharSequences: false })
         })
         cy.get('.btn:visible', { timeout: 30000 }).should('have.length', 1)
         cy.get('.btn:visible', { timeout: 30000 }).click()

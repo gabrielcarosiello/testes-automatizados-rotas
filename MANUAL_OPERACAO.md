@@ -85,7 +85,7 @@ Edite mes-s7-piloto/execucao.local.json. Não copie comentários para dentro de 
 | numTestsKeptInMemory | Número de testes mantidos em memória no runner; exemplo 5 |
 | esperaBuscaMs / esperaVisualS7Ms / esperaMesSemS7Ms | Esperas adicionais de 0 a 10000 ms; manter 0 quando a sincronização por condição funcionar |
 
-A senha MES pode ser lida de credenciais.local.json, chave senhaMES, conforme o fluxo instalado. O arquivo de exemplo é apenas referência; não coloque senhas no manual ou em commits. Preserve os mecanismos de credencial existentes. Campos desconhecidos em execucao.local.json são recusados.
+O Cypress lê a chave senhaMES de credenciais.local.json na pasta mes-s7-piloto aberta no runner. Feche e reabra o runner depois de corrigir o arquivo. Se a senha MES já vier pela configuração do Cypress, ela tem prioridade. O arquivo de exemplo é apenas referência; não coloque senhas no manual ou em commits. Preserve os mecanismos de credencial existentes. Campos desconhecidos em execucao.local.json são recusados.
 
 ### SQL Server
 
