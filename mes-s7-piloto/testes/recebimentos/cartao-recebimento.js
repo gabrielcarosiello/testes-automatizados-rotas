@@ -4,10 +4,11 @@ function normalizarStatus(valor) {
   return String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase()
 }
 
-function lerCartao(painel, visivel) {
+function lerCartao(painel, visivel, { ordem, rota }) {
+  const contem = (texto, valor) => texto.split(/[^\p{L}\p{N}]+/u).includes(String(valor))
   const estados = [...painel.querySelectorAll('.card-situations')].filter(visivel)
   const cartoes = [...new Set(estados.map(el => el.closest('.row')).filter(cartao => cartao && painel.contains(cartao)))]
-    .filter(cartao => /\b9390\b/.test(cartao.textContent) && /\bMG01\b/.test(cartao.textContent))
+    .filter(cartao => contem(cartao.textContent, ordem) && contem(cartao.textContent, rota.destino))
   if (cartoes.length !== 1) return { cartoes, status: [], expandir: null }
   const [cartao] = cartoes
   const icones = [...cartao.querySelectorAll('span > .svgbtn-base > div')]
@@ -38,4 +39,17 @@ function botoesConfirmacao(documento, mensagem, visivel) {
   return [...new Set(dialogos.flatMap(dialogo => botoesComTexto(dialogo, 'Sim', visivel)))]
 }
 
-module.exports = { lerCartao, normalizarStatus, botoesComTexto, botoesConfirmacao }
+function painelRecebimentoLivre(painel, visivel) {
+  const ativos = [...painel.querySelectorAll('.card-situations')].some(visivel)
+  const mensagem = [...painel.querySelectorAll('*')].some(el =>
+    visivel(el) && normalizarStatus(el.textContent) === 'nao ha nenhum recebimento em uso')
+  return mensagem && !ativos
+}
+
+function estadoDeEncerramento(painel, visivel, recebimento) {
+  if (painelRecebimentoLivre(painel, visivel)) return 'livre'
+  const { status } = lerCartao(painel, visivel, recebimento)
+  return status.some(texto => normalizarStatus(texto) === 'parando') ? 'parando' : null
+}
+
+module.exports = { painelRecebimentoLivre, estadoDeEncerramento, lerCartao, normalizarStatus, botoesComTexto, botoesConfirmacao }

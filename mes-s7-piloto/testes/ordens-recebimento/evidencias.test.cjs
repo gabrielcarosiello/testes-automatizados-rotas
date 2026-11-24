@@ -9,12 +9,16 @@ test('grava etapa e falha da ordem e oculta a credencial', t => {
   const raiz = fs.mkdtempSync(path.join(os.tmpdir(), 'evidencia-ordem-'))
   t.after(() => fs.rmSync(raiz, { recursive: true }))
   const tarefas = tarefasEvidenciasOrdem(raiz, 'segredo-teste')
-  const pasta = tarefas.iniciarEvidenciaOrdem()
-  const dados = { pasta, etapa: 'Conferir número na listagem', numero: '9392' }
+  const item = { id: 'milho', codigoProduto: '34130CP|GR', pesoTotalNfKg: 1000, loteProduto: 'LTESTE' }
+  const pasta = tarefas.iniciarEvidenciaOrdem({ item })
+  const dados = { pasta, etapa: 'Conferir número na listagem', numero: '9392', item, confirmadaNaLista: false }
   tarefas.registrarEvidenciaOrdem(dados)
   tarefas.registrarEvidenciaOrdem({ ...dados, resultado: 'Falhou', erro: 'Ordem ausente: segredo-teste' })
   const eventos = fs.readFileSync(path.join(raiz, 'resultados', pasta, 'eventos.jsonl'), 'utf8').trim().split('\n').map(JSON.parse)
   assert.deepEqual(eventos.map(evento => evento.tipo), ['inicio', 'etapa', 'resultado'])
+  assert.deepEqual(eventos[0].dados.item, item)
+  assert.deepEqual(eventos[2].dados.item, item)
+  assert.equal(eventos[2].dados.confirmadaNaLista, false)
   assert.equal(eventos[2].dados.numero, '9392')
   assert.equal(eventos[2].dados.etapa, dados.etapa)
   assert.equal(eventos[2].dados.erro, 'Ordem ausente: [oculto]')

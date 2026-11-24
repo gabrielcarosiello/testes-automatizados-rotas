@@ -19,20 +19,24 @@ function mapearCampos(aba) {
   return colunas
 }
 
-function lerRotaRecebimento(raiz, caminho) {
+function lerRotaRecebimento(raiz, caminho, codigoSolicitado) {
   const { aba, valor } = abrirLir(raiz, caminho, abaRecebimento, mapearCampos)
   const fim = XLSX.utils.decode_range(aba['!ref']).e.r
   const linhas = []
   for (let r = 8; r <= fim; r++) {
+    if (codigoSolicitado != null) {
+      if (valor('ID Rota', r) === String(codigoSolicitado)) linhas.push(r)
+      continue
+    }
     if (valor('Origem', r) === 'RG01' && valor('Destino', r) === 'MG01' &&
         valor('Rota', r).replace(/\s+/g, '') === 'RG01->RG03->RG04->RG22->MG01') linhas.push(r)
   }
-  if (linhas.length !== 1) throw new Error('A rota RG01->RG03->RG04->RG22->MG01 precisa ter um cadastro único na aba de Recebimento.')
+  if (linhas.length !== 1) throw new Error('A rota ' + (codigoSolicitado ?? 'RG01->RG03->RG04->RG22->MG01') + ' precisa ter um cadastro único na aba de Recebimento.')
   const [r] = linhas
   const codigo = valor('ID Rota', r)
   const ordem = valor('Ordem de Recebimento', r)
-  if (!/^\d+$/.test(codigo) || Number(codigo) < 1 || Number(codigo) > 32767 || ordem !== '9390') {
-    throw new Error('Confira o ID da rota e a ordem 9390 na linha ' + (r + 1) + ' da aba de Recebimento.')
+  if (!/^\d+$/.test(codigo) || Number(codigo) < 1 || Number(codigo) > 32767 || (codigoSolicitado == null && ordem !== '9390')) {
+    throw new Error('Confira o ID da rota e o cadastro da ordem na linha ' + (r + 1) + ' da aba de Recebimento.')
   }
   const ioTexto = valor('IO Nível Alto', r)
   const digitalTexto = valor('ID Digital LSH', r)

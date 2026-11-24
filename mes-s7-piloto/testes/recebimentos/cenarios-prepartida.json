@@ -1,0 +1,12 @@
+[
+  {
+    "id": "milho-cg-moido",
+    "codigoRota": 14,
+    "modalidade": "Recebimento Grãos RG"
+  },
+  {
+    "id": "farelo-soja-cg-moido",
+    "codigoRota": 1,
+    "modalidade": "Recebimento Grãos RG"
+  }
+]

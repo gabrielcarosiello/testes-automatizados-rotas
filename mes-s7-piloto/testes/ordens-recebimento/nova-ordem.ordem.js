@@ -78,7 +78,8 @@ function dadosDaOrdem() {
   return { lote: gerarLote('P'), placa }
 }
 
-const itemDeTeste = { codigoProduto: '34130CP|GR', nomeProduto: 'Milho CG Moído', pesoTotalNfKg: 1000 }
+const { carregarCenarios } = require('./cenarios')
+const cenarios = carregarCenarios(require('./cenarios.json'))
 const linhas = 'tr:visible, [role="row"]:visible'
 const celulas = 'td, [role="gridcell"]'
 
@@ -112,7 +113,7 @@ function pesoEmKg(texto) {
   return Number(valor.includes(',') ? valor.replace(/\./g, '').replace(',', '.') : valor.replace(/\.(?=\d{3}(?:\.|$))/g, ''))
 }
 
-function cadastrarItem({ codigoProduto, nomeProduto, pesoTotalNfKg }) {
+function cadastrarItem({ codigoProduto, nomeProduto, pesoTotalNfKg, loteProduto }) {
   linhaDoItemEmEdicao().children(celulas).first()
     .find('.form-select:visible, [role="combobox"]:visible').first().should('be.visible').click()
   cy.get('input[placeholder^="Buscar"]:visible', { timeout })
@@ -124,7 +125,6 @@ function cadastrarItem({ codigoProduto, nomeProduto, pesoTotalNfKg }) {
 
   const colunaPeso = /^peso\s+total\s+(?:da\s+)?nf$/
   const colunaLote = /^lote\s+(?:do\s+)?fornecedor$/
-  const loteProduto = gerarLote('L')
   campoDoItem(colunaPeso, 'Peso Total NF').clear().type(String(pesoTotalNfKg)).blur()
   campoDoItem(colunaLote, 'Lote Fornecedor').clear().type(loteProduto).should('have.value', loteProduto).blur()
   linhaDoItemEmEdicao().contains('button, a, [role="button"]', /^\s*Salvar\s*$/).click()
@@ -199,8 +199,11 @@ afterEach(function () {
   })
 })
 
-it('Cria e confere uma ordem de recebimento de milho a granel', { viewportWidth: 1440, viewportHeight: 850 }, () => {
-  cy.task('iniciarEvidenciaOrdem').then(pasta => { evidencia = { pasta, etapa: 'Login', numero: null } })
+function criarOrdem(cenario) {
+  const item = { ...cenario, loteProduto: gerarLote('L') }
+  cy.task('iniciarEvidenciaOrdem', { item }).then(pasta => {
+    evidencia = { pasta, etapa: 'Login', numero: null, item, confirmadaNaLista: false }
+  })
   registrarEtapa('Login')
   acessarMes()
   registrarEtapa('Abrir formulário')
@@ -226,13 +229,19 @@ it('Cria e confere uma ordem de recebimento de milho a granel', { viewportWidth:
     const numero = String($campo.val()).trim()
     registrarEtapa('Cadastrar item', numero)
     cy.adicionarOrdem().click()
-    cadastrarItem(itemDeTeste)
+    cadastrarItem(item)
     registrarEtapa('Salvar cabeçalho')
     cy.elementoMes('button', 'Salvar').should('have.length', 1).and('be.enabled').click()
     registrarEtapa('Voltar à lista')
     voltarParaListaDeOrdens()
     registrarEtapa('Conferir número na listagem')
-    conferirOrdemNaLista(numero)
+    conferirOrdemNaLista(numero).then(() => { evidencia.confirmadaNaLista = true })
+    registrarEtapa('Ordem confirmada na listagem')
     cy.then(() => cy.screenshot(evidencia.pasta + '/ordem-' + numero + '-confirmada', { capture: 'viewport', overwrite: false }))
   })
-})
+}
+
+for (const cenario of cenarios) {
+  it('Cria e confere a ordem de ' + cenario.nomeProduto + ' (' + cenario.id + ')',
+    { viewportWidth: 1440, viewportHeight: 850 }, () => criarOrdem(cenario))
+}

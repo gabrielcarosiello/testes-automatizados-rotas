@@ -34,10 +34,10 @@ const rota = { codigo: 123, destino: 'MG01', rota: 'RG01 -> RG03 -> RG04 -> RG22
 test('Recebimento prepara sem rearme e usa o mesmo contexto para restaurar e registrar a evidência', async () => {
   const chamadas = []
   const tarefas = carregar([rota], chamadas)
-  const preparo = await tarefas.prepararRecebimentoS7()
+  const preparo = await tarefas.prepararRecebimentoS7({ ordem: '9407', codigo: 123 })
   assert.equal(preparo.nivelAlto, true)
   assert.equal(preparo.codigo, rota.codigo)
-  assert.match(preparo.pasta, /^Recebimento_9390_/)
+  assert.match(preparo.pasta, /^Recebimento_9407_/)
   await tarefas.confirmarEquipamentosRecebimentoS7({ inicio: 100 })
   await tarefas.acionarNivelAltoRecebimentoS7()
   assert.equal((await tarefas.restaurarNivelAltoRecebimentoS7()).ok, true)
@@ -48,10 +48,10 @@ test('Recebimento prepara sem rearme e usa o mesmo contexto para restaurar e reg
 
 test('Recebimento usa o modo MES configurado e dispensa LSH quando ela não se aplica', async () => {
   const chamadas = []
-  const mes = await carregar([], chamadas, false).prepararRecebimentoS7()
+  const mes = await carregar([], chamadas, false).prepararRecebimentoS7({ ordem: '9407', codigo: 123 })
   assert.equal(mes.equipamentos, false)
   assert.deepEqual(chamadas, [])
-  const s7 = await carregar([{ ...rota, nivelAlto: { aplicavel: false } }], chamadas).prepararRecebimentoS7()
+  const s7 = await carregar([{ ...rota, nivelAlto: { aplicavel: false } }], chamadas).prepararRecebimentoS7({ ordem: '9407', codigo: 123 })
   assert.equal(s7.equipamentos, true)
   assert.equal(s7.nivelAlto, false)
 })
@@ -59,7 +59,7 @@ test('Recebimento usa o modo MES configurado e dispensa LSH quando ela não se a
 test('Recebimento confirma equipamentos sem LSH quando a configuração da partida desabilita o ensaio', async () => {
   let rotaPreparada
   const tarefas = carregar([rota], [], true, { nivelAltoHabilitado: false }, valor => { rotaPreparada = valor })
-  const resultado = await tarefas.prepararRecebimentoS7()
+  const resultado = await tarefas.prepararRecebimentoS7({ ordem: '9407', codigo: 123 })
   assert.equal(resultado.equipamentos, true)
   assert.equal(resultado.nivelAlto, false)
   assert.equal(rotaPreparada.nivelAlto.aplicavel, false)

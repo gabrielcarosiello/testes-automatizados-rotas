@@ -2,6 +2,11 @@
 
 ## Piloto-12 — Recebimento Grãos RG (24/11/2026)
 
+- Milho e farelo passaram a rodar como testes independentes no mesmo spec. OR indisponível interrompe apenas o cenário antes de Iniciar.
+- Após confirmar a parada, o Recebimento aceita o painel vazio confirmado quando o cartão sai rapidamente de Parando e mantém a verificação da restauração.
+- O ciclo completo de Recebimento passou a usar a ordem gerada, a rota e o cartão do primeiro cenário de pré-partida.
+- Adicionada pré-partida por cenário com leitura das ordens confirmadas e das rotas da LIR, sem iniciar operações.
+- O cadastro de ordens passou a ler cenários de produtos e registrar o item e a confirmação na listagem no JSONL.
 - Documentados cinco cenários candidatos de Recebimento, os dados de referência para criar ordens e os pontos a parametrizar no spec.
 - A finalização por nível alto aciona Parar no cartão da ordem 9390 e confirma os dois diálogos de parada e finalização pelo texto.
 - O ensaio de nível alto aguarda Parando para restaurar a LSH e confirma o painel de Recebimento livre antes de encerrar.
