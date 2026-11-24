@@ -1,0 +1,21 @@
+const { test } = require('node:test')
+const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const os = require('node:os')
+const path = require('node:path')
+const { tarefasEvidenciasOrdem } = require('./evidencias')
+
+test('grava etapa e falha da ordem e oculta a credencial', t => {
+  const raiz = fs.mkdtempSync(path.join(os.tmpdir(), 'evidencia-ordem-'))
+  t.after(() => fs.rmSync(raiz, { recursive: true }))
+  const tarefas = tarefasEvidenciasOrdem(raiz, 'segredo-teste')
+  const pasta = tarefas.iniciarEvidenciaOrdem()
+  const dados = { pasta, etapa: 'Conferir número na listagem', numero: '9392' }
+  tarefas.registrarEvidenciaOrdem(dados)
+  tarefas.registrarEvidenciaOrdem({ ...dados, resultado: 'Falhou', erro: 'Ordem ausente: segredo-teste' })
+  const eventos = fs.readFileSync(path.join(raiz, 'resultados', pasta, 'eventos.jsonl'), 'utf8').trim().split('\n').map(JSON.parse)
+  assert.deepEqual(eventos.map(evento => evento.tipo), ['inicio', 'etapa', 'resultado'])
+  assert.equal(eventos[2].dados.numero, '9392')
+  assert.equal(eventos[2].dados.etapa, dados.etapa)
+  assert.equal(eventos[2].dados.erro, 'Ordem ausente: [oculto]')
+})

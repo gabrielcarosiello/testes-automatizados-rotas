@@ -1,7 +1,9 @@
 # Criação de ordens de recebimento
 
-No Cypress principal, abra E2E Testing → Specs e selecione nova-ordem.ordem.js. O primeiro ensaio acessa Movimentação → Ordem Recebimento → Adicionar, preenche lote e placa gerados para a simulação, libera a ordem, verifica Adicionar item e salva uma captura em resultados/ordens-recebimento.
+No Cypress principal, abra E2E Testing → Specs e selecione nova-ordem.ordem.js. Cada execução libera uma ordem na simulação com lote e placa aleatórios, cadastra Milho CG Moído pelo código 34130CP|GR e informa 1000 kg em Peso Total NF e um lote aleatório em Lote Fornecedor na linha do produto. Os demais campos usam os valores já exibidos pelo MES.
 
-Cada execução que concluir Liberar cria um novo cabeçalho de ordem. A próxima etapa é confirmar o número gerado e incluir um item de milho, produto 2, usando os valores de referência registrados no levantamento. Verifique a disponibilidade em Receber Granel e confirme o cabeçalho e o item via SQL. Depois de validar uma criação, amplie para cinco ordens e registre os números gerados para associá-los às rotas da LIR.
+O spec salva o item e o cabeçalho, volta para a listagem, verifica o número gerado na coluna Recebimento. O produto é conferido na grade de itens antes de voltar e grava a captura. A confirmação da disponibilidade em Receber Granel e a ampliação para cinco ordens ficam para a próxima etapa.
 
-O fluxo usa a URL e as credenciais locais já usadas pelo Piloto. O spec de cadastro não chama tarefas S7. A configuração dedicada continua disponível para abrir somente esse cadastro.
+O cadastro reutiliza o acesso local ao MES e roda na configuração principal ou na dedicada.
+
+Cada execução grava etapas e resultado em resultados/Ordem_Recebimento_*/eventos.jsonl. O registro informa o número assim que o MES o atribui. O spec solicita uma captura de sucesso ou falha no Cypress, mesmo quando a conferência da lista falha.

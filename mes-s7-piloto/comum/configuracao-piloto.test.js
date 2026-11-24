@@ -26,6 +26,7 @@ function configurar(s7, rotas = [{ codigo: '91', status: 'NT' }, { codigo: '73',
         return { urlMes: 'http://localhost/nexxus-mes', planilha: null, numTestsKeptInMemory: 5 }
       } }
       if (id === './comum/credenciais-mes') return { lerSenhaMes: () => ({ erro: 'Senha MES ausente.' }) }
+      if (id === './testes/ordens-recebimento/evidencias') return { tarefasEvidenciasOrdem: () => ({ iniciarEvidenciaOrdem() {}, registrarEvidenciaOrdem() {} }) }
       if (id === './testes/recebimentos/s7') return { tarefasRecebimento: () => ({}) }
       if (id === './comum/s7/nivel-alto') return require('./s7/nivel-alto')
       if (id === './comum/s7/piloto') return { criarPiloto: () => ({ prepararS7() {}, confirmarS7() {} }) }
@@ -63,7 +64,7 @@ test('modo MES explícito e seleção null para todas as pendentes', () => {
   const { dados, tarefas } = configurar({ habilitado: false, codigoRota: null })
   assert.equal(dados.pilotoS7, false)
   assert.equal(dados.rotas.length, 2)
-  assert.equal(tarefas.length, 0)
+  assert.deepEqual(tarefas, ['iniciarEvidenciaOrdem', 'registrarEvidenciaOrdem'])
   assert.equal(configurar(undefined, []).dados.erro, undefined)
 })
 
