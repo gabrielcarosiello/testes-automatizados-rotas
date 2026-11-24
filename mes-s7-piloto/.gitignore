@@ -1,0 +1,17 @@
+node_modules/
+resultados/
+planilhas/*.xlsx
+credenciais.local.json
+configuracao.local.json
+cypress.env.json
+.env
+.env.*
+*.tmp
+*.bak
+s7.local.json
+sql.local.json
+*.plf
+*.ap16
+
+execucao.local.json
+clp/

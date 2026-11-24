@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Monitor S7 Siemens</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="workspace">
+    <header class="topbar">
+      <div class="monitor-brand">
+        <strong>Monitor S7</strong>
+        <small>v{{version}}</small>
+      </div>
+      <div class="topbar-tools">
+        <label class="font-control" for="font-size">Fonte
+          <select id="font-size">
+            <option value="12">12 px</option>
+            <option value="13">13 px</option>
+            <option value="15" selected>15 px</option>
+            <option value="17">17 px</option>
+            <option value="19">19 px</option>
+          </select>
+        </label>
+        <p id="source">Aguardando dados</p>
+        <span id="state" class="status" role="status">Aguardando</span>
+      </div>
+    </header>
+    <main id="painel">
+      <div class="page-head">
+        <h1>Monitor de tags</h1>
+        <a class="button primary config-link" href="#configurar">Configurar conexão</a>
+      </div>
+      <section class="metrics" aria-label="Resumo de leitura">
+        <article class="metric">
+          <span>Tags monitoradas</span>
+          <strong id="tag-count">—</strong>
+          <small id="tag-validity">Aguardando dados</small>
+        </article>
+        <article class="metric accent">
+          <span>Qualidade da leitura</span>
+          <strong id="quality">—</strong>
+          <div class="quality-track" aria-hidden="true"><span id="quality-fill"></span></div>
+        </article>
+        <article class="metric">
+          <span>Última leitura</span>
+          <strong id="last-read">—</strong>
+          <small id="sample">Aguardando amostra</small>
+        </article>
+      </section>
+      <p id="diagnostic" class="notice" hidden></p>
+      <details id="configurar" class="panel">
+        <summary>Conexão com o CLP</summary>
+        <form id="connect">
+          <div class="fields">
+            <label>IP do CLP<input name="host" placeholder="IPv4 da CPU" required></label>
+            <label>Rack<input name="rack" type="number" value="0" min="0" max="7" required></label>
+            <label>Slot<input name="slot" type="number" value="1" min="0" max="31" required></label>
+            <label>Ciclo (ms)<input name="pollMs" type="number" value="200" min="100" max="10000" required></label>
+          </div>
+          <div class="actions">
+            <button class="button primary" type="submit">Conectar CPU</button>
+            <button class="button secondary" type="button" id="demo">Usar simulação</button>
+          </div>
+        </form>
+        <div class="import-panel">
+          <h3>Importar Projeto Tia Portal</h3>
+          <label for="tia-catalog">Catálogos salvos neste computador</label>
+          <div class="import-actions">
+            <select id="tia-catalog"><option value="">Nenhum catálogo salvo</option></select>
+            <button id="tia-load-catalog" class="button secondary" type="button">Abrir catálogo</button>
+            <button id="tia-remove-catalog" class="button secondary" type="button">Remover versão</button>
+          </div>
+          <small>A última versão é restaurada ao abrir o Monitor. Cada projeto permanece salvo até você removê-lo.</small>
+          <label for="tia-folder">Pasta principal do projeto</label>
+          <div class="import-actions">
+            <input id="tia-folder" type="file" webkitdirectory>
+            <button id="tia-open-folder" class="button secondary" type="button">Ler pasta</button>
+          </div>
+          <p id="tia-status" role="status"></p>
+          <form id="tia-select" hidden>
+            <label for="tia-query">Pesquisar no projeto</label>
+            <input id="tia-query" type="search" placeholder="Ex.: LSH MG14, DB3031 ou I34.6" autocomplete="off">
+            <div class="catalog-filters">
+            <label>Área<select id="tia-area"><option value="">Todas as áreas</option><option value="DB">DBs</option><option value="I">Entradas (I)</option><option value="Q">Saídas (Q)</option><option value="M">Memórias (M)</option></select></label>
+            <label>Filtrar por DB / grupo<select id="tia-block"></select></label>
+            <label>Filtrar por tipo<select id="tia-type-filter"></select></label>
+            </div>
+            <label>DB / variável<select id="tia-array"></select></label>
+            <div class="actions">
+              <button id="tia-clear-filters" type="button" class="button secondary">Limpar filtros</button>
+              <button id="tia-more" type="button" class="button secondary" hidden>Mostrar mais resultados</button>
+              <span id="tia-results" role="status"></span>
+            </div>
+            <p id="tia-type"></p>
+            <div class="actions" id="tia-navigation" hidden>
+              <button id="tia-enter" type="button" class="button secondary" hidden>Abrir estrutura</button>
+              <button id="tia-segment" type="button" class="button secondary" hidden>Mapear lista de equipamentos</button>
+              <button id="tia-up" type="button" class="button secondary" hidden>Voltar um nível</button>
+            </div>
+            <div id="tia-addressing" class="fields">
+              <label>Número do DB<input id="tia-db" type="number" min="1" max="65535" required></label>
+              <label>Offset inicial<input id="tia-offset" placeholder="Ex.: 0.0" required></label>
+              <label id="tia-first-label">Primeiro índice<input id="tia-first" type="number" required></label>
+              <label id="tia-last-label">Último índice<input id="tia-last" type="number" required></label>
+              <label id="tia-length-label" hidden>Comprimento declarado<input id="tia-length" type="number" min="1"></label>
+              <label id="tia-stride-label" hidden>Distância entre elementos (bytes)<input id="tia-stride" type="number" min="1"></label>
+            </div>
+
+            <div class="actions">
+              <button id="tia-all" class="button secondary" type="button">Selecionar array inteiro</button>
+              <button class="button primary" type="submit" id="tia-add">Adicionar ao mapeamento</button>
+            </div>
+          </form>
+        </div>
+        <details class="mapping-options">
+          <summary>Revisar seleção e endereços das tags</summary>
+          <div class="mapping-body">
+          <fieldset class="tag-builder">
+            <legend>Adicionar endereço de DB</legend>
+            <div class="fields builder-fields">
+              <label>Alias<input id="manual-alias" placeholder="Ex.: peso"></label>
+              <label>Nome<input id="manual-name" placeholder="Ex.: Peso"></label>
+              <label>DB<input id="manual-db" type="number" min="1" max="65535" placeholder="5"></label>
+              <label>Offset<input id="manual-offset" placeholder="0.0 ou 2"></label>
+              <label>Tipo<select id="manual-type"></select></label>
+            </div>
+            <button id="manual-add" type="button" class="button secondary">Adicionar tag</button>
+            <p id="manual-status" role="status"></p>
+            <label id="manual-length-label" hidden>Comprimento declarado<input id="manual-length" type="number" min="1" value="254" disabled></label>
+          </fieldset>
+          <label for="mapping">Endereços das tags</label>
+          <textarea id="mapping" name="tags" rows="3" spellcheck="false" aria-describedby="mapping-help"></textarea>
+          <small id="mapping-help">Uma tag por linha no formato <code>alias | nome | endereço S7</code>. Conecte a CPU e use Aplicar tags para atualizar o monitor.</small>
+          <div class="selection-head">
+            <h3>Tags da conexão</h3>
+            <button id="select-all" class="button secondary" type="button">Selecionar todas</button>
+            <button id="select-none" class="button secondary" type="button">Limpar seleção</button>
+          </div>
+          <p id="selection-count"></p>
+          <div id="selection-list"></div>
+          </div>
+        </details>
+        <div class="actions mapping-actions">
+          <button class="button primary" type="button" id="apply-tags">Aplicar tags</button>
+          <a class="button secondary" href="#monitor">Ver leituras</a>
+          <p id="form-error" role="alert"></p>
+        </div>
+      </details>
+      <section id="monitor" class="panel" aria-labelledby="tags-title">
+        <div class="panel-head">
+          <div>
+            <h2 id="tags-title">Tags em tempo real</h2>
+            <p id="visible-count">Aguardando tags</p>
+          </div>
+          <div class="view-switch" role="group" aria-label="Visualização das tags">
+            <button type="button" id="view-cards" aria-pressed="true">Cartões</button>
+            <button type="button" id="view-table" aria-pressed="false">Tabela</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <label for="filter">Buscar tag</label>
+          <input id="filter" type="search" placeholder="Nome, alias ou endereço">
+          <select id="monitor-area" aria-label="Filtrar área monitorada"><option value="">Todas as áreas</option><option value="DB">DB</option><option value="I">Entradas</option><option value="Q">Saídas</option><option value="M">Memórias</option></select>
+          <select id="monitor-quality" aria-label="Filtrar qualidade"><option value="">Qualquer qualidade</option><option value="good">Válidas</option><option value="bad">Inválidas</option></select>
+        </div>
+        <div id="tag-cards" class="tag-grid"></div>
+        <div id="tag-table" class="table-wrap" hidden>
+          <table>
+            <thead><tr><th>Tag</th><th>Endereço</th><th>Valor</th><th>Leitura</th></tr></thead>
+            <tbody id="tags"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="/panel.js"></script>
+  <script type="module" src="/tia-panel.js"></script>
+</body>
+</html>

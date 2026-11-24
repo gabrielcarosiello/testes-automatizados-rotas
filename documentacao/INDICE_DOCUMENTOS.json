@@ -1,0 +1,126 @@
+{
+  "revisao": "01",
+  "documentosOriginais": [
+    {
+      "caminhoAnterior": "LEIA_ANTES_ATUALIZAR_11_3.md",
+      "sha256": "ad95ac4dd8e94917094d40314d6d319d972c1d96c28bee7a3b1198ba937dd3d0"
+    },
+    {
+      "caminhoAnterior": "LEIA_ANTES_ATUALIZAR_11_4.md",
+      "sha256": "7710333d23a5a50cb8b41f3e39d3ef731562d69eb153fc9b090602985ce481c5"
+    },
+    {
+      "caminhoAnterior": "LEIA_ANTES_ATUALIZAR_11_1.md",
+      "sha256": "67108564530dd9e2e65233290e3ec746a3fb7c25390bf1aef34db05bb12d1db9"
+    },
+    {
+      "caminhoAnterior": "LEIA_ANTES_ATUALIZAR_11_2.md",
+      "sha256": "0806b98ebfefaab4f485cd403d552dd858c7228779dd9ae8a323ab0b64b41571"
+    },
+    {
+      "caminhoAnterior": "REVISAO_INTEGRACAO.md",
+      "sha256": "8e596f9ac5cd0a4956ed9099cd38ea28ab690386c837cd893f81a1695fe6628c"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/CHANGELOG.md",
+      "sha256": "1cc90db6224a9899a107f230cbd37dc90b8fe031305290f9f1e83ab5490af8aa"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/README.md",
+      "sha256": "b769839ab811c08a7ccac435978a1d7c638aa1588263fddf25d6318d895bd65a"
+    },
+    {
+      "caminhoAnterior": "monitor-s7/CHANGELOG.md",
+      "sha256": "359224529d438b1ad2a5c4f0e469d58d77ccb79ff0d53cdb1ba5841e7cc2d8cc"
+    },
+    {
+      "caminhoAnterior": "monitor-s7/VALIDACAO.md",
+      "sha256": "9f3a312b4d856f70f23fdaa80929ad957f1bfcce6f40c216d29c862e328ea305"
+    },
+    {
+      "caminhoAnterior": "monitor-s7/README.md",
+      "sha256": "2b583d81b0f8c56a8c42fe275e4919c2ed3974d03c7a5dd3f704fe415334aa32"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/NIVEL_ALTO_LIR04.md",
+      "sha256": "5451236de677959d6f83a22c6e987d922654ded0a5e4bf3c6d08b387057ccea5"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/CONTROLE_INTEGRACAO.md",
+      "sha256": "b3a5167460238a244d8b3749b144c567735d1e638016318c69753dc884cba85f"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/PILOTO_11_3_LIMPEZA_CARTAO.md",
+      "sha256": "ad95ac4dd8e94917094d40314d6d319d972c1d96c28bee7a3b1198ba937dd3d0"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/PILOTO_11_2_ESTADO_VAZIO.md",
+      "sha256": "0806b98ebfefaab4f485cd403d552dd858c7228779dd9ae8a323ab0b64b41571"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/PILOTO_11_4_INTEGRIDADE_LIR.md",
+      "sha256": "7710333d23a5a50cb8b41f3e39d3ef731562d69eb153fc9b090602985ce481c5"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/PILOTO_11_1_CARTAO_E_RECUPERACAO.md",
+      "sha256": "67108564530dd9e2e65233290e3ec746a3fb7c25390bf1aef34db05bb12d1db9"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/PILOTO_11_ESTABILIDADE.md",
+      "sha256": "b13b356c52f06300b968ebff0a3dafc65f7c62e84da72ebec3298003ce0212bd"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/RECURSOS_E_ARMAZENAMENTO.md",
+      "sha256": "3095b0fef9e830e58f7e814b6f20623bf36f776be17c33aebbd430376ac0a4b9"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/RELATORIO_REVISAO_E_EFICIENCIA.md",
+      "sha256": "6085dc836d445c12d2452167327ce5e92c2d4bce68243677b1e571ccb244afed"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/REGISTRO_ENSAIO.md",
+      "sha256": "54e99b2f8ef182d615000351e1bcaccb47a6bc089fa3ce348cae6f0ea084dc2b"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/historico/PILOTO_10_NIVEL_ALTO.md",
+      "sha256": "ff1b3577d6bd62f847f87e825812ba8add1d2de4450e3d8733f5151f8a3c40f0"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/historico/PILOTO_10_1_ALM_OU_AVISO.md",
+      "sha256": "edeeed56ef2d27813d6a036c8bbd92f8c0d06e83b73ebd1e6a10fb215766a7b8"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/historico/PILOTO_10_3_RECUSA_PARTIDA.md",
+      "sha256": "8a949f33007d3400e9e67dc163349a93cc49fb93725e0e5797329a6c82a63e9a"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/historico/README_ate_10_3.md",
+      "sha256": "82454a0e250cfb6c29118eabed7a32036b6c461133a8e40da65c0520a4a0fa74"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/historico/GUIA_OPERACAO_PROJETOS_Rev01.md",
+      "sha256": "3e62e0fc08a6277a52042104a394d0c9d9dd12429147fc16fda1ea4b81393fef"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/historico/CHANGELOG_ate_10_3.md",
+      "sha256": "b870649bcda77c0dbd5fbd5d06d8cabd8e522e187a04e2c22c56e16b8aaeca07"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/historico/PILOTO_10_2_LAYOUT_DIGITAIS.md",
+      "sha256": "586a33dd1d38920cc1e79e6a1b14b05e2c6ed668ab82be262bccfd3d16bfe5ef"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/historico/CONTROLE_INTEGRACAO.md",
+      "sha256": "8865d245d046ba4ce69c7d74d402bb24f4e22416ef89be72ba9db8ee2e9c434f"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/historico/REVISAO_09_3.md",
+      "sha256": "145eb6b8c078d0475733188df9605f00bccf87620497cc6b52363df52a1c4241"
+    },
+    {
+      "caminhoAnterior": "mes-s7-piloto/docs/historico/PILOTO_09_2_MONITOR_0_11.md",
+      "sha256": "9978f11ad05f856ccecae59c85a90841de4bd649c5eae86be87cd57133317745"
+    }
+  ],
+  "arquivoHistorico": "DOCUMENTACAO_ANTERIOR_Rev01.zip"
+}

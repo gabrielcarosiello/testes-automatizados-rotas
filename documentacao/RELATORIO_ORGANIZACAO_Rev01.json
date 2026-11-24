@@ -1,0 +1,171 @@
+{
+  "revisaoDocumental": "01",
+  "data": "2026-11-19",
+  "base": "Integracao_MES_S7_Piloto_11(1).zip",
+  "codigoFuncional": "11.4 sem alteracao",
+  "monitor": "0.13.0 sem alteracao",
+  "arquivosNaoMarkdownPreservadosByteAByte": 13481,
+  "markdownOriginaisArquivados": 30,
+  "mudancasDocumentais": [
+    {
+      "arquivo": "LEIA_ANTES_ATUALIZAR_11_1.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "LEIA_ANTES_ATUALIZAR_11_2.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "LEIA_ANTES_ATUALIZAR_11_3.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "LEIA_ANTES_ATUALIZAR_11_4.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/CHANGELOG.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/CONTROLE_INTEGRACAO.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/historico/CHANGELOG_ate_10_3.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/historico/CONTROLE_INTEGRACAO.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/historico/GUIA_OPERACAO_PROJETOS_Rev01.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/historico/PILOTO_09_2_MONITOR_0_11.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/historico/PILOTO_10_1_ALM_OU_AVISO.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/historico/PILOTO_10_2_LAYOUT_DIGITAIS.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/historico/PILOTO_10_3_RECUSA_PARTIDA.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/historico/PILOTO_10_NIVEL_ALTO.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/historico/README_ate_10_3.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/historico/REVISAO_09_3.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/NIVEL_ALTO_LIR04.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/PILOTO_11_1_CARTAO_E_RECUPERACAO.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/PILOTO_11_2_ESTADO_VAZIO.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/PILOTO_11_3_LIMPEZA_CARTAO.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/PILOTO_11_4_INTEGRIDADE_LIR.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/PILOTO_11_ESTABILIDADE.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/RECURSOS_E_ARMAZENAMENTO.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/REGISTRO_ENSAIO.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/docs/RELATORIO_REVISAO_E_EFICIENCIA.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "mes-s7-piloto/README.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "monitor-s7/CHANGELOG.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "monitor-s7/README.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "monitor-s7/VALIDACAO.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    },
+    {
+      "arquivo": "REVISAO_INTEGRACAO.md",
+      "destino": "documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip",
+      "acao": "documentacao arquivada; orientacao atual no manual"
+    }
+  ],
+  "novoUtilitario": "CONFIGURAR_GIT.cmd; identidade local, sem autenticacao/commit/push automaticos",
+  "regressao": {
+    "piloto": 105,
+    "monitor": 25,
+    "integracaoSimulada": 3,
+    "aprovados": 133,
+    "falhas": 0,
+    "ignorados": 0
+  },
+  "limites": "Sem Windows/Excel/MES/SQL/CPU real; CMD nao executado no Windows. Historico Git, configs, dependencias, resultados e planilhas preservados."
+}

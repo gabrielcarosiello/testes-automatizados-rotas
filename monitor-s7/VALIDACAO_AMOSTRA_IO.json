@@ -1,0 +1,261 @@
+{
+  "version": "0.11.0",
+  "source": "PEData(1).plf (amostra fornecida anteriormente)",
+  "sourceSha256": "f172bf84a1542cabb8ad10d432c76b70313bfc447f635a0ee706a6816724746e",
+  "importedAt": "2026-11-19",
+  "entries": 136154,
+  "io": 2190,
+  "ioLsh": 89,
+  "elapsedMs": 2244,
+  "lir": "CL373.00.LIR.04_preenchida.xlsx",
+  "lshDistinct": 41,
+  "signals": [
+    {
+      "name": "LSH_TQME19",
+      "idDigital": 200,
+      "address": "I128.7",
+      "area": "I"
+    },
+    {
+      "name": "LSH_UT15",
+      "idDigital": 199,
+      "address": "I128.6",
+      "area": "I"
+    },
+    {
+      "name": "LSH_UT14",
+      "idDigital": 198,
+      "address": "I128.5",
+      "area": "I"
+    },
+    {
+      "name": "LSH_UT13",
+      "idDigital": 197,
+      "address": "I128.4",
+      "area": "I"
+    },
+    {
+      "name": "LSH_UT12",
+      "idDigital": 196,
+      "address": "I128.3",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RB06",
+      "idDigital": 108,
+      "address": "I84.4",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RB05",
+      "idDigital": 107,
+      "address": "I84.3",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RB04",
+      "idDigital": 106,
+      "address": "I84.2",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RB03",
+      "idDigital": 105,
+      "address": "I84.1",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RB02",
+      "idDigital": 104,
+      "address": "I84.0",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RB01",
+      "idDigital": 103,
+      "address": "I83.7",
+      "area": "I"
+    },
+    {
+      "name": "LSH_PX17",
+      "idDigital": 102,
+      "address": "I79.2",
+      "area": "I"
+    },
+    {
+      "name": "LSH_PX16",
+      "idDigital": 101,
+      "address": "I79.1",
+      "area": "I"
+    },
+    {
+      "name": "LSH_PX15",
+      "idDigital": 100,
+      "address": "I79.0",
+      "area": "I"
+    },
+    {
+      "name": "LSH_PX14",
+      "idDigital": 99,
+      "address": "I78.7",
+      "area": "I"
+    },
+    {
+      "name": "LSH_PX13",
+      "idDigital": 98,
+      "address": "I78.6",
+      "area": "I"
+    },
+    {
+      "name": "LSH_PX12",
+      "idDigital": 97,
+      "address": "I78.5",
+      "area": "I"
+    },
+    {
+      "name": "LSH_NC73",
+      "idDigital": 53,
+      "address": "I121.0",
+      "area": "I"
+    },
+    {
+      "name": "LSH_NC72",
+      "idDigital": 52,
+      "address": "I45.7",
+      "area": "I"
+    },
+    {
+      "name": "LSH_NC06",
+      "idDigital": 51,
+      "address": "I45.6",
+      "area": "I"
+    },
+    {
+      "name": "LSH_NC05",
+      "idDigital": 50,
+      "address": "I45.5",
+      "area": "I"
+    },
+    {
+      "name": "LSH_NC04",
+      "idDigital": 49,
+      "address": "I45.4",
+      "area": "I"
+    },
+    {
+      "name": "LSH_NC03",
+      "idDigital": 48,
+      "address": "I45.3",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RC11",
+      "idDigital": 44,
+      "address": "I40.7",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RC10",
+      "idDigital": 43,
+      "address": "I40.6",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RC08",
+      "idDigital": 41,
+      "address": "I40.4",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RC07",
+      "idDigital": 40,
+      "address": "I40.3",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RC05",
+      "idDigital": 38,
+      "address": "I40.1",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RC04",
+      "idDigital": 37,
+      "address": "I40.0",
+      "area": "I"
+    },
+    {
+      "name": "LSH_MG14",
+      "idDigital": 31,
+      "address": "I34.6",
+      "area": "I"
+    },
+    {
+      "name": "LSH_MG11",
+      "idDigital": 30,
+      "address": "I34.5",
+      "area": "I"
+    },
+    {
+      "name": "LSH_MG09",
+      "idDigital": 29,
+      "address": "I34.4",
+      "area": "I"
+    },
+    {
+      "name": "LSH_MG07",
+      "idDigital": 28,
+      "address": "I34.3",
+      "area": "I"
+    },
+    {
+      "name": "LSH_MG04",
+      "idDigital": 27,
+      "address": "I34.2",
+      "area": "I"
+    },
+    {
+      "name": "LSH_MG01",
+      "idDigital": 26,
+      "address": "I34.1",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RG37",
+      "idDigital": 3,
+      "address": "I21.4",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RG32",
+      "idDigital": 32,
+      "address": "I119.3",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RG16",
+      "idDigital": 25,
+      "address": "I31.6",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RG14",
+      "idDigital": 24,
+      "address": "I31.5",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RG11",
+      "idDigital": 23,
+      "address": "I31.2",
+      "area": "I"
+    },
+    {
+      "name": "LSH_RG08",
+      "idDigital": 22,
+      "address": "I30.7",
+      "area": "I"
+    }
+  ],
+  "note": "Comparação offline de arquivos; endereços não foram conferidos com a CPU em execução. Não representa teste de força/simulação de entradas."
+}

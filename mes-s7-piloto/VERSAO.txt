@@ -1,0 +1,4 @@
+Integração MES + Monitor S7
+Piloto-12
+Monitor 0.13.0
+Consulte ../MANUAL_OPERACAO.md e ../CHANGELOG.md.

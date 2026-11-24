@@ -1,47 +1,73 @@
-# Testes automatizados de rotas
+<div align="center">
 
-Projeto Cypress para testar rotas de transferência. As pastas de recebimentos e dosagem estão reservadas para testes futuros.
+# Piloto MES e S7
 
-## Requisitos
+### Testes de Transporte com Cypress, SQL Server e Monitor Siemens S7
 
-- Windows com Node.js, npm e PowerShell.
-- Aplicação MES acessível no ambiente de teste.
-- Para as capturas do supervisório, manter a tela do Elipse visível durante a execução.
+![Piloto](https://img.shields.io/badge/Piloto-12-167D8D?style=flat-square)
+![Monitor](https://img.shields.io/badge/Monitor-0.13.0-263B68?style=flat-square)
+![Documentação](https://img.shields.io/badge/Documenta%C3%A7%C3%A3o-Rev04-6D55A3?style=flat-square)
 
-## Preparação
+**[Manual de operação](MANUAL_OPERACAO.md) · [Manual visual](documentacao/visual/Piloto_12_Manual_Visual_Rev04.html) · [Matriz de processos](.agents/skills/piloto-evolucao-processos/references/matriz-processos.md) · [Histórico](CHANGELOG.md)**
 
-1. Na pasta do projeto, instale as dependências:
+</div>
 
-   ```powershell
-   npm install
-   ```
+---
 
-2. Copie `credenciais.exemplo.json` para `credenciais.local.json` e preencha `senhaMES`. O arquivo local é ignorado pelo Git e a senha não deve ser publicada.
-3. Coloque **uma única planilha real `.xlsx`** em `planilhas/`. O código ignora o modelo `CLXXX.00.LIR.00.xlsx` e arquivos temporários do Excel. Se houver mais de uma planilha real, o teste informa o problema sem escolher automaticamente.
-4. Para criar uma planilha, copie o modelo com outro nome e confira os dados e os valores da coluna **Teste**. O modelo contém rotas de exemplo já preenchidas.
-5. Feche a planilha no Excel ou LibreOffice antes de executar, para permitir o registro dos resultados.
+O piloto verifica o fluxo de Transporte no MES e, no modo integrado, cruza os equipamentos cadastrados no SQL com os retornos S7. Os ensaios registram partida, nível alto quando aplicável, restauração, encerramento e resultados na LIR.
 
-## Execução
+> **Versão:** a branch se chama `piloto-11`; o código atual se identifica como **Piloto-12**. A revisão documental 04 não altera o funcionamento da aplicação.
+
+## Comece pelo documento certo
+
+| Você precisa de… | Consulte |
+| --- | --- |
+| Preparar a instalação e configurar MES, SQL e S7 | [Manual de operação](MANUAL_OPERACAO.md#2-preparação-e-instalação) |
+| Ler com cores, busca e navegação lateral | [Manual visual em HTML](documentacao/visual/Piloto_12_Manual_Visual_Rev04.html) — baixe e abra no navegador |
+| Tratar uma escrita pendente ou interrupção | [Recuperação operacional](MANUAL_OPERACAO.md#10-recuperar-escrita-pendente) |
+| Entender os condicionamentos do Transporte | [Matriz de regras e consumidores](.agents/skills/piloto-evolucao-processos/references/matriz-processos.md) |
+| Investigar um erro conhecido | [Diagnóstico](MANUAL_OPERACAO.md#11-diagnóstico-de-erros) e [registro de estabilidade](mes-s7-piloto/docs/PILOTO_11_ESTABILIDADE.md) |
+| Medir o tempo das etapas | [Estudo de desempenho do Piloto-12](mes-s7-piloto/docs/DESEMPENHO_PILOTO_12.md) |
+| Revisar uma alteração antes da liberação | [Regressão](MANUAL_OPERACAO.md#14-eficiência-manutenção-e-regressão) e [skill de evolução](.agents/skills/piloto-evolucao-processos/SKILL.md) |
+
+## Preparação rápida
+
+Use **Windows e Node.js 22 ou superior**. O Node é instalado uma vez no computador; as dependências são instaladas nas duas subpastas:
 
 ```powershell
-npx cypress open
+# A partir da raiz do repositório
+Set-Location .\mes-s7-piloto
+npm.cmd ci
+Set-Location ..\monitor-s7
+npm.cmd ci
+Set-Location ..
 ```
 
-Escolha **E2E Testing**, o navegador e `testes/transferencias/transferencias.cy.js`. A execução começa com uma pausa para preparar o ambiente.
+Forneça as configurações locais, a LIR e o projeto TIA da bancada antes de iniciar. Esses recursos não devem ser presumidos como parte do clone. Veja o [procedimento completo](MANUAL_OPERACAO.md#3-configuração-mes-e-sql).
 
-- `NT` e `NOK`: a rota entra no teste.
-- `OK` e `---`: a rota é ignorada.
-- Ao concluir, o teste tenta preencher `Teste`, `Data` e `Falha Identificada` na planilha real.
-- Prints e históricos de tempos são salvos em `resultados/`, que é ignorada pelo Git.
+| Terminal | Diretório | Comando | Finalidade |
+| --- | --- | --- | --- |
+| Monitor | `monitor-s7` | `npm.cmd start` | Iniciar o serviço HTTP local |
+| Diagnóstico | `mes-s7-piloto` | `npm.cmd run diagnostico -- --monitor` | Conferir configuração, LIR, pendência e API |
+| Cypress | `mes-s7-piloto` | `npm.cmd run abrir` | Abrir o runner para execução controlada |
+| Regressão | Raiz | `node verificar-tudo.cjs` | Verificar Piloto, Monitor e integração simulada |
 
-Se a gravação do resultado falhar, confira o aviso no Cypress e o histórico antes de repetir. Para carregar a lista atualizada de rotas pendentes, feche e abra o Cypress novamente.
+> **Operação da bancada:** executar a spec pode comandar o MES, escrever a LSH e atualizar a LIR. Confirme o ambiente, mantenha uma execução por bancada e confira a restauração e o local vazio antes de retomar um lote interrompido.
 
-## Estrutura
+## Organização por processo
 
-- `testes/transferencias/`: teste de transferências e suas funções de apoio.
-- `testes/recebimentos/` e `testes/dosagem/`: áreas reservadas para os testes futuros.
-- `planilhas/`: modelo versionado e planilha real local.
-- `comum/`: script para captura das telas.
-- `cypress.config.js` e `cypress.base.config.js`: configuração do Cypress e da captura.
+| Processo | Situação nesta branch | Referência |
+| --- | --- | --- |
+| Transporte | Implementado; critérios e limites registrados | T01–T08 na matriz |
+| Recebimento | Pendente de levantamento | Confirmar fluxo e condições próprias |
+| Dosagem | Pendente de levantamento | Confirmar ciclo, tolerâncias e recuperação |
 
-O modelo contém várias abas e nomes de rotas como exemplo; o teste atual usa somente a aba **Lista de Rotas - Transferências**. A planilha real, as credenciais, `node_modules/` e `resultados/` não devem ser enviados ao repositório.
+Reaproveite serviços somente após comprovar a equivalência do comportamento. Mudanças em módulos comuns exigem análise dos consumidores e regressão correspondente.
+
+## Sobre a documentação
+
+O manual visual funciona offline, sem bibliotecas externas. Inclui o manual operacional, a matriz existente e o estudo de desempenho. O GitHub apresenta o código do HTML; baixe o arquivo para visualizar o layout no navegador. O Markdown permanece como fonte editável dos procedimentos.
+
+Os números de testes e as medições mantêm a identificação da revisão que os produziu. A revisão documental 04 verificou apresentação, links e integridade dos arquivos funcionais; não executou novos testes contra a bancada.
+
+[Alterações desta revisão](documentacao/REVISAO_DOCUMENTAL_Rev04.md) · [Changelog](CHANGELOG.md)

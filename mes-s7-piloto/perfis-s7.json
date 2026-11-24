@@ -1,0 +1,25 @@
+{
+  "perfis": {
+    "saidaMantida": {
+      "camposPorComando": {
+        "1": "EspelhoSaida1",
+        "2": "EspelhoSaida2"
+      },
+      "exigirDesligadoAntes": true
+    },
+    "posicaoConfirmada": {
+      "camposPorComando": {
+        "1": "EspelhoEntrada1",
+        "2": "EspelhoEntrada2"
+      },
+      "exigirDesligadoAntes": false
+    }
+  },
+  "porTipo": {
+    "1": "saidaMantida",
+    "2": "saidaMantida",
+    "3": "posicaoConfirmada",
+    "4": "saidaMantida"
+  },
+  "porEquipamento": {}
+}
