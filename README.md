@@ -16,7 +16,7 @@
 
 O piloto verifica o fluxo de Transporte no MES e, no modo integrado, cruza os equipamentos cadastrados no SQL com os retornos S7. Os ensaios registram partida, nível alto quando aplicável, restauração, encerramento e resultados na LIR.
 
-> **Versão:** a branch se chama `piloto-11`; o código atual se identifica como **Piloto-12**. A revisão documental 04 não altera o funcionamento da aplicação.
+> **Versão:**: o código atual se identifica como **Piloto-12**. A revisão documental 04 não altera o funcionamento da aplicação.
 
 ## Comece pelo documento certo
 
