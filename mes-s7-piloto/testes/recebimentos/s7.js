@@ -2,6 +2,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const { randomUUID } = require('node:crypto')
 const { gravarEvento } = require('../../comum/registro-execucao')
+const { criarEstadoEscrita } = require('../../comum/s7/estado-escrita')
 const { criarPiloto } = require('../../comum/s7/piloto')
 const { lerOrdensConfirmadas } = require('./ordens-confirmadas')
 const { lerRotaRecebimento } = require('./lir-recebimento')
@@ -10,6 +11,10 @@ function tarefasRecebimento(raiz, planilha) {
   let piloto
   let pasta
   return {
+    exigirRestauracaoLivreRecebimento() {
+      criarEstadoEscrita(raiz).exigirLivre()
+      return null
+    },
     planejarPrePartidaRecebimento(id) {
       const cenario = require('./cenarios-prepartida.json').find(item => item.id === id)
       if (!cenario) throw new Error('Cenário de pré-partida desconhecido: ' + id)

@@ -1,7 +1,12 @@
 # Changelog
 
+## Revisão documental — Skills do Piloto (24/11/2026)
+
+- Atualizada a skill piloto-evolucao-processos para 0.3.0 com roteiro de reaproveitamento e regras R01–R05 de Recebimento. A retomada em bancada e o levantamento de Dosagem seguem pendentes.
+
 ## Piloto-12 — Recebimento Grãos RG (24/11/2026)
 
+- O Recebimento passou a recuperar a mesma OR ativa antes de tentar nova partida, preservando a ordem e respeitando pendência de LSH.
 - Milho e farelo passaram a rodar como testes independentes no mesmo spec. OR indisponível interrompe apenas o cenário antes de Iniciar.
 - Após confirmar a parada, o Recebimento aceita o painel vazio confirmado quando o cartão sai rapidamente de Parando e mantém a verificação da restauração.
 - O ciclo completo de Recebimento passou a usar a ordem gerada, a rota e o cartão do primeiro cenário de pré-partida.

@@ -32,18 +32,39 @@ function botoesComTexto(raiz, texto, visivel) {
     .filter((el, _, candidatos) => !candidatos.some(outro => outro !== el && el.contains(outro)))
 }
 
-function botoesConfirmacao(documento, mensagem, visivel) {
+function botoesConfirmacao(documento, mensagem, visivel, resposta = 'Sim') {
   const dialogos = [...documento.querySelectorAll('dialog[open], [role="dialog"], [aria-modal="true"], .modal.show, .modal-content')]
     .filter(dialogo => visivel(dialogo) && [...dialogo.querySelectorAll('*')].some(el =>
       visivel(el) && normalizarStatus(el.textContent) === normalizarStatus(mensagem)))
-  return [...new Set(dialogos.flatMap(dialogo => botoesComTexto(dialogo, 'Sim', visivel)))]
+  return [...new Set(dialogos.flatMap(dialogo => botoesComTexto(dialogo, resposta, visivel)))]
+}
+
+function cartoesOcupados(painel, visivel) {
+  const rotulos = [...painel.querySelectorAll('*')].filter(el => visivel(el) &&
+    /^o\s*\.\s*r\s*\.?$/.test(normalizarStatus(el.textContent)) &&
+    ![...el.children].some(filho => /^o\s*\.\s*r\s*\.?$/.test(normalizarStatus(filho.textContent))))
+  const cartoes = new Map()
+  for (const rotulo of rotulos) {
+    for (let grupo = rotulo.parentElement; grupo && grupo !== painel; grupo = grupo.parentElement) {
+      const partes = [...grupo.querySelectorAll('*')].filter(el => !el.children.length && visivel(el))
+        .map(el => el.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean)
+      const indiceDestino = partes.findIndex(texto => normalizarStatus(texto) === 'destino atual')
+      if (indiceDestino < 0 || !partes.some(texto => normalizarStatus(texto) === 'situacao')) continue
+      const indiceOrdem = partes.findIndex(texto => /^o\s*\.\s*r\s*\.?$/.test(normalizarStatus(texto)))
+      const ordem = /^\d+$/.test(partes[indiceOrdem + 1] ?? '') ? partes[indiceOrdem + 1] : null
+      const destino = /^[A-Z]+\d+[A-Z0-9-]*$/i.test(partes[indiceDestino + 1] ?? '') ? partes[indiceDestino + 1] : null
+      cartoes.set(grupo, { ordem, destino })
+      break
+    }
+  }
+  return [...cartoes.values()]
 }
 
 function painelRecebimentoLivre(painel, visivel) {
   const ativos = [...painel.querySelectorAll('.card-situations')].some(visivel)
   const mensagem = [...painel.querySelectorAll('*')].some(el =>
     visivel(el) && normalizarStatus(el.textContent) === 'nao ha nenhum recebimento em uso')
-  return mensagem && !ativos
+  return mensagem && !ativos && !cartoesOcupados(painel, visivel).length
 }
 
 function estadoDeEncerramento(painel, visivel, recebimento) {
@@ -52,4 +73,16 @@ function estadoDeEncerramento(painel, visivel, recebimento) {
   return status.some(texto => normalizarStatus(texto) === 'parando') ? 'parando' : null
 }
 
-module.exports = { painelRecebimentoLivre, estadoDeEncerramento, lerCartao, normalizarStatus, botoesComTexto, botoesConfirmacao }
+function estadoDeRetomada(painel, visivel, recebimento) {
+  if (painelRecebimentoLivre(painel, visivel)) return 'livre'
+  const ativos = [...painel.querySelectorAll('.card-situations')].filter(visivel)
+  if (!ativos.length) return cartoesOcupados(painel, visivel).length ? 'bloqueado' : 'aguardando'
+  const { cartoes, status } = lerCartao(painel, visivel, recebimento)
+  if (cartoes.length !== 1) return 'bloqueado'
+  if (ativos.some(el => el.closest('.row') !== cartoes[0])) return 'bloqueado'
+  const estados = status.map(normalizarStatus)
+  if (estados.includes('parando')) return 'parando'
+  return estados.some(estado => ['iniciado', 'interrompido', 'aguardando finalizacao'].includes(estado)) ? 'recuperar' : 'bloqueado'
+}
+
+module.exports = { cartoesOcupados, estadoDeRetomada, painelRecebimentoLivre, estadoDeEncerramento, lerCartao, normalizarStatus, botoesComTexto, botoesConfirmacao }

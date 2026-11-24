@@ -1,5 +1,9 @@
 # Preparação do Recebimento
 
+## Estado atual no Piloto-12
+
+Ciclo de Grãos RG e reconhecimento pelo SQL de OR já recebida foram validados na VM para milho em MG01 e farelo em RG08. A retomada da mesma OR ativa com resposta Não foi coberta localmente e ainda aguarda validação na VM. Consulte a [matriz atual](matriz-processos.md) e o [roteiro de reaproveitamento](reaproveitamento.md). As seções seguintes preservam o histórico do levantamento.
+
 ## Referência e diagnóstico
 
 Base analisada em 24/11/2026: Piloto-12, HEAD `1cae9ac`, branch `piloto-12`, árvore limpa e um commit à frente de `origin/piloto-12` na conferência inicial. A Rev04 e seus artefatos visuais ficam como referência editorial. O README, a seção 16 do manual e a matriz registram Recebimento como pendente. Na base documental analisada, a busca direcionada não encontrou um fluxo de Recebimento definido. A conferência posterior na tela está registrada abaixo.

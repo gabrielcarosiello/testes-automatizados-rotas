@@ -31,3 +31,5 @@ No ensaio de nível alto, após confirmar o alarme o spec aguarda Parando na ord
 Ciclo por cenário: graos-rg.recebimento.js registra um teste por entrada de cenarios-prepartida.json, na ordem do arquivo. Uma OR ausente no seletor falha no prazo do Cypress antes de Iniciar. O cenário seguinte só inicia se o painel estiver livre.
 
 Antes de abrir o seletor de OR, o spec consulta se a mesma ordem e rota já foram finalizadas no destino, com peso recebido e estoque atual do mesmo produto. Se confirmar, registra a evidência em eventos.jsonl e segue ao próximo cenário. Sem essa confirmação, executa a seleção normal no MES.
+
+Retomada: antes de selecionar a OR, o spec verifica pendência de LSH. Se a mesma OR ainda estiver ativa em estado conhecido, aciona Parar, responde Não ao diálogo de finalização e aguarda o painel livre. Somente então verifica se a OR continua oferecida e pode ser reiniciada. Outro cartão, diálogo aberto, estado indefinido ou pendência de LSH exigem conferência antes de nova partida.

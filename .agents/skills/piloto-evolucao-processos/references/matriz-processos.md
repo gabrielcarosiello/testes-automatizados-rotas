@@ -17,7 +17,7 @@ Base observada no código do Piloto 11.4 em 23/11/2026. As regras de Transporte 
 
 ## Módulos compartilhados e consumidores
 
-Caminhos relativos a `mes-s7-piloto/`. O uso compartilhado abaixo foi observado dentro do Piloto. O reaproveitamento por Recebimento e Dosagem está pendente.
+Caminhos relativos a `mes-s7-piloto/`. O uso compartilhado abaixo foi observado dentro do Piloto. Os consumidores de Recebimento constam abaixo. O levantamento de Dosagem segue pendente.
 
 | Módulo | Responsabilidade | Consumidores diretos verificados | Regras |
 | --- | --- | --- | --- |
@@ -33,9 +33,15 @@ Caminhos relativos a `mes-s7-piloto/`. O uso compartilhado abaixo foi observado 
 
 ## Recebimento
 
-Consulte a [matriz de compartilhamento e o cenário inicial](recebimento.md).
+| ID | Regra implementada | Fonte |
+| --- | --- | --- |
+| R01 | O cadastro lê cenários de produto, salva o item e registra o número atribuído após confirmá-lo na listagem. | [Spec de ordens](../../../../mes-s7-piloto/testes/ordens-recebimento/nova-ordem.ordem.js) e [registro](../../../../mes-s7-piloto/testes/ordens-recebimento/evidencias.js) |
+| R02 | Cada cenário usa uma ordem confirmada do produto e a rota da aba própria da LIR. Confere modalidade, OR, destino e caminho antes de Iniciar. | [Formulário](../../../../mes-s7-piloto/testes/recebimentos/formulario-recebimento.js) e [tarefas](../../../../mes-s7-piloto/testes/recebimentos/s7.js) |
+| R03 | A consulta SQL confirma OR finalizada na mesma rota e destino, com peso recebido e saldo atual do produto. O cenário segue sem nova partida. | [Consulta SQL](../../../../mes-s7-piloto/comum/s7/consultarRota.js) |
+| R04 | Confirma retornos S7 e Iniciado. Quando aplicável, confirma nível alto no S7 e no cartão, encerra a ordem, restaura a LSH e verifica o painel livre. | [Spec Grãos RG](../../../../mes-s7-piloto/testes/recebimentos/graos-rg.recebimento.js) e [leitor de cartão](../../../../mes-s7-piloto/testes/recebimentos/cartao-recebimento.js) |
+| R05 | Antes de retomar, verifica a pendência de LSH. Para somente a OR ativa do cenário em estado conhecido, responde Não à finalização e aguarda painel livre. | [Spec Grãos RG](../../../../mes-s7-piloto/testes/recebimentos/graos-rg.recebimento.js) e [estado da escrita](../../../../mes-s7-piloto/comum/s7/estado-escrita.js) |
 
-**Pendente de levantamento.** Confirmar o ponto de entrada do MES, as condições de liberação e encerramento, os vínculos SQL, os sinais de confirmação e os registros esperados. Fonte inicial para a próxima revisão: fluxo operacional e implementação identificada pelo responsável pelo processo.
+R01–R04 foram exercitados na VM com milho e farelo. R05 passou na regressão local. A resposta Não e a disponibilidade da OR após a parada ainda precisam ser confirmadas na VM. Consulte o [levantamento](recebimento.md) e o [roteiro de reaproveitamento](reaproveitamento.md).
 
 ## Dosagem
 

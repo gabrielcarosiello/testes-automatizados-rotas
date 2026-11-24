@@ -49,7 +49,6 @@ function prepararFormulario({ modalidade, ordem, produto, rota }) {
   const numero = new RegExp('\\b' + ordem + '\\b')
   const caminho = new RegExp('^' + rota.rota.split(/\s*->\s*/).map(Cypress._.escapeRegExp).join('\\s*->\\s*') + '$')
   cy.log('OR ' + ordem + ' | ' + produto.nomeProduto + ' | rota ' + rota.codigo + ' | ' + rota.destino)
-  abrirReceberGranel(modalidade)
   selecionar(/^Recebimento:$/, exato(modalidade))
   selecionar(/^Ordem Recebimento:$/, numero, ordem)
   campo(/^Destino:$/).then($campo => {

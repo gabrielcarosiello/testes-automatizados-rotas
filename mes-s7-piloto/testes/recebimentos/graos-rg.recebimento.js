@@ -1,7 +1,7 @@
 // Teste preparado com Cypress Author em 24/11/2026.
 require('../../comum/consultas-mes')
 const { mostrarMonitor, informarResultado, ocultarMonitor } = require('../../comum/visualizacao-monitor')
-const { painelRecebimentoLivre, estadoDeEncerramento, lerCartao, normalizarStatus, botoesComTexto, botoesConfirmacao } = require('./cartao-recebimento')
+const { cartoesOcupados, estadoDeRetomada, painelRecebimentoLivre, estadoDeEncerramento, lerCartao, normalizarStatus, botoesComTexto, botoesConfirmacao } = require('./cartao-recebimento')
 const { painel, abrirReceberGranel, prepararFormulario } = require('./formulario-recebimento')
 const cenarios = require('./cenarios-prepartida.json')
 
@@ -82,14 +82,14 @@ function aguardarParandoOuPainelLivre(recebimento) {
     .then($painel => cy.log('Estado de encerramento no MES: ' + lerEstado($painel)))
 }
 
-function confirmarDialogoRecebimento(mensagem) {
-  const botoes = $body => botoesConfirmacao($body[0], mensagem, Cypress.dom.isVisible)
+function confirmarDialogoRecebimento(mensagem, resposta) {
+  const botoes = $body => botoesConfirmacao($body[0], mensagem, Cypress.dom.isVisible, resposta)
   return cy.get('body', { timeout: 30000 })
     .should($body => expect(botoes($body), mensagem).to.have.length(1))
     .then($body => cy.wrap(botoes($body)[0]).click())
 }
 
-function pararRecebimento(recebimento) {
+function pararRecebimento(recebimento, respostaFinalizacao = 'Sim') {
   const botoesParar = $painel => {
     const { cartoes } = lerCartao($painel[0], Cypress.dom.isVisible, recebimento)
     return cartoes.length === 1 ? botoesComTexto(cartoes[0], 'Parar', Cypress.dom.isVisible) : []
@@ -98,7 +98,35 @@ function pararRecebimento(recebimento) {
     .should($painel => expect(botoesParar($painel), 'Parar no cartão ' + recebimento.ordem + ' / ' + recebimento.rota.destino).to.have.length(1))
     .then($painel => cy.wrap(botoesParar($painel)[0]).click())
     .then(() => confirmarDialogoRecebimento('Deseja realmente parar o recebimento ' + recebimento.modalidade + '?'))
-    .then(() => confirmarDialogoRecebimento('A ordem de recebimento foi finalizada?'))
+    .then(() => confirmarDialogoRecebimento('A ordem de recebimento foi finalizada?', respostaFinalizacao))
+}
+
+function recuperarRecebimentoAntesDaPartida(recebimento) {
+  const lerEstado = $painel => estadoDeRetomada($painel[0], Cypress.dom.isVisible, recebimento)
+  return cy.task('exigirRestauracaoLivreRecebimento').then(() =>
+    cy.get(painel, { timeout: 30000 }).should($painel => {
+      expect(lerEstado($painel), 'estado do recebimento antes da retomada').not.to.equal('aguardando')
+    })).then($painel => {
+    const estado = lerEstado($painel)
+    if (estado === 'livre') return
+    if (estado === 'parando') return aguardarRecebimentoLivre()
+    if (estado !== 'recuperar') {
+      const [ocupado] = cartoesOcupados($painel[0], Cypress.dom.isVisible)
+      if (ocupado) {
+        const identificacao = ocupado.ordem ? ' OR ' + ocupado.ordem + (ocupado.destino ? ' em ' + ocupado.destino : '') + '.' : ''
+        throw new Error('Recebimento ocupado.' + identificacao + ' Nova partida bloqueada.')
+      }
+      throw new Error('Recebimento ativo ou estado indefinido no MES. Confira a ordem antes de retomar ' + recebimento.ordem + '.')
+    }
+    return cy.get('body').then($body => {
+      const dialogos = $body[0].querySelectorAll('dialog[open], [role="dialog"], [aria-modal="true"], .modal.show, .modal-content')
+      if ([...dialogos].some(Cypress.dom.isVisible)) throw new Error('Há um diálogo aberto no MES. Confira a parada da ordem ' + recebimento.ordem + '.')
+      return pararRecebimento(recebimento, 'Não')
+        .then(() => aguardarRecebimentoLivre())
+        .then(() => cy.log('OR ' + recebimento.ordem + ' recuperada sem marcar a finalização.'))
+        .then(() => cy.screenshot('recebimento-' + recebimento.ordem + '-recuperado', { capture: 'viewport', overwrite: false }))
+    })
+  })
 }
 
 function aguardarFinalizacaoRecebimento(recebimento, pasta) {
@@ -147,6 +175,8 @@ function executarCenario(cenario) {
       ordem, codigoRota: rota.codigo, destino: rota.destino, codigoProduto: produto.codigoProduto,
     }, { timeout: 60000 }).then(confirmado => {
       if (confirmado) return cy.log('OR ' + ordem + ' já recebida em ' + rota.destino + ' — ' + confirmado.pesoRecebido + ' kg. Evidência: ' + confirmado.evidencia)
+      abrirReceberGranel(recebimento.modalidade)
+      recuperarRecebimentoAntesDaPartida(recebimento)
       prepararFormulario(recebimento)
       cy.get(painel).contains(/^Não há nenhum recebimento em uso$/).should('be.visible')
       return cy.task('prepararRecebimentoS7', { ordem: recebimento.ordem, codigo: recebimento.rota.codigo }, { timeout: 150000 }).then(({ equipamentos, nivelAlto, codigo, pasta }) => {
