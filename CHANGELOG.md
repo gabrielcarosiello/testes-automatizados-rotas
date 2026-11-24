@@ -1,5 +1,9 @@
 # Changelog
 
+- O cadastro de OR de Ensacados reutiliza o fluxo completo e marca Ensacados antes de liberar o cabeçalho.
+
+- Adicionados os specs iniciais de cadastro e Recebimento de Ensacados com login reaproveitado. A primeira validação em bancada cobre apenas a abertura das telas e a opção Ensacados.
+
 ## Revisão documental — Skills do Piloto (24/11/2026)
 
 - Atualizada a skill piloto-evolucao-processos para 0.3.0 com roteiro de reaproveitamento e regras R01–R05 de Recebimento. A retomada em bancada e o levantamento de Dosagem seguem pendentes.

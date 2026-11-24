@@ -11,3 +11,9 @@ Cada execução grava etapas e resultado em resultados/Ordem_Recebimento_*/event
 Cada registro de cenarios.json define um identificador único, o código exibido pelo MES e o nome usado na busca. O pesoTotalNfKg pode ser definido se o cenário exigir outro peso. Milho CG Moído e Farelo de Soja CG Moído são candidatos do catálogo para a validação inicial. O vínculo com uma fórmula específica de Dosagem será confirmado na seleção do lote.
 
 Os eventos de resultado registram o item e se a ordem foi conferida na listagem. A seleção automática no Recebimento será desenvolvida na etapa seguinte.
+
+O spec nova-ordem.ensacados.js reutiliza o cadastro completo, com Ensacados marcado antes de Liberar. Os produtos ficam em cenarios-ensacados.json. MICRO é o cenário inicial para validar a criação da OR. O destino e o fluxo operacional do MICRO serão confirmados separadamente.
+
+Para Ensacados, cenarios-ensacados.json define quantidade e pesoUnitarioKg. O caso inicial usa 10 unidades de 25 kg. Quantidade Disponível deve ficar igual à quantidade. O MES calcula Peso Total NF e o spec verifica o valor salvo, esperado em 250 kg. O lote do produto continua aleatório.
+
+Cadastro completo de Ensacados: o cenário define o fornecedor existente e a validade em dias. O spec gera NF de teste, fabricação na data da execução e validade calculada. Confere esses campos e os valores do item após salvar. Peso Total NF, peso disponível quando calculado e situação continuam sob controle do MES.

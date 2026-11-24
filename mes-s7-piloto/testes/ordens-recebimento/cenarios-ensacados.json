@@ -1,0 +1,11 @@
+[
+  {
+    "id": "micro-ensacados",
+    "codigoProduto": "999999|",
+    "nomeProduto": "MICRO",
+    "quantidade": 10,
+    "pesoUnitarioKg": 25,
+    "fornecedor": "teste",
+    "validadeDias": 180
+  }
+]

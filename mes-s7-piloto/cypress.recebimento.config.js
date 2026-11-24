@@ -7,7 +7,7 @@ module.exports = defineConfig({
   screenshotsFolder: 'resultados',
   trashAssetsBeforeRuns: false,
   e2e: {
-    specPattern: 'testes/recebimentos/recebimento.js',
+    specPattern: ['testes/recebimentos/recebimento.js', 'testes/recebimentos/recebimento-ensacados.js'],
     supportFile: false,
     setupNodeEvents(on, config) {
       const { urlMes, usuarioMes, planilha } = lerExecucao(config.projectRoot)

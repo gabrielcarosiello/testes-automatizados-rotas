@@ -7,7 +7,7 @@ module.exports = defineConfig({
   trashAssetsBeforeRuns: false,
   screenshotsFolder: 'resultados',
   e2e: {
-    specPattern: 'testes/ordens-recebimento/*.ordem.js',
+    specPattern: 'testes/ordens-recebimento/*.{ordem,ensacados}.js',
     supportFile: false,
     setupNodeEvents(on, config) {
       const { urlMes, usuarioMes } = lerExecucao(config.projectRoot)

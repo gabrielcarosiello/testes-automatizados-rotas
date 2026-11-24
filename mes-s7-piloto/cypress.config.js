@@ -19,7 +19,7 @@ module.exports = defineConfig({
     ...base.e2e,
     testIsolation: false,
     supportFile: false,
-    specPattern: ['testes/**/*.cy.js', 'testes/recebimentos/recebimento.js', 'testes/ordens-recebimento/*.ordem.js'],
+    specPattern: ['testes/**/*.cy.js', 'testes/recebimentos/recebimento.js', 'testes/recebimentos/recebimento-ensacados.js', 'testes/ordens-recebimento/*.{ordem,ensacados}.js'],
     // Executado ao carregar o projeto: resolve LIR, tarefas e opções públicas.
     // Senha MES permanece no Node e é solicitada pelo teste com cy.env.
     setupNodeEvents(on, config) {

@@ -1,18 +1,18 @@
 const painel = '[role="tabpanel"]:visible'
 const lista = '.custom-dropdown-list:visible'
 
-function campo(rotulo) {
-  return cy.get(painel).contains('label', rotulo).parent().find('.custom-dropdown > .form-select')
+function campo(rotulo, escopo = painel) {
+  return cy.get(escopo).contains('label', rotulo).parent().find('.custom-dropdown > .form-select')
 }
 
-function selecionar(rotulo, opcao, busca) {
-  campo(rotulo).should('have.length', 1).click()
+function selecionar(rotulo, opcao, busca, escopo = painel) {
+  campo(rotulo, escopo).should('have.length', 1).click()
   cy.get(lista).should('have.length', 1).then($lista => {
     const entrada = $lista.find('input:visible:enabled')
     if (busca && entrada.length === 1) cy.wrap(entrada).clear().type(busca)
   })
   cy.get(lista).contains(opcao).should('be.visible').click()
-  campo(rotulo).should($campo => expect($campo.text().trim()).to.match(opcao))
+  return campo(rotulo, escopo).should($campo => expect($campo.text().trim()).to.match(opcao))
 }
 
 function abrirReceberGranel(modalidade, aba = modalidade) {
@@ -62,4 +62,4 @@ function prepararFormulario({ modalidade, ordem, produto, rota }) {
   campo(/^Rota:$/).should($campo => expect($campo.text().trim()).to.match(caminho))
 }
 
-module.exports = { painel, abrirReceberGranel, prepararFormulario }
+module.exports = { painel, abrirReceberGranel, prepararFormulario, selecionar }

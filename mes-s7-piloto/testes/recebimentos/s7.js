@@ -15,6 +15,24 @@ function tarefasRecebimento(raiz, planilha) {
       criarEstadoEscrita(raiz).exigirLivre()
       return null
     },
+    async verificarRecebimentoEnsacados({ numero, codigoProduto, aposIniciar = false }) {
+      if (!/^\d+$/.test(numero)) throw new Error('OR inválida para consulta de Ensacados.')
+      const { consultarRecebimentoEnsacados } = require('../../comum/s7/consultarRota')
+      const confirmado = await consultarRecebimentoEnsacados({ numero, codigoProduto })
+      if (!confirmado) return null
+      const pasta = 'Recebimento_Ensacados_' + numero + '_' + randomUUID()
+      fs.mkdirSync(path.join(raiz, 'resultados', pasta), { recursive: true })
+      gravarEvento(raiz, pasta, aposIniciar ? 'recebimento-confirmado' : 'recebimento-ja-confirmado', { numero, codigoProduto, ...confirmado })
+      return { pasta, evidencia: 'resultados/' + pasta + '/eventos.jsonl' }
+    },
+    planejarRecebimentoEnsacados(id) {
+      const produto = require('../ordens-recebimento/cenarios-ensacados.json').find(item => item.id === id)
+      if (!produto) throw new Error('Cenário de Ensacados desconhecido: ' + id)
+      const ordem = lerOrdensConfirmadas(path.join(raiz, 'resultados')).find(registro =>
+        registro.item.ensacados === true && registro.item.id === id && registro.item.codigoProduto === produto.codigoProduto)
+      if (!ordem) throw new Error('Nenhuma OR de Ensacados confirmada para o cenário ' + id + '.')
+      return { numero: ordem.numero, produto: ordem.item }
+    },
     planejarPrePartidaRecebimento(id) {
       const cenario = require('./cenarios-prepartida.json').find(item => item.id === id)
       if (!cenario) throw new Error('Cenário de pré-partida desconhecido: ' + id)

@@ -137,4 +137,30 @@ async function consultarRecebimentoNoSilo({ ordem, codigoRota, destino, codigoPr
   })
 }
 
-module.exports = { consultarRota, consultarSilo, consultarRecebimentoNoSilo }
+async function consultarRecebimentoEnsacados({ numero, codigoProduto }) {
+  return consultarBanco(async request => {
+    const { recordset } = await request
+      .input('Ordem', sql.Int, Number(numero))
+      .input('Produto', sql.NVarChar(128), codigoProduto)
+      .query(`
+        SELECT i.num_item AS item, e.val_quantidade AS quantidadeRecebida, e.val_peso AS pesoRecebido,
+               e.cod_armazem_destino AS armazem, e.dat_atualizacao AS recebidoEm
+        FROM dbo.[Ordem.Recebimento] AS o
+        JOIN dbo.[Ordem.Recebimento.Produto] AS i ON i.cod_ordem_recebimento = o.cod_ordem_recebimento
+        JOIN dbo.Produto AS p ON p.cod_produto = i.cod_produto
+        JOIN dbo.[Unidade.Carga.Estoque.Log] AS e ON e.num_primario = o.cod_ordem_recebimento AND e.num_secundario = i.num_item
+        WHERE o.cod_ordem_recebimento = @Ordem AND o.tip_ensacados = 1
+          AND p.nom_sigla_produto = @Produto AND i.tip_situacao = 4
+          AND e.tip_lote = 1 AND e.tip_operacao = 1 AND e.val_quantidade > 0 AND e.val_peso > 0
+          AND NOT EXISTS (
+            SELECT 1 FROM dbo.[Ordem.Recebimento.Produto] AS pendente
+            WHERE pendente.cod_ordem_recebimento = o.cod_ordem_recebimento
+              AND (ISNULL(pendente.tip_situacao, 0) <> 4 OR ISNULL(pendente.val_quantidade_disponivel, 0) > 0)
+          )
+        ORDER BY e.dat_atualizacao DESC
+      `)
+    return recordset[0] ?? null
+  })
+}
+
+module.exports = { consultarRota, consultarSilo, consultarRecebimentoNoSilo, consultarRecebimentoEnsacados }

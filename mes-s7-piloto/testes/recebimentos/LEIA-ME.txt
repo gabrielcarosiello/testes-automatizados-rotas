@@ -35,3 +35,7 @@ Antes de abrir o seletor de OR, o spec consulta se a mesma ordem e rota já fora
 Retomada: antes de selecionar a OR, o spec verifica pendência de LSH. Se a mesma OR ainda estiver ativa em estado conhecido, aciona Parar, responde Não ao diálogo de finalização e aguarda o painel livre. Somente então verifica se a OR continua oferecida e pode ser reiniciada. Outro cartão, diálogo aberto, estado indefinido ou pendência de LSH exigem conferência antes de nova partida.
 
 Líquidos usa a mesma spec. Configure em cenarios-prepartida.json o ID do cenário de produto, o código da rota na LIR e o nome da modalidade no MES. Se o rótulo da aba diferir da opção do formulário, configure aba. Origem, caminho, destino e LSH vêm da LIR de cada instalação. A rota 692 deste cliente começa em IBC e termina em UT14. Crie e confirme a OR de óleo no spec de ordens antes de validar esse cenário.
+
+Ensacados: recebimento-ensacados.js abre Movimentação → Receber Ensacado por Ordem de Recebimento, seleciona Ensacado e a OR confirmada mais recente do cenário de produto. Confere os dois campos, clica em Iniciar e salva uma captura da tela seguinte.
+
+Fechamento de Ensacados: depois de Iniciar, aguarda os campos de recebimento e OR serem limpos ou desaparecerem. Confirma a movimentação de estoque da ordem e do item por leitura no SQL. Se a OR já estiver finalizada com o movimento registrado, a spec grava evidência e termina sem novo clique. Não há validação S7 neste cenário.
