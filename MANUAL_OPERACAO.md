@@ -1,345 +1,495 @@
-# Manual de operação — MES + Monitor S7
+# Manual de operação do Piloto MES e S7
 
-**Revisão documental 03 · 23/11/2026 · Piloto-12 · Monitor 0.13.0**
+**Piloto-12 · Monitor 0.13.0 · Revisão documental 04 · 24 de novembro de 2026**
 
-Mapa de processos e consumidores na [skill piloto-evolucao-processos](.agents/skills/piloto-evolucao-processos/SKILL.md). Consulte o [changelog](CHANGELOG.md) para o histórico documental.
+Este manual orienta a preparação da bancada, a execução dos testes de Transporte e a conferência dos resultados. Também descreve como tratar falhas e recuperar operações interrompidas, preservando a LIR, as evidências e o estado de escrita no S7.
 
-Este é o ponto único de consulta para operar o pacote enviado. A organização é documental: não altera regras do MES, SQL, S7, planilhas, resultados ou dependências. A identificação Piloto-12 é usada no Cypress e nos eventos de novas execuções. A versão do Monitor é 0.13.0. NUT/E3 permanece em espera.
+A branch de distribuição é `piloto-11`, mas a identificação funcional atual é **Piloto-12**, conforme `mes-s7-piloto/versao.json`. Esta revisão melhora a documentação e a apresentação; não altera o código funcional.
 
-As instruções atuais abaixo prevalecem sobre os documentos históricos. A documentação anterior foi arquivada integralmente em documentacao/DOCUMENTACAO_ANTERIOR_Rev01.zip. Só permanece um redirecionamento no caminho antigo citado pelo erro de restauração.
+> **Antes de iniciar:** confirme a CPU, a seleção de rotas, a planilha ativa e a ausência de pendências de restauração. Mantenha apenas uma execução por bancada MES/CLP.
 
 ## Índice
 
-1. [Estrutura e arquivos preservados](#1-estrutura-e-arquivos-preservados)
+1. [Estrutura e documentos](#1-estrutura-e-arquivos-preservados)
 2. [Preparação e instalação](#2-preparação-e-instalação)
 3. [Configuração MES e SQL](#3-configuração-mes-e-sql)
 4. [Configuração S7 e critérios](#4-configuração-s7-e-critérios)
 5. [Planilha e seleção de rotas](#5-planilha-e-seleção-de-rotas)
-6. [Operar o Monitor](#6-operar-o-monitor)
-7. [Executar o Cypress](#7-executar-o-cypress)
+6. [Operação do Monitor](#6-operar-o-monitor)
+7. [Execução no Cypress](#7-executar-o-cypress)
 8. [Etapas e critérios do teste](#8-etapas-e-critérios-do-teste)
-9. [Resultados, evidências e planilha](#9-resultados-evidências-e-planilha)
-10. [Recuperar escrita pendente](#10-recuperar-escrita-pendente)
+9. [Resultados e integridade da LIR](#9-resultados-evidências-e-planilha)
+10. [Recuperação de escrita pendente](#10-recuperar-escrita-pendente)
 11. [Diagnóstico de erros](#11-diagnóstico-de-erros)
-12. [Git e controle de versão](#12-git-e-controle-de-versão)
-13. [Configurar outro projeto](#13-configurar-outro-projeto)
-14. [Eficiência, manutenção e regressão](#14-eficiência-manutenção-e-regressão)
-15. [Histórico consolidado e limites](#15-histórico-consolidado-e-limites)
+12. [Git e versionamento](#12-git-e-controle-de-versão)
+13. [Configuração de outro projeto](#13-configurar-outro-projeto)
+14. [Desempenho e regressão](#14-eficiência-manutenção-e-regressão)
+15. [Histórico e limites da validação](#15-histórico-consolidado-e-limites)
+16. [Evolução dos processos](#16-evolução-dos-processos)
 
-## 1. Estrutura e arquivos preservados
+<a id="1-estrutura-e-arquivos-preservados"></a>
+## 1. Estrutura e documentos
 
-| Caminho a partir da raiz do pacote | Função |
-|---|---|
-| MANUAL_OPERACAO.md | Manual atual |
-| documentacao/ | Arquivo histórico dos Markdown originais, índice de origem e relatório da organização |
-| CONFIGURAR_GIT.cmd | Configura autoria dos commits no repositório informado |
-| mes-s7-piloto/ | Projeto a abrir no Cypress |
-| mes-s7-piloto/cypress.config.js | Configuração integrada; preservar junto dos módulos comuns |
-| mes-s7-piloto/testes/transferencias/ | Testes, seleção de rotas, leitura/gravação da LIR e tarefas |
-| mes-s7-piloto/comum/s7/ | Consulta SQL, perfis, catálogo, leituras e ensaio LSH |
-| mes-s7-piloto/scripts/ | Diagnóstico, resumo e recuperação da planilha |
-| mes-s7-piloto/clp/System/PEData.plf | Fonte local do catálogo TIA |
-| mes-s7-piloto/planilhas/ | LIR operacional; subpasta arquivo guarda versões alternativas |
-| mes-s7-piloto/modelos/ | Modelos da planilha |
-| mes-s7-piloto/resultados/ | Execuções, capturas, históricos e controle persistente |
-| mes-s7-piloto/comum/fixtures/ | Dados de regressão; não substituir a LIR operacional por essas cópias |
-| mes-s7-piloto/docs/validacao/ | Relatórios técnicos recebidos; podem refletir execuções históricas |
-| mes-s7-piloto/.git/ | Histórico/configuração Git recebido, preservado sem reconfiguração |
-| monitor-s7/ | Serviço e interface do Monitor, com dependências recebidas |
-| verificar-tudo.cjs / VERIFICAR_REGRESSAO.cmd | Regressão local dos três grupos |
+Abra `mes-s7-piloto` como projeto Cypress. O Monitor é um serviço separado, na pasta `monitor-s7`. A raiz do repositório reúne a documentação e o verificador integrado.
 
-O pacote contém os dados enviados, inclusive resultados e configurações locais. Não sobrescreva uma instalação mais recente com esses dados. Ao aplicar somente esta organização à instalação ativa, copie o manual, a pasta documentacao, o utilitário Git e o redirecionamento documental; mantenha suas configurações, planilhas e resultados atuais. A extração mantém apenas um nível externo de Integracao_MES_S7_Piloto_11. Não crie outro diretório de mesmo nome dentro dele.
+| Caminho | Finalidade |
+| --- | --- |
+| `README.md` | Apresentação do projeto e acesso rápido aos documentos |
+| `MANUAL_OPERACAO.md` | Procedimentos operacionais desta revisão |
+| `documentacao/visual/Piloto_12_Manual_Visual_Rev04.html` | Manual visual com navegação, pesquisa e impressão |
+| `mes-s7-piloto/cypress.config.js` | Configuração integrada e registro de tarefas |
+| `mes-s7-piloto/testes/transferencias/` | Especificação, orquestração e regras do Transporte |
+| `mes-s7-piloto/comum/` e `comum/s7/` | Serviços, persistência, catálogo, perfis e comunicação |
+| `mes-s7-piloto/scripts/` | Diagnóstico, resumo, medição e recuperação de planilhas |
+| `mes-s7-piloto/planilhas/` | Local da LIR operacional, fornecida pela instalação |
+| `mes-s7-piloto/clp/System/PEData.plf` | Fonte TIA local, correspondente ao projeto da bancada |
+| `mes-s7-piloto/resultados/` | Eventos, evidências, históricos, backups e controle persistente |
+| `mes-s7-piloto/comum/fixtures/` | Planilhas de regressão; não usar como LIR operacional |
+| `monitor-s7/` | Serviço HTTP, interface e driver S7 |
+| `.agents/skills/piloto-evolucao-processos/` | Procedimento de evolução e matriz de processos |
+| `verificar-tudo.cjs` | Regressão do Piloto, do Monitor e da integração simulada |
+| `CHANGELOG.md` | Registro de versões e revisões documentais |
 
+**Cópia do GitHub:** configurações locais, dependências, resultados, LIR operacional e projeto CLP podem ser excluídos pelo `.gitignore`. Preserve ou forneça esses recursos na instalação. Não substitua arquivos locais mais recentes por cópias históricas.
+
+Os relatórios e manifestos antigos permanecem como registros de origem. A ausência de um arquivo histórico no checkout não impede o uso dos documentos atuais; consulte a origem indicada em cada registro.
+
+<a id="2-preparação-e-instalação"></a>
 ## 2. Preparação e instalação
 
-Use Windows com Node.js 22 ou superior e acesso ao MES, SQL e CPU de simulação. O Monitor e Cypress devem apontar para a instância correta. Não execute duas cópias do piloto simultaneamente contra o mesmo MES/CLP.
+Use Windows com Node.js 22 ou superior e acesso aos serviços da bancada. A configuração precisa apontar para o MES, o SQL e a CPU de simulação corretos.
 
-1. Extraia o pacote em uma pasta identificável. Mantenha a versão anterior para retorno.
-2. Preserve a LIR mais recente, resultados, credenciais locais e o estado de controle da instalação em andamento.
-3. Confira node --version no terminal.
-4. Se as dependências não estiverem instaladas, na pasta mes-s7-piloto execute npm.cmd ci. O lockfile é a referência. Isso pode exigir internet/cache do npm e do binário Cypress; não há instalador offline completo neste pacote.
-5. Para o Monitor, use INICIAR_MONITOR.cmd ou o executável compatível 0.13 já disponível no computador. Nenhum novo .exe foi compilado aqui.
-6. Confira as configurações antes de iniciar qualquer rota.
+### Instalar as dependências
+
+O **Node.js é instalado uma única vez no computador**. Nesta branch, Piloto e Monitor possuem seus próprios `package.json` e `package-lock.json`; as dependências são instaladas em cada subpasta. Não há um instalador npm na raiz.
+
+No PowerShell, a partir da raiz do repositório:
 
 ```powershell
-# Execute na pasta mes-s7-piloto
 node --version
+Set-Location .\mes-s7-piloto
+npm.cmd ci
+Set-Location ..\monitor-s7
+npm.cmd ci
+Set-Location ..
+```
+
+A instalação pode exigir internet ou caches do npm e do binário Cypress. O repositório não constitui um instalador offline completo. Esta entrega documental não recompila nem fornece um novo executável do Monitor.
+
+### Preparar a instalação
+
+1. Mantenha a versão anterior disponível para retorno.
+2. Preserve a LIR atual, os resultados, as configurações locais e qualquer pendência de escrita.
+3. Configure os arquivos MES/S7 e o SQL externo, conforme as seções seguintes.
+4. Instale as dependências das duas subpastas.
+5. Inicie o Monitor e faça o diagnóstico antes de selecionar um lote.
+
+Na pasta `mes-s7-piloto`:
+
+```powershell
 npm.cmd run diagnostico
 npm.cmd run diagnostico -- --monitor
 ```
 
-O diagnóstico comum lê configurações, LIR e pendência em disco. Com --monitor, consulta metadados HTTP do catálogo; não escreve no CLP, não inicia transferência e não valida o SQL. A pré-validação do teste faz a consulta SQL de leitura.
+O diagnóstico básico lê configurações, LIR e pendência em disco. A opção `--monitor` consulta o catálogo HTTP e verifica a disponibilidade da API de diagnóstico com uma lista vazia, sem abrir uma conexão com a CPU. Esses comandos não iniciam transferências, não escrevem no CLP e não validam a conexão SQL. A pré-validação do teste faz a consulta SQL de leitura.
 
+<a id="3-configuração-mes-e-sql"></a>
 ## 3. Configuração MES e SQL
 
-### MES
+### Opções de execução
 
-Edite mes-s7-piloto/execucao.local.json. Não copie comentários para dentro de JSON.
+Configure `mes-s7-piloto/execucao.local.json`. Use JSON válido, sem comentários. Campos desconhecidos são recusados pelo carregador.
 
 | Campo | Uso |
-|---|---|
-| planilha | Caminho relativo dentro de planilhas, por exemplo planilhas/CL373.00.LIR.04.xlsx |
-| urlMes | URL da aplicação, nesta instalação http://localhost/nexxus-mes |
-| usuarioMes | Usuário MES |
-| selecaoRotas | pendentes, falhas, nao-testadas ou todas |
-| modoBusca | estavel: reconsulta campo entre caracteres; rapida: digitação inteira em interface estável |
-| capturaDesktop | true mantém captura desktop Windows; false usa somente captura pelo Cypress |
-| numTestsKeptInMemory | Número de testes mantidos em memória no runner; exemplo 5 |
-| esperaBuscaMs / esperaVisualS7Ms / esperaMesSemS7Ms | Esperas adicionais de 0 a 10000 ms; manter 0 quando a sincronização por condição funcionar |
+| --- | --- |
+| `planilha` | Caminho da LIR dentro de `planilhas/`, por exemplo `planilhas/CL373.00.LIR.04.xlsx` |
+| `urlMes` | Endereço do MES; a referência da bancada é `http://localhost/nexxus-mes` |
+| `usuarioMes` | Nome do usuário selecionado no login |
+| `selecaoRotas` | `pendentes`, `falhas`, `nao-testadas` ou `todas` |
+| `modoBusca` | `estavel`: reconsulta entre caracteres; `rapida`: preenchimento integral, com verificação e alternativa estável |
+| `capturaDesktop` | `true` mantém a captura desktop Windows; `false` mantém somente as capturas previstas pelo Cypress |
+| `numTestsKeptInMemory` | Quantidade de testes mantidos em memória, de 0 a 50; referência: 5 |
+| `esperaBuscaMs`, `esperaVisualS7Ms`, `esperaMesSemS7Ms` | Esperas adicionais entre 0 e 10000 ms; referência: 0 |
 
-O Cypress lê a chave senhaMES de credenciais.local.json na pasta mes-s7-piloto aberta no runner. Feche e reabra o runner depois de corrigir o arquivo. Se a senha MES já vier pela configuração do Cypress, ela tem prioridade. O arquivo de exemplo é apenas referência; não coloque senhas no manual ou em commits. Preserve os mecanismos de credencial existentes. Campos desconhecidos em execucao.local.json são recusados.
+### Credenciais do MES
 
-### SQL Server
+O carregador procura `credenciais.local.json` na raiz do projeto Cypress, ao lado de `cypress.config.js`. A chave é **`senhaMES`**, com essa capitalização. O valor abaixo é apenas um marcador:
 
-O módulo lê a configuração externa em %LOCALAPPDATA%/Nexxus/cypress-clp/sql.local.json. Se essa não existir e a pasta antiga CypressCLP tiver o arquivo, utiliza a antiga. Esse caminho é por usuário do Windows e fica fora do projeto intencionalmente.
+```json
+{
+  "senhaMES": "SUBSTITUA_PELA_SENHA_LOCAL"
+}
+```
 
-Campos: server, instance, database, user, password, port opcional, trustServerCertificate e caFile opcional. Com port explícita, a instância nomeada não é aplicada pelo módulo. Sem porta, instance configura a instância SQLEXPRESS desta instalação. Variáveis FMS_SQL_* existentes no processo podem prevalecer sobre os dados do arquivo.
+Uma senha já fornecida em `env.senhaMES` tem precedência. O carregador atual reconhece UTF-8 com ou sem BOM e UTF-16 com BOM. Mantenha credenciais fora dos commits, capturas e relatórios. Após alterar a configuração, recarregue o projeto no Cypress; reexecutar somente a spec pode manter os dados anteriores.
 
-Para certificado confiável, use a CA em caFile (caminho relativo à pasta SQL local). Para a bancada que usa certificado autoassinado e aceita esse modo, trustServerCertificate: true dispensa caFile e aceita o certificado do servidor; a conexão continua encrypt: true. Use booleanos sem aspas. Essa escolha deve corresponder à configuração de conexão da instalação.
+### Conexão SQL Server
 
-A consulta é parametrizada pelo código da rota e cruza dbo.[Rota.Segmento.Equipamento] com dbo.[Equipamento]. O nome textual da rota não define sozinho todos os equipamentos. Não substitua o cypress.config.js integrado por um config de exemplo: isso perde os registros de tarefas existentes.
+O arquivo é externo ao projeto e pertence ao usuário Windows que executa o Cypress:
 
+```text
+%LOCALAPPDATA%\Nexxus\cypress-clp\sql.local.json
+```
+
+Se esse arquivo não existir, o módulo pode usar a pasta legada `CypressCLP`. Variáveis `FMS_SQL_*` do processo podem prevalecer sobre os valores do arquivo.
+
+| Campo | Orientação |
+| --- | --- |
+| `server`, `database`, `user`, `password` | Servidor, banco e credenciais da instalação |
+| `instance` | Instância nomeada, como `SQLEXPRESS` na referência da bancada |
+| `port` | Opcional; quando explícita, a instância nomeada não é aplicada |
+| `trustServerCertificate` | Booleano coerente com a política de certificado da instalação |
+| `caFile` | Caminho da CA; quando relativo, é resolvido na pasta da configuração SQL |
+
+A conexão utiliza `encrypt: true`. Na bancada que aceita certificado autoassinado, `trustServerCertificate: true` dispensa a CA. Essa escolha é da instalação; não deve ser transportada automaticamente para outro ambiente.
+
+A consulta parametrizada cruza `dbo.[Rota.Segmento.Equipamento]` e `dbo.[Equipamento]`. O cadastro de silo usa `dbo.Silo`. O nome da rota, isoladamente, não identifica todos os equipamentos. Preserve o `cypress.config.js` integrado para manter os registros das tarefas.
+
+<a id="4-configuração-s7-e-critérios"></a>
 ## 4. Configuração S7 e critérios
 
-Edite mes-s7-piloto/s7.local.json. Configuração recebida: host 10.255.11.52, rack 0, slot 1, pollMs 200, intervaloConsultaMs 1000, prazoS7Ms 45000, modoValidacao entradas e tipoContatoLSH 1. Esses são valores da bancada, não padrões universais.
+Configure `mes-s7-piloto/s7.local.json`. O arquivo local não é distribuído pelo Git. Se a mensagem de erro citar `s7.exemplo.json`, confira sua existência: esse modelo não está presente no checkout de referência desta revisão. Preserve a configuração anterior validada ou prepare uma configuração específica da bancada.
 
-| Campo | Função |
-|---|---|
-| habilitado | true = MES + S7; false = fluxo MES |
-| codigoRota | null para lote; número inteiro para rota específica |
-| monitor | URL do serviço HTTP, normalmente http://127.0.0.1:3000 |
-| host / rack / slot | CPU de destino e parâmetros da conexão S7 |
-| peData | clp/System/PEData.plf |
-| fonteCatalogo | automatico, monitor ou arquivo, conforme suporte do código |
-| catalogoId | Identificador de catálogo para seleção explícita, ou null |
-| modoValidacao | sql para perfil por equipamento/tipo; entradas para sempre usar retornos de entrada |
-| incluirLSHNoMonitor | Inclui LSH no monitoramento |
-| escritaManualLSH | Permissão usada no mapeamento da LSH para escrita; não substitui a fase automática |
-| nivelAlto.habilitado | Habilita ensaio LSH nas rotas aplicáveis |
-| nivelAlto.prazoMs | Prazo para reação de nível alto; recebido 60000 ms |
+| Campo | Finalidade |
+| --- | --- |
+| `habilitado` | `true` para MES + S7; `false` para o fluxo MES |
+| `codigoRota` | Número inteiro para uma rota específica; `null` para lote |
+| `monitor` | URL HTTP local do Monitor, normalmente `http://127.0.0.1:3000` |
+| `host`, `rack`, `slot` | CPU e parâmetros da conexão S7 |
+| `pollMs` | Ciclo do Monitor; referência da bancada: 200 ms |
+| `intervaloConsultaMs` | Consulta do piloto; referência: 1000 ms |
+| `prazoS7Ms` | Prazo de confirmação S7; referência: 45000 ms |
+| `peData` | Fonte TIA, normalmente `clp/System/PEData.plf` |
+| `fonteCatalogo` | `automatico`, `monitor` ou `arquivo`, conforme o fluxo implementado |
+| `catalogoId` | Catálogo explícito ou `null` |
+| `modoValidacao` | `entradas` para retornos de posição; `sql` para seleção por perfil |
+| `tipoContatoLSH` | `0` para NA; `1` para NF |
+| `incluirLSHNoMonitor` | Inclui a LSH no mapeamento |
+| `escritaManualLSH` | Habilita a permissão de escrita no ponto mapeado |
+| `nivelAlto.habilitado` | Habilita o ensaio de nível alto nas rotas aplicáveis |
+| `nivelAlto.prazoMs` | Prazo de confirmação; referência: 60000 ms |
+| `nivelAlto.offsetsConfirmacao` | Offsets admitidos; referência do projeto: `1.0` e `1.1` |
+| `nivelAlto.alarmesConfirmados` | Endereços explicitamente conferidos no projeto |
+| `nivelAlto.rearmarRecusaPlcsim` | Opção explícita para o procedimento de rearme no PLCSIM; desativada por padrão |
+| `camposDiagnosticoEquipamentos` | Nomes completos de campos adicionais do catálogo para diagnóstico |
 
-Mesmo em modo entradas, o SQL continua necessário para descobrir os vínculos da rota e o comando de cada equipamento. Em modo sql, perfis-s7.json escolhe por cod_equipamento antes de tip_equipamento; a regra determina EspelhoEntrada1/2 ou EspelhoSaida1/2 e a necessidade de desligado inicial. Tipo sem regra válida falha explicitamente. Comando 0 é ignorado nos retornos de acionamento; comando 1 ou 2 escolhe o espelho correspondente.
+A CPU `10.255.11.52`, rack 0 e slot 1 é uma referência da bancada anterior, não um padrão universal. Confirme esses dados antes de executar.
 
-Gavetas de duplo solenoide podem emitir apenas pulso na saída. Para confirmar posição estável, utilizar retorno de entrada conforme perfil ou modo entradas, sem exigir saída permanentemente ligada.
+### Retornos e perfis
 
-### Polaridade e alarme LSH
+O SQL continua necessário no modo `entradas`, pois identifica os vínculos e comandos da rota. No modo `sql`, `perfis-s7.json` prioriza a regra por equipamento e depois por tipo. Comando 0 não participa dos retornos de acionamento; comandos 1 e 2 selecionam seus espelhos. Tipos sem regra válida falham explicitamente.
 
-| tipoContatoLSH | Contato | Nível alto na entrada | Sem nível alto |
-|---|---|---|---|
-| 0 | NA | 1 / true | 0 / false |
-| 1 | NF | 0 / false | 1 / true |
+Gavetas com duplo solenoide podem ter saída pulsada. Confirme a posição pelo retorno de entrada quando esse for o critério do perfil; uma saída momentânea não comprova posição mantida.
 
-O botão Aciona do Monitor escreve 1; Desaciona escreve 0. Isso não significa automaticamente ativar/desativar alarme: para NF, o nível alto é 0.
+### Polaridade da LSH
 
-Nesta bancada, nivelAlto.offsetsConfirmacao contém 1.0 e 1.1: Alm OU Aviso pode confirmar o sensor, junto da entrada e do status MES. Não são dois alarmes obrigatórios simultâneos. O endereço explícito conhecido de LSH_MG14 consta em alarmesConfirmados. Não derive DB/offset de um ID sem confirmação no catálogo. O layout deve ser revisto ao mudar de projeto.
+| `tipoContatoLSH` | Contato | Entrada em nível alto | Entrada normal |
+| --- | --- | --- | --- |
+| `0` | NA | `1 / true` | `0 / false` |
+| `1` | NF | `0 / false` | `1 / true` |
 
+No Monitor, **Aciona** escreve 1 e **Desaciona** escreve 0. Para contato NF, portanto, escrever 0 representa nível alto.
+
+A aprovação do ensaio combina a entrada, **Alm OU Aviso** e a situação **Nível Alto** no MES. Não exige os dois bits digitais simultaneamente. Os offsets `1.0` e `1.1` pertencem ao layout de referência e precisam ser conferidos ao mudar de projeto. Não derive DB e offset apenas de um ID.
+
+### Diagnóstico e rearme
+
+O ponto `Silo[X].Niveis.Alto` do DB11 é diagnóstico. Seu mapeamento depende de cadastro SQL e layout coerentes; ele não substitui os critérios de aprovação. O diagnóstico de equipamentos usa os endereços confirmados no catálogo e diferencia valores lidos de condições não verificadas.
+
+O rearme no PLCSIM exige habilitação explícita e guardas de estado. A normalização pode envolver uma escrita única ou nenhuma escrita quando os sinais já estão normais. Uma nova recusa encerra a tentativa sem novo rearme. Consulte o [registro de estabilidade](mes-s7-piloto/docs/PILOTO_11_ESTABILIDADE.md#rearme-após-recusa-de-partida-no-plcsim-60) antes de habilitar esse recurso.
+
+<a id="5-planilha-e-seleção-de-rotas"></a>
 ## 5. Planilha e seleção de rotas
 
-Mantenha a LIR mais recente na pasta planilhas e defina seu caminho em execucao.local.json. Sem caminho explícito, a descoberta deve encontrar uma única planilha real além do modelo; múltiplos candidatos exigem seleção explícita. Não use arquivos temporários do Excel como planilha operacional. Nomes arbitrários são possíveis se o conteúdo e os cabeçalhos forem compatíveis.
+Mantenha a LIR operacional em `mes-s7-piloto/planilhas/` e indique seu caminho em `execucao.local.json`. Sem seleção explícita, a descoberta precisa encontrar um único candidato operacional. Arquivos temporários do Excel e fixtures de regressão não são a planilha de operação.
 
-A aba de rotas usada pelo gravador é Lista de Rotas - Transferências. Não renomeie abas/cabeçalhos operacionais sem adequação controlada do leitor. O piloto confere identidade da linha e status antes de atualizar. IO/ID e campos de nível alto devem estar preenchidos de acordo com a LIR do projeto; ausência não deve virar endereço presumido.
+A aba usada pelo gravador é **Lista de Rotas - Transferências**. Preserve abas e cabeçalhos. O piloto verifica a identidade da linha e o status antes de gravar.
 
-| selecaoRotas com codigoRota null | Seleção |
-|---|---|
-| pendentes | Teste NT/NOK; com nível habilitado, também pendências de nível aplicáveis |
-| falhas | Teste NOK ou nível alto NOK aplicável |
-| nao-testadas | Apenas Teste NT |
-| todas | Todas as rotas aplicáveis, incluindo OK |
+| Seleção com `codigoRota: null` | Rotas consideradas |
+| --- | --- |
+| `pendentes` | Teste NT/NOK e, quando habilitadas, pendências de nível alto aplicáveis |
+| `falhas` | Teste NOK ou nível alto NOK aplicável |
+| `nao-testadas` | Somente Teste NT |
+| `todas` | Todas as rotas aplicáveis, inclusive as já aprovadas |
 
-Para retestar a rota 91, configure codigoRota: 91; para voltar ao lote, codigoRota: null. Não use string vazia nem 0 como lote. Com todas as rotas da seleção concluídas, o piloto informa a ausência de pendências; os totais dependem da LIR atual, não dos números históricos das versões.
+Use `codigoRota: 91` para um ensaio específico e `codigoRota: null` para voltar ao lote. Não use 0 ou string vazia como substituto de `null`.
 
-Alterações em configurações, planilha ou seleção exigem recarregar a configuração do projeto no Cypress para reconstruir o lote. Reexecutar somente uma spec pode reutilizar a configuração anterior. O watcher foi desativado para impedir reinício involuntário durante uma operação.
+Rotas sem IO/ID de nível alto, ou marcadas com `---` conforme as regras da LIR, podem manter o teste normal e registrar o ensaio de nível alto como não aplicável. Não crie endereços presumidos para preencher lacunas. Consulte os casos detalhados no registro de estabilidade.
 
-## 6. Operar o Monitor
+Depois de mudar seleção, configuração ou planilha, recarregue o projeto para reconstruir o lote. O watcher fica desativado para evitar reinício involuntário durante a operação.
 
-1. Inicie monitor-s7/INICIAR_MONITOR.cmd (Node) ou o executável compatível já instalado. Mantenha o serviço aberto durante o lote.
-2. Abra a URL exibida no terminal, normalmente http://127.0.0.1:3000. Loopback é a máquina do processo/navegador; não é automaticamente o servidor MES.
-3. Configure a CPU e confira o estado da conexão. Conectado sem tags significa negociação concluída, sem leituras mapeadas.
-4. Abra um catálogo salvo correspondente à CPU ou importe a pasta principal TIA com o PEData. O catálogo persistente evita varredura repetida; abrir o cache não comprova a versão efetiva carregada na CPU.
-5. Pesquise nome, palavras, DB ou endereço; combine área, grupo e tipo. Use limpar filtros para reiniciar a pesquisa. A lista pagina resultados para não renderizar tudo de uma vez.
-6. Adicione os pontos necessários e aplique tags. Monitorar e Permitir escrita são escolhas por ponto. O checkbox antigo de conferência do nome não é mais obrigatório.
-7. Use Cartões/Tabela e ajuste a apresentação disponível. A visualização do piloto também mostra tabela de acompanhamento no runner; ela acompanha as tarefas e não depende de iframe da página completa do Monitor.
+<a id="6-operar-o-monitor"></a>
+## 6. Operação do Monitor
 
-Catálogos ficam por padrão em %LOCALAPPDATA%/Nexxus/MonitorS7/catalogos, fora da instalação. São mantidos até remoção explícita. O PEData e JSON extraído ocupam espaço por versão; não há cópia por consulta. MONITOR_S7_DATA_DIR pode alterar o diretório do serviço. Conexão/mapeamento da sessão e catálogo persistente são estados diferentes; abrir um catálogo não reconecta automaticamente a CPU.
+1. Execute `monitor-s7/INICIAR_MONITOR.cmd` ou, nessa pasta, `npm.cmd start`. Mantenha o serviço aberto durante o lote.
+2. Acesse a URL exibida no terminal, normalmente `http://127.0.0.1:3000`.
+3. Confira CPU, rack, slot e estado da conexão. Conectado sem tags indica negociação, não confirmação de leituras.
+4. Abra um catálogo salvo correspondente ao projeto ou importe a pasta TIA com o PEData.
+5. Pesquise por nome, palavras, DB ou endereço e combine os filtros de área, grupo e tipo.
+6. Adicione os pontos e aplique o mapeamento. **Monitorar** e **Permitir escrita** são escolhas por ponto.
+7. Use Cartões ou Tabela conforme a necessidade. O painel do piloto acompanha as tarefas e não depende de um iframe da interface completa.
 
-A escrita é pontual, com confirmação e releitura; não é força cíclica. A CPU/simulação pode sobrescrever o valor. BOOL usa Aciona/Desaciona sem modal; números usam editor inline. Endereço, sessão, qualidade, faixa e permissão continuam validados. Não interpretar acknowledged isolado como sensor estabilizado: conferir verified/observed e a reação do programa.
+Loopback é a máquina em que o serviço/navegador está em execução; não representa automaticamente o servidor MES. Um catálogo salvo não comprova a versão carregada na CPU nem restabelece a conexão por si só.
 
-### Endereçamento
+Os catálogos ficam em `%LOCALAPPDATA%/Nexxus/MonitorS7/catalogos`, salvo configuração de `MONITOR_S7_DATA_DIR`. A fonte PEData e o JSON extraído são persistidos por versão, não por consulta.
 
-| TIA | Monitor | Interpretação |
-|---|---|---|
-| %I34.6 | I34.6 | Entrada BOOL |
-| DB1149.DBX1.5 | DB1149,X1.5 | Bit de DB, byte 1 bit 5 |
-| DB5.DBW2 com INT | DB5,INT2 | Inteiro no byte 2 |
-| DB5.DBD4 com REAL | DB5,REAL4 | Real no byte 4 |
+### Escrita e endereçamento
 
-O texto do endereço usa a sintaxe do driver S7, preservando área/byte/bit/tipo. Não é uma conversão por nome Siemens. Confirmar offsets do catálogo com o projeto; o extrator PEData reconhece estruturas específicas e pode ter catálogo parcial. Para DB absoluto clássico, verificar acesso padrão e configuração de comunicação da CPU da bancada.
+A escrita é pontual, com validação de sessão, qualidade, tipo, faixa, permissão e releitura. Ela não força a entrada ciclicamente; a CPU pode sobrescrever o valor. Para BOOL, os comandos são diretos; números usam editor inline. `acknowledged` sozinho não equivale a sinal estabilizado: confira `verified`, `observed` e a resposta do programa.
 
-## 7. Executar o Cypress
+| Endereço no TIA | Sintaxe no Monitor | Interpretação |
+| --- | --- | --- |
+| `%I34.6` | `I34.6` | Entrada BOOL |
+| `DB1149.DBX1.5` | `DB1149,X1.5` | Bit 5 do byte 1 |
+| `DB5.DBW2` como INT | `DB5,INT2` | Inteiro no byte 2 |
+| `DB5.DBD4` como REAL | `DB5,REAL4` | Real no byte 4 |
 
-Na pasta mes-s7-piloto, execute ABRIR_CYPRESS.cmd ou:
+O catálogo PEData pode ser parcial. Confirme área, tipo e offsets no projeto, além das condições de acesso absoluto da CPU da bancada.
+
+<a id="7-executar-o-cypress"></a>
+## 7. Execução no Cypress
+
+Na pasta `mes-s7-piloto`, execute `ABRIR_CYPRESS.cmd` ou:
 
 ```powershell
 npm.cmd run abrir
 ```
 
-Escolha E2E e o navegador. Abra testes/transferencias/transferencias.cy.js. Não abra outro projeto aninhado por engano. Confirme no log a versão, seleção e host antes do lote.
+Selecione E2E, o navegador e `testes/transferencias/transferencias.cy.js`. Confirme a identificação do piloto, o host e as rotas selecionadas antes do lote.
 
-Para execução pelo terminal com navegador visível, npm.cmd run executar. Use esse modo somente depois de validar a configuração no runner. Não troque config, tarefas ou imports durante um teste ativo.
-
-Para interromper, use Stop e confira o estado MES/S7 antes de nova execução. Fechar o Cypress não garante restauração de uma escrita já enviada. O arquivo de pendência deve ser respeitado.
-
-## 8. Etapas e critérios do teste
-
-| Etapa | Ação e aprovação |
-|---|---|
-| Pré-validação | Conferir LIR, configuração, registro pendente, catálogo/LSH e SQL inicial |
-| Login | Acessar MES, autenticar e abrir transferência |
-| Seleção | Local, transferência, origem, destino e rota; conferir seleção exata |
-| Preparar S7 | Consultar todos os vínculos SQL e escolher os retornos; preparar leitura |
-| Partida | Clicar Iniciar e acompanhar S7 imediatamente; não aguardar Iniciado para começar a ler equipamentos |
-| Confirmar | Retornos esperados e situação MES; registrar evidências |
-| Nível alto | Se aplicável: registrar intenção, escrever LSH conforme NA/NF, confirmar entrada + Alm OU Aviso + MES Nível Alto |
-| Restaurar | Retornar ao valor original e confirmar por releitura; só então remover registro da escrita |
-| Encerrar | Finalizar/limpar transferência e comprovar local vazio antes de liberar outra rota |
-| Persistir | Eventos, evidência, histórico e atualização LIR com resultado |
-
-Se o MES recusar partida por destino já em nível alto, registrar NOK, evidência e fechar a mensagem. A próxima rota só é liberada após confirmar ausência de transferência/diálogo e restauração quando houver escrita do piloto.
-
-Cartões são procurados no local certo pelo nome esperado, sem usar o botão Limpar do formulário como sinal de transferência ativa. Contêiner Situação vazio, + ou ícone add não é status real. Um cartão do nome esperado, sem Parar, com um único Limpar e sem status real pode ser encerrado por Limpar → confirmação → Sim → confirmação de local vazio. Cartão ativo, de outro nome, duplicado ou estado ambíguo não recebe limpeza indiscriminada.
-
-O afterEach confere o estado e registra resultados; não repete automaticamente comandos de partida, parada, limpeza ou escrita cuja resposta ficou incerta. A restauração normal da LSH pertence ao fluxo de controle previsto. Lote bloqueado por estado indefinido deve ser investigado, não contornado removendo validações.
-
-## 9. Resultados, evidências e planilha
-
-Cada execução tem pasta própria em resultados. Histórico XLSX, capturas, evidências S7 e eventos.jsonl são complementares. O diário registra resultado recebido antes da persistência da planilha e depois a confirmação de persistência. Uma falha de gravação não deve apagar o resultado original nem autorizar o próximo teste silenciosamente.
+Para execução pelo terminal com navegador visível:
 
 ```powershell
-# Dentro de mes-s7-piloto; substitua pelo nome real da pasta
+npm.cmd run executar -- --spec "testes/transferencias/transferencias.cy.js"
+```
+
+**Esse comando opera o ambiente configurado:** pode enviar comandos ao MES, escrever a LSH e atualizar a LIR. Use-o somente com a bancada e a seleção conferidas. Não troque configurações, imports ou tarefas durante um lote ativo.
+
+Para interromper, use Stop e confira os estados MES/S7 antes de uma nova execução. Fechar o Cypress não comprova a restauração de uma escrita enviada.
+
+<a id="8-etapas-e-critérios-do-teste"></a>
+## 8. Etapas e critérios do teste
+
+| Etapa | Ação e condição de aprovação |
+| --- | --- |
+| Pré-validação | Conferir LIR, configuração, pendência, catálogo, LSH e consulta SQL inicial |
+| Login | Autenticar no MES e preparar a sessão de navegação |
+| Seleção | Confirmar local, transferência, origem, destino e rota exata |
+| Preparação S7 | Consultar vínculos e selecionar os retornos do perfil |
+| Partida | Acionar Iniciar e observar os equipamentos sem esperar primeiro a situação Iniciado |
+| Confirmação | Validar os retornos S7 e a situação no MES; registrar evidências |
+| Nível alto | Quando aplicável, persistir a intenção, escrever a LSH e confirmar entrada + Alm OU Aviso + MES |
+| Restauração | Confirmar por releitura o retorno ao valor original antes de liberar a pendência |
+| Encerramento | Finalizar ou limpar somente o cartão identificado e comprovar o local vazio |
+| Persistência | Gravar eventos, evidência, histórico e resultado na LIR |
+
+### Recusas, impedimentos e recuperação
+
+A recusa por nível alto deve corresponder ao destino da rota. Preserve a mensagem, a captura e o resultado. Quando as guardas do rearme PLCSIM permitem nova tentativa, ela é única. Uma segunda recusa com S7 normal pode adiar o mesmo destino naquele local até o próximo lote, conforme o fluxo implementado.
+
+O reconhecimento do cartão depende do local e do nome esperado. Situação vazia, `+` e ícone `add` não constituem status real. Um cartão encerrado, identificado e sem Parar pode admitir Limpar, confirmação e verificação de local vazio. Cartões ativos, duplicados, de outro nome ou ambíguos não recebem limpeza indiscriminada.
+
+Para cartão Interrompido ou Iniciar desabilitado, o diagnóstico registra condições visíveis e estados S7 confirmados. Informação indisponível permanece não verificada. A limpeza de cartão interrompido exige identidade e condições específicas, descritas no registro de estabilidade; o diagnóstico não transforma uma falha em aprovação.
+
+O `afterEach` registra o resultado e pode executar a recuperação prevista, com guardas de identidade, execução e restauração. Para uma rota observada em Iniciado, a primeira parada de recuperação pode ser permitida. Isso não autoriza repetição indiscriminada de partida, parada, limpeza ou escrita com resposta incerta. Estado indefinido mantém o bloqueio.
+
+<a id="9-resultados-evidências-e-planilha"></a>
+## 9. Resultados e integridade da LIR
+
+Cada lote possui sua própria pasta em `resultados/`. Histórico XLSX, capturas, evidência S7 e `eventos.jsonl` se complementam. O diário registra o recebimento do resultado e, em seguida, a confirmação de persistência. Uma falha de gravação não autoriza o próximo teste silenciosamente.
+
+Na pasta `mes-s7-piloto`:
+
+```powershell
 npm.cmd run resumo -- Teste_rotas_Rev00_NOME_DA_EXECUCAO
 ```
 
-O comando cria resumo.json, considera o último resultado por rota e sinaliza pendências de persistência. Não reaplica automaticamente resultados a outra LIR. Preserve o JSONL e a planilha em uso para reconciliação.
+O comando cria `resumo.json`, considera o último resultado por rota e aponta pendências. Ele não reaplica resultados automaticamente a outra LIR. Preserve a planilha e o JSONL para reconciliação.
 
-### Integridade e recuperação da LIR
+### Gravação e backups
 
-A rotina 11.4 grava por Node, normaliza o defeito conhecido de namespace XML e valida todo XML e ZIP antes de substituir a LIR. O PowerShell antigo de gravação foi desativado; PowerShell de captura desktop é outro recurso. Fórmulas, estilos e calcChain são preservados; células de fórmula não são sobrescritas. Solicita recálculo ao Excel.
+O gravador Node, introduzido no 11.4, valida ZIP/XML e trata o defeito conhecido de namespace antes da substituição. Preserva fórmulas, estilos e `calcChain`; solicita recálculo ao Excel. O gravador PowerShell antigo está desativado. O PowerShell da captura desktop tem outra finalidade.
 
-Backups ficam em resultados/<execucao>/backups-lir: inicio (primeira versão daquela execução) e anterior (versão imediatamente anterior). Não é um backup por rota. O gravador confere hash, marcador Excel/LibreOffice e lock antes da substituição. Se existir trava de outro gravador, não apague enquanto ele estiver ativo.
+Os backups ficam em `resultados/<execucao>/backups-lir`: `inicio` guarda a primeira versão do lote e `anterior` a versão imediatamente precedente. Não há uma cópia completa por rota. Hash, marcador Excel/LibreOffice e lock protegem a substituição. Não remova a trava de um gravador ativo.
 
-Para o aviso Excel de namespace d6p1/xml ou conteúdo ilegível:
+### Planilha com aviso de reparo
 
-1. Preserve o original sem aceitar/salvar reparos destrutivos do Excel.
+1. Preserve o original antes de aceitar qualquer reparo do Excel.
 2. Feche Excel e Cypress.
-3. Execute REPARAR_PLANILHA.cmd em mes-s7-piloto; ou arraste o XLSX problemático sobre ele, inclusive fora da pasta original.
-4. Abra a nova cópia em resultados/recuperacao e confira todas as abas/resultados antes de trocar a ativa.
-5. Se o Excel já removeu dados e você salvou por cima, use original/backup; a ferramenta não inventa conteúdo apagado.
+3. Execute `REPARAR_PLANILHA.cmd` ou arraste o XLSX sobre esse arquivo.
+4. Abra a cópia gerada em `resultados/recuperacao` e confira todas as abas.
+5. Troque a planilha ativa somente após conferir o conteúdo. Dados já removidos e salvos pelo Excel exigem original ou backup.
 
-Alternativa: npm.cmd run recuperar:planilha -- "C:\caminho\arquivo.xlsx". O original não é sobrescrito. A verificação da base antiga preservou 340 fórmulas; esse número não é garantia de conteúdo para qualquer planilha. O estado atual da LIR enviada não deve ser substituído por fixtures ou bases históricas.
+Alternativa, na pasta do piloto:
 
-## 10. Recuperar escrita pendente
+```powershell
+npm.cmd run recuperar:planilha -- "C:\caminho\arquivo.xlsx"
+```
 
-Uma escrita LSH cria resultados/controle/escrita-pendente.json antes do comando e só o remove após restauração confirmada. Em interrupção ou resposta perdida, a próxima execução bloqueia. Fechar/reabrir o Cypress não apaga a pendência. Durante o ensaio, se o Node continuar ativo após o prazo de nível alto mais 15 segundos, a proteção de prazo usa a rotina de restauração na sessão proprietária e registra o resultado no log do lote. Ela não envia parada ao MES. Se a pendência continuar em disco, siga os passos abaixo.
+O original não é sobrescrito. A contagem histórica de 340 fórmulas pertence à base antiga e não comprova a integridade de qualquer outra planilha.
 
-1. Pare o lote e impeça novas execuções enquanto confere os registros. Preserve o JSON, os temporários correspondentes e as evidências S7/MES com seus horários. Uma falha de `rename` na fase confirmada ocorre após a releitura da escrita pelo Monitor.
-2. Confira host, endereço e valor original no registro. Identifique a transferência exata no MES. Se ela ainda estiver em andamento, peça ao operador autorizado que coordene a parada e a limpeza do cartão conforme o procedimento da área e confirme que a rota ficou livre.
-3. Na mesma CPU de simulação, confirme por leitura estável o valor esperado. Num ensaio de nível alto, use o campo `original`. Se o registro tem tipo `rearme-plcsim`, use o campo `destino`, que representa o valor normal, e confirme Alm/Aviso inativos.
-4. Só após conferência, renomeie o arquivo para escrita-pendente-conferida-DATA.json. Preserve o registro.
-5. Recarregue o projeto/execute novamente. Se reaparecer, investigar a nova pendência.
+<a id="10-recuperar-escrita-pendente"></a>
+## 10. Recuperação de escrita pendente
 
-Exemplo da ocorrência relatada: I128.4, CPU 10.255.11.52, original 1. Esses valores são daquele registro, não substituem a leitura do JSON da próxima ocorrência. O piloto não força ciclicamente a entrada nem reconstrói uma sessão de escrita antiga ao reiniciar.
+O arquivo `resultados/controle/escrita-pendente.json` registra a intenção antes do comando. Sua remoção depende da normalização ou restauração confirmada, de acordo com o tipo de operação. Uma pendência bloqueia o próximo ensaio; reiniciar o Cypress não a resolve.
 
+Se o Node permanecer ativo, a proteção de prazo tenta a restauração na sessão proprietária 15 segundos após o prazo de nível alto. O resultado é registrado no lote. Essa proteção não envia parada ao MES e não funciona após o término de todo o processo Node.
+
+### Procedimento de conferência
+
+1. Pare o lote e impeça novas execuções. Preserve o registro, os temporários e as evidências com seus horários.
+2. Confira CPU, endereço, operação e valor esperado. Identifique a transferência exata no MES e coordene seu encerramento com o operador autorizado.
+3. Confirme o sinal por leitura estável na CPU de simulação correta. Para ensaio de nível alto, confira `original`; para `rearme-plcsim`, confira `destino` e Alm/Aviso inativos.
+4. Somente após a conferência, arquive o registro por renomeação, por exemplo `escrita-pendente-conferida-DATA.json`. Não o apague.
+5. Recarregue o projeto. Se houver nova pendência, investigue o novo registro antes de continuar.
+
+Uma falha de `rename` na fase confirmada pode ocorrer após a releitura da escrita pelo Monitor. Não presuma ausência de escrita a partir de uma falha de arquivo. A ocorrência antiga em `I128.4`, CPU `10.255.11.52`, original 1 é apenas um exemplo histórico; o registro da operação corrente é a referência.
+
+<a id="11-diagnóstico-de-erros"></a>
 ## 11. Diagnóstico de erros
 
-| Mensagem/sintoma | Verificação e ação |
-|---|---|
-| fetch failed em validarCatalogoS7 | Serviço do Monitor, URL/porta, processo e acesso HTTP; consulte diagnóstico com --monitor antes de iniciar |
-| consultarRota não registrada | Projeto/config errado ou módulos incompletos; manter o config integrado e o pacote conjunto |
-| user/password SQL ausentes | Conferir o sql.local.json do usuário Windows que executa Cypress |
-| self-signed certificate / caFile | Conferir política TLS configurada e caminho PEM externo, ou trustServerCertificate da bancada |
-| Nenhuma rota selecionada | codigoRota, selecaoRotas, LIR e status atuais; todas OK pode significar ausência legítima de pendências |
-| Cartão ausente/ambíguo | Aba/local correto e renderização; preserve evidência antes de intervir; não selecionar o primeiro cartão arbitrariamente |
-| Cartão só com Limpar | Aplicar regra de encerramento identificado; ausência de Parar não implica sempre erro |
-| LSH já em nível alto | Conferir condição de processo/polaridade; recusa de partida deve virar NOK com recuperação de estado conhecido |
-| Restauração pendente em disco | Seguir seção 10; reiniciar serviço não resolve o registro |
-| Saída de gaveta não permanece | Verificar tipo/perfil e retorno de entrada; pulso não é confirmação permanente de posição |
-| Alarme não confirma | Conferir permanência da entrada, catálogo/layout, Alm/Aviso e reação do MES |
-| Erro ao salvar LIR | Fechar Excel; verificar lock, hash, permissões e JSONL; preservar dados antes de nova execução |
-| Planilha pede reparo | Recuperação por cópia da seção 9; não sobrescrever o original com remoção automática do Excel |
-| Pastas/referências sumiram no Cypress | Abrir mes-s7-piloto correto; conferir specPattern e módulos, sem substituir config por exemplo |
+| Sintoma | Conferência e ação |
+| --- | --- |
+| `npm ci` falha na raiz | Execute nas subpastas `mes-s7-piloto` e `monitor-s7`; não há pacote npm na raiz |
+| `ERR_MODULE_NOT_FOUND` para `@st-one-io/nodes7` | Instale as dependências em `monitor-s7` e inicie o serviço dessa versão |
+| `s7.local.json` ausente | Confira a raiz do projeto Cypress e restaure a configuração validada |
+| Senha MES ausente | Confira `credenciais.local.json`, chave `senhaMES`, extensão real e projeto aberto; recarregue a configuração |
+| `fetch failed` em catálogo | Verifique serviço, URL, porta e diagnóstico com `--monitor` |
+| API de diagnóstico retorna 404/405 | Encerre o Monitor antigo, inicie o da versão atual e repita o diagnóstico HTTP |
+| Tarefa não registrada | Confira o projeto e mantenha a configuração integrada com os módulos correspondentes |
+| Credencial SQL ausente | Confira o arquivo externo do usuário Windows que executa o Cypress |
+| Certificado SQL recusado | Confira a CA e a política TLS da instalação |
+| Nenhuma rota selecionada | Confira rota específica, modo de seleção, LIR e pendências reais |
+| Cartão ausente ou ambíguo | Confira local e identidade; preserve evidências antes de intervir |
+| Iniciar desabilitado | Preserve a captura e consulte o diagnóstico; resultado continua NOK |
+| LSH já em nível alto | Confira polaridade, condição da bancada e guardas do rearme PLCSIM |
+| Nível alto no CLP sem MES | Confira propagação DB11 e atualização MES, conforme o diagnóstico disponível |
+| Restauração pendente / `EPERM` | Preserve registro e temporários; siga a seção 10 e confira bloqueios/permissões |
+| Saída de gaveta pulsada | Confira perfil e retorno de posição, sem exigir saída mantida indevidamente |
+| Falha ao gravar LIR | Feche Excel; confira lock, hash, permissões e diário antes de repetir |
+| Planilha pede reparo | Gere uma cópia de recuperação; não sobrescreva o original com reparo destrutivo |
+| Spec ou referência ausente | Confira `mes-s7-piloto`, `specPattern` e a integridade dos módulos |
 
-Para investigar, registrar código da rota, etapa, horário, versão, erro completo, evidência e diretório real do projeto. Não compartilhar senhas em prints ou relatórios.
+Ao relatar um problema, informe rota, etapa, horário, versão, diretório real, erro completo e evidências relevantes. Oculte senhas e dados sensíveis.
 
-## 12. Git e controle de versão
+<a id="12-git-e-controle-de-versão"></a>
+## 12. Git e versionamento
 
-CONFIGURAR_GIT.cmd, na raiz do pacote, configura user.name Lucas Colombo e user.email sr.colomboo@gmail.com no repositório indicado. Sem argumento procura o repositório em mes-s7-piloto (onde está o .git recebido) e depois na própria raiz. Um caminho pode ser passado como argumento. Não inicializa nem substitui repositórios, não cria commit e não envia arquivos. A autenticação GitHub é separada e depende das credenciais do Git instaladas no computador.
+`CONFIGURAR_GIT.cmd` configura a autoria dos commits no repositório indicado. Confira os valores definidos no utilitário antes de usá-lo com outra pessoa. Sem argumento, ele procura o repositório em `mes-s7-piloto` e depois na raiz. Não inicializa repositórios, cria commits ou envia arquivos. A autenticação GitHub é independente da autoria.
 
-Execute antes dos commits e confira git status. Versione código, lockfile, configurações de exemplo e documentação. Não envie senhas, configuração local, projetos CLP grandes, dependências e capturas sem revisar o .gitignore. Um arquivo já rastreado não deixa de ser rastreado só por entrar no .gitignore. As regras recebidas foram preservadas nesta organização; não houve remoção do índice Git.
+Antes de registrar alterações, confira:
 
-Use commits com objetivo e versão, por exemplo: "docs: consolidar manual de operação Rev01". Para retornar uma versão funcional, preservar também os dados/configurações compatíveis; git checkout sozinho não restaura entradas do CLP, banco ou resultados externos.
+```powershell
+git status
+git var GIT_AUTHOR_IDENT
+```
 
-## 13. Configurar outro projeto
+Versione código, lockfiles, exemplos sem segredos e documentação. Revise o `.gitignore`: adicionar uma regra não remove arquivos já rastreados. Não publique credenciais, configurações locais, dependências ou capturas sem revisão.
 
-1. Criar instalação identificada para o projeto novo e manter o histórico do anterior. Não executar instâncias concorrentes sobre a mesma bancada.
-2. Ajustar URL/credenciais MES e SQL externo. Não herdar credenciais como se fossem padrão.
-3. Colocar a LIR nova dentro de planilhas e selecionar explicitamente em execucao.local.json.
-4. Colocar PEData correspondente em clp/System e selecionar/importar o catálogo certo no Monitor.
-5. Ajustar CPU, modo de validação, perfis, IO/ID e polaridade LSH. Rever layout de DB e offsets; 1.0/1.1 não é universal.
-6. Não transportar pendência de uma operação ativa como se fosse dado de configuração. Resolver a operação original; iniciar o projeto novo com estado conhecido.
-7. Executar diagnóstico e regressão; depois ensaiar uma rota com acompanhamento antes do lote.
+Uma revisão documental não altera a versão funcional. O histórico desta revisão está no [changelog](CHANGELOG.md). Retornar o código no Git não restaura automaticamente entradas do CLP, banco, resultados ou configurações externas.
 
-A base automatizada de fixtures CL373 testa regressão do software; não comprova o cadastro ou comportamento online de outro projeto. Projeto com tipos de equipamentos ou telas diferentes pode exigir ajuste de perfil/seletor e ensaio específico.
+<a id="13-configurar-outro-projeto"></a>
+## 13. Configuração de outro projeto
 
-## 14. Eficiência, manutenção e regressão
+1. Crie uma instalação identificada, mantendo o histórico anterior.
+2. Configure MES, credenciais e SQL da nova instalação.
+3. Forneça a nova LIR e selecione seu caminho explicitamente.
+4. Forneça o PEData correspondente e escolha o catálogo correto.
+5. Confira CPU, perfis, IO/ID, polaridade e layout de DB. Os offsets de referência não são universais.
+6. Resolva pendências do projeto original; não as transporte como configuração do novo projeto.
+7. Faça diagnóstico e regressão. Depois, valide uma rota acompanhada antes do lote.
 
-- Manter ciclo do Monitor e intervalo de consulta coerentes (bancada: 200 ms e 1000 ms), sem reduzir prazo de reação para acelerar artificialmente.
-- Reutilizar catálogo persistente e índice do lote. Nova versão de projeto exige seleção/importação correspondente e nova execução.
-- Priorizar lote pendentes/falhas. Modo de busca rapida só após ensaio da estabilidade de renderização.
-- Manter poucos snapshots no runner (recebido 5), vídeo desativado e sem repetição automática de comandos. Reduzir snapshots não elimina evidências salvas em disco.
-- capturaDesktop false reduz processo PowerShell de captura, com perda da visão desktop; é alternativa de configuração, não mudança aplicada nesta organização.
-- Ao arquivar execuções concluídas, guardar histórico/JSONL/capturas necessários e conferir referências da LIR. Não apagar nem compactar a execução ativa ou resultados/controle durante os testes.
-- Acompanhar espaço do cache Cypress, node_modules, catálogos e resultados separadamente. Não limpar automaticamente os catálogos escolhidos pelo operador.
+As fixtures CL373 validam o software em cenários conhecidos; não comprovam o cadastro nem o comportamento online de outro projeto. Novas telas ou tipos de equipamento podem exigir critérios e seletores específicos.
 
-Regressão local, na raiz do pacote:
+<a id="14-eficiência-manutenção-e-regressão"></a>
+## 14. Desempenho e regressão
+
+Melhorias de desempenho devem ser medidas sem reduzir os critérios de aprovação, os prazos funcionais ou as evidências obrigatórias. O [estudo do Piloto-12](mes-s7-piloto/docs/DESEMPENHO_PILOTO_12.md) apresenta amostras e candidatos à investigação; não demonstra ganho antes/depois.
+
+- Mantenha o ciclo do Monitor e o intervalo de consulta coerentes com a bancada.
+- Reutilize o catálogo correspondente à versão do projeto, sem reutilizar estado operacional antigo.
+- Priorize seleções pendentes ou com falha quando esse for o objetivo do ensaio.
+- Use busca rápida somente com estabilidade conferida; preserve a alternativa estável.
+- Snapshots em memória e vídeo são diferentes das evidências persistidas em disco.
+- `capturaDesktop: false` retira a visão desktop; não é uma otimização equivalente quando essa evidência é obrigatória.
+- Arquive somente lotes encerrados e mantenha seus históricos, JSONL e referências. Não compacte ou apague o lote ativo nem `resultados/controle`.
+- Gerencie cache Cypress, dependências, catálogos e resultados separadamente.
+
+### Regressão isolada
+
+Na raiz do repositório, com as dependências dos dois projetos instaladas:
 
 ```powershell
 node verificar-tudo.cjs
 ```
 
-Ou VERIFICAR_REGRESSAO.cmd. Requer dependências de teste nos dois projetos; quando necessário, npm.cmd ci em mes-s7-piloto e monitor-s7. Para somente piloto, npm.cmd test. Para catálogo offline, npm.cmd run verificar:catalogo na pasta mes-s7-piloto. Os testes usam arquivos temporários e peers locais; não são operação da bancada MES/SQL/CLP real.
+Também é possível executar `VERIFICAR_REGRESSAO.cmd`. Para o piloto isoladamente, execute `npm.cmd test` em `mes-s7-piloto`; para conferir o catálogo offline, use `npm.cmd run verificar:catalogo` nessa mesma pasta, com a fonte configurada.
 
-A auditoria recebida registra pendência alta em xlsx. O patch XML não a resolve. Não executar npm audit fix --force como troca cega de dependência; planejar substituição/atualização com regressão da LIR. Esta organização não atualiza bibliotecas nem declara a vulnerabilidade resolvida.
+A regressão usa arquivos temporários e peers locais. Ela não substitui a validação do Windows/Excel nem do MES, SQL e CLP da bancada.
+
+### Dependências
+
+O `package.json` atual usa SheetJS `xlsx` **0.20.3**, por URL do fornecedor. A referência histórica a uma pendência em `xlsx` 0.18.5 pertence à versão anterior e não descreve a dependência declarada neste checkout. Esta revisão documental não executou uma nova auditoria nem declara ausência de vulnerabilidades. Preserve a origem de cada relatório e evite atualizações forçadas sem regressão da LIR.
 
 ### Revisão de versão com as Cypress AI Skills
 
-Execute `node verificar-tudo.cjs` na raiz de uma cópia local da revisão. Guarde o commit testado, a versão do Node, a contagem por grupo e os limites da validação. No piloto, o fluxo de revisão usa as skills abaixo.
+Registre commit, versão do Node, resultado por grupo e limites da validação. As skills orientam o trabalho; os testes e evidências sustentam as conclusões.
 
-| Skill | Uso na revisão | Evidência |
+| Skill | Aplicação | Evidência esperada |
 | --- | --- | --- |
-| `$cypress-explain` | Relacionar os testes e as tarefas do Node ao comportamento esperado. No spec de transferências, o login e a navegação preparam a sessão, cada rota valida partida e retornos e o encerramento registra a LIR e recupera a transferência quando necessário. | Seletor, tarefa, condição esperada e artefato que sustentam a conclusão. |
-| `$cypress-docs` | Confirmar a sintaxe e o comportamento de comandos na documentação oficial para a versão instalada. Na revisão atual, a CLI 16.2.1 oferece `cypress tap`. | Versão conferida e referência oficial. |
-| `$cypress-author` | Quando a revisão encontrar comportamento sem cobertura ou uma regressão, criar ou ajustar o teste usando os comandos, helpers e fixtures do projeto. Reexecutar o teste afetado e a suíte completa. | Cenário reproduzido, asserção e resultado de regressão. |
-| `$cypress-tap` | Na VM com o Cypress aberto, localizar a sessão com `npx.cmd cypress tap sessions --json`, conferir `status --json` e ler `reporter` após o término. Para várias sessões, informar o PID com `--session`. Ao conferir uma reexecução, validar o spec, o novo `startedAt` e a contagem de testes executados antes de aceitar o resultado. | Resultado da sessão e Command Log da rota cruzado com os arquivos gravados pelo piloto. |
+| `$cypress-explain` | Revisar a intenção, a sequência e as dependências do teste | Condição, tarefa, seletor e comportamento relacionado |
+| `$cypress-docs` | Conferir APIs para a versão instalada | Versão e referência oficial |
+| `$cypress-author` | Criar ou corrigir testes com os helpers existentes | Cenário, asserção e regressão |
+| `$cypress-tap` | Inspecionar a sessão local correta e seu Command Log | PID/sessão, spec, novo início e resultado efetivamente executado |
 
-O spec de bancada usa a sessão preparada pelo login e pela navegação. Um filtro que execute só a rota pode omitir essa preparação. Consulte [Cypress AI Skills](https://docs.cypress.io/app/tooling/ai-skills) e [Cypress Tap](https://docs.cypress.io/app/tooling/cypress-tap).
+Na máquina com o Cypress aberto, a partir de `mes-s7-piloto`:
 
-O detalhamento da suíte e a execução desta revisão estão no [registro de revisão do Piloto 11](mes-s7-piloto/docs/PILOTO_11_ESTABILIDADE.md#revisão-b5f2168--regressão-e-conferência-na-vm).
+```powershell
+npx.cmd cypress tap sessions --json
+npx.cmd cypress tap status --json
+npx.cmd cypress tap reporter
+```
 
-## 15. Histórico consolidado e limites
+Com várias sessões, selecione explicitamente a correta por `--session`, conforme a CLI instalada. Um resultado anterior não comprova uma reexecução. O spec depende do login e da navegação preparados; filtrar somente uma rota pode omitir essa preparação. Não execute novamente um lote ativo para apenas inspecioná-lo.
 
-| Marco | Comportamento incorporado |
-|---|---|
-| Monitor 0.11 | Pesquisa combinada, catálogos persistentes, identificação de I/O |
-| Monitor 0.12/0.13 | Escrita pontual I/Q/M/DB com permissão; BOOL direto, sem modal ou checkbox antigo |
-| Piloto 10.x | Nível alto, polaridade 0/1, alternativas Alm/Aviso, recusa de partida por nível |
-| Piloto 11 | Eventos e persistência, recuperação controlada, eficiência de busca e catálogo |
-| Piloto 11.1/11.2 | Recuperação somente com estado conhecido e identificação correta de vazio/cartão |
-| Piloto 11.3 | Limpar cartão encerrado identificado, confirmar diálogo e local vazio |
-| Piloto 11.4 | Gravador Node, XML estrito, backup e recuperação de LIR em cópia |
-| Organização Rev01 | Manual consolidado, documentação anterior arquivada, utilitário de identidade Git incluído |
+Referências: [Cypress AI Skills](https://docs.cypress.io/app/tooling/ai-skills), [Cypress Tap](https://docs.cypress.io/app/tooling/cypress-tap) e [registro de estabilidade](mes-s7-piloto/docs/PILOTO_11_ESTABILIDADE.md).
 
-Os Markdown históricos permanecem integralmente no ZIP documental, com nomes/caminhos e hashes em documentacao/INDICE_DOCUMENTOS.json. Eles contêm decisões, exemplos e relatórios de épocas diferentes; não aplicar instruções antigas de modal, checkbox obrigatório ou gravador PowerShell como operação atual. Relatórios JSON/TXT de validação e SQL auxiliares permanecem em seus caminhos.
+<a id="15-histórico-consolidado-e-limites"></a>
+## 15. Histórico e limites da validação
 
-Os 133 testes aprovados documentados no 11.4 são resultados locais históricos. Nesta organização, a regressão foi novamente executada sobre o pacote recebido: 105 testes do piloto, 25 do Monitor e 3 de integração simulada, totalizando 133 aprovados, zero falhas e zero ignorados. Foi necessário disponibilizar jsdom como dependência de teste do Monitor no ambiente local; essa ligação temporária não integra o ZIP. O relatório está em documentacao/REGRESSAO_ORGANIZACAO_Rev01.txt. Nenhum ensaio aqui substitui validação no Windows/Excel, MES, SQL e PLC da bancada. Não houve recompilação de .exe, implantação remota nem alteração de entradas reais nesta organização.
+| Marco | Evolução registrada |
+| --- | --- |
+| Monitor 0.11 | Pesquisa combinada, persistência de catálogos e identificação de I/O |
+| Monitor 0.12 / 0.13 | Escrita pontual I/Q/M/DB com permissão e interface direta |
+| Piloto 10.x | Ensaio de nível alto, polaridade e alternativas Alm/Aviso |
+| Piloto 11 a 11.3 | Persistência, recuperação, identificação de cartões e confirmação do local vazio |
+| Piloto 11.4 | Gravador Node, validação XML, backups e recuperação da LIR em cópia |
+| Revisões documentais 01 e 02 | Consolidação do manual e inclusão da skill de evolução |
+| Piloto-12 | Identificação funcional atual e coletor offline de tempos |
+| Revisão documental 04 | Redação revisada, README de entrada e manual visual; sem mudança funcional |
 
-Os manifestos e relatórios da raiz recebidos são registros de origem/versões anteriores e foram preservados. Para os hashes desta organização use documentacao/MANIFESTO_ORGANIZACAO_Rev01.json e para a comparação com o arquivo enviado use documentacao/RELATORIO_ORGANIZACAO_Rev01.json.
+### Evidências históricas
+
+O registro do commit `b5f2168`, em 23/11/2026, informa **192 testes aprovados** no Windows com Node 24.22.1: 162 do Piloto, 25 do Monitor e 5 de integração simulada. A contagem 133 dos relatórios antigos pertence ao 11.4 e não deve ser apresentada como resultado da revisão atual.
+
+O documento de estabilidade reúne ocorrências e verificações na VM, com seus limites e pendências. Os recortes de desempenho são parciais e têm seleções distintas; não constituem comparação controlada antes/depois. Esta revisão de apresentação não executou novo ensaio funcional nem confirmou um lote completo da bancada.
+
+Os arquivos `VERSOES_INTEGRACAO.json`, relatórios e manifestos devem ser lidos com seu contexto de origem. A entrada histórica `auditoriaNpm` foi preservada como registro anterior; consulte a declaração atual de dependências e faça auditoria específica quando necessário.
+
+<a id="16-evolução-dos-processos"></a>
+## 16. Evolução dos processos
+
+O Transporte possui regras implementadas T01–T08. Recebimento e Dosagem permanecem **pendentes de levantamento**; compartilhar módulos não comprova equivalência funcional entre processos.
+
+Use a [matriz de processos](.agents/skills/piloto-evolucao-processos/references/matriz-processos.md) para identificar regras e consumidores. Antes de alterar um módulo comum, confira os pontos de uso e as evidências exigidas. Registre ambiguidades sem inventar critérios.
+
+A skill [`piloto-evolucao-processos` v0.1.0](.agents/skills/piloto-evolucao-processos/SKILL.md) orienta essa revisão. Esta entrega preserva integralmente seu conteúdo e a matriz existente. A separação entre infraestrutura, regras compartilhadas comprovadas e regras específicas continua sendo o princípio de desenvolvimento.
+
+### Referências da revisão
+
+- Branch: `piloto-11`.
+- Commit de origem: `7e0f7a4cddb39f244c8be13389c7ec4c59bf0806`.
+- Código funcional: `Piloto-12`.
+- Monitor: `0.13.0`.
+- Revisão documental: `04`.
+- Detalhes e arquivos alterados: [registro da revisão](documentacao/REVISAO_DOCUMENTAL_Rev04.md).

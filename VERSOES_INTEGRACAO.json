@@ -2,7 +2,7 @@
   "data": "2026-11-23",
   "piloto": "Piloto-12",
   "monitor": "0.13.0",
-  "documentacao": "Rev03",
+  "documentacao": "Rev04",
   "base": "Integracao_MES_S7_Piloto_10_3(1).zip",
   "hostPreservado": "10.255.11.52",
   "contatoPreservado": "NF (1)",
@@ -22,5 +22,12 @@
     "dependencia": "xlsx",
     "resolvida": false
   },
-  "integracaoNutE3": "em-espera"
+  "integracaoNutE3": "em-espera",
+  "revisaoDocumental": {
+    "data": "2026-11-24",
+    "commitOrigem": "7e0f7a4cddb39f244c8be13389c7ec4c59bf0806",
+    "escopo": "Redação e apresentação; sem alteração funcional",
+    "manualVisual": "documentacao/visual/Piloto_12_Manual_Visual_Rev04.html",
+    "validacaoFuncionalNestaRevisao": "não executada"
+  }
 }

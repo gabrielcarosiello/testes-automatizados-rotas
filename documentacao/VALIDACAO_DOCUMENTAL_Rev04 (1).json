@@ -1,0 +1,68 @@
+# Revisão documental 04
+
+**Data:** 24/11/2026. **Branch de origem:** `piloto-11`. **Commit:** `7e0f7a4cddb39f244c8be13389c7ec4c59bf0806`.
+
+## Objetivo
+
+Facilitar a consulta operacional com redação direta, hierarquia de assuntos, instruções de instalação claras e uma apresentação visual consistente. A versão funcional permanece Piloto-12 e o Monitor permanece 0.13.0.
+
+## Alterações por arquivo
+
+| Arquivo | Alteração e motivo | Impacto funcional |
+| --- | --- | --- |
+| `README.md` | Substitui a cópia do manual antigo por apresentação, badges, atalhos e preparação rápida. Distingue o nome da branch da identificação funcional. | Nenhum |
+| `MANUAL_OPERACAO.md` | Reescreve os procedimentos por assunto e adiciona seção de evolução. Explica instalação nas duas subpastas, localização das credenciais, parâmetros de diagnóstico e limites dos registros históricos. | Nenhum |
+| `CHANGELOG.md` | Registra esta revisão sem apagar entradas anteriores. | Nenhum |
+| `VERSOES_INTEGRACAO.json` | Atualiza somente a identificação documental e acrescenta os metadados da revisão. Preserva contagens e auditoria históricas. | Nenhum |
+| `documentacao/gerar_manual_visual.py` | Gera o HTML a partir do manual, da matriz e do estudo de desempenho. Requer Python e o pacote `Markdown`; o HTML pronto não exige Python. | Ferramenta exclusivamente documental |
+| `documentacao/visual/Piloto_12_Manual_Visual_Rev04.html` | Apresentação offline com sumário, cores por assunto, busca de seções, cópia de comandos e estilo de impressão. | Nenhum no piloto |
+| `documentacao/VALIDACAO_DOCUMENTAL_Rev04.json` | Evidência das verificações estruturais e da integridade dos arquivos rastreados preservados. | Nenhum |
+| `documentacao/REVISAO_DOCUMENTAL_Rev04.md` | Este registro, incluindo aplicação, regeneração e limites. | Nenhum |
+
+## Regras e fontes preservadas
+
+A skill `piloto-evolucao-processos` v0.1.0 e a matriz de processos foram mantidas byte a byte. Os IDs T01–T08 continuam iguais. Recebimento e Dosagem permanecem pendentes de levantamento.
+
+As fontes da matriz e do estudo de desempenho estão incorporadas ao HTML para consulta. Elas não foram reescritas. O texto dos links foi preservado; o destino de referências complementares no HTML aponta para o commit de origem no GitHub, enquanto referências ao manual e aos dois anexos incorporados usam navegação interna.
+
+As regras funcionais não foram modificadas. O manual passa a descrever explicitamente a primeira parada de recuperação guardada pelo `afterEach`, o rearme PLCSIM opcional, o DB11 diagnóstico e a distinção entre leituras confirmadas e condições não verificadas, já presentes nas fontes da branch.
+
+## Divergências documentais tratadas
+
+- A branch se chama `piloto-11`, mas `versao.json` identifica Piloto-12. O README e o manual agora explicitam essa diferença.
+- O manual antigo descrevia o pacote ZIP original como se ele fosse a instalação recebida. A nova redação distingue o clone dos dados e configurações locais.
+- O projeto não possui pacote npm na raiz. A instalação nas duas subpastas é documentada de forma explícita.
+- A mensagem do código cita `s7.exemplo.json`, ausente no checkout. O manual registra essa ausência sem criar ou alterar parâmetros de bancada.
+- O manifesto contém uma auditoria histórica de `xlsx` anterior. O `package.json` atual declara 0.20.3 por URL do fornecedor. A redação distingue esses registros sem declarar uma nova auditoria aprovada.
+- O diagnóstico ainda imprime `versao: '11'` no script. Esse código não foi alterado; para identificação funcional, o manual remete a `versao.json` e aos logs do Cypress.
+- A contagem histórica de 133 testes não é apresentada como validação atual. A referência de 192 testes é atribuída ao commit `b5f2168` e ao registro de estabilidade, sem uma nova declaração de aprovação.
+
+## Aplicar o pacote
+
+1. Confira o commit e preserve suas alterações documentais locais antes de copiar.
+2. Extraia os arquivos na raiz do repositório, respeitando a estrutura de pastas.
+3. Revise o diff. Este pacote contém apenas documentação e seu gerador; não inclui código funcional, dados de bancada ou credenciais.
+4. Abra `documentacao/visual/Piloto_12_Manual_Visual_Rev04.html` no navegador. O GitHub mostra o código HTML; a apresentação é vista ao baixar e abrir o arquivo.
+5. Confira o Markdown no GitHub ou no preview do VS Code. Os badges do README dependem de acesso ao serviço de imagens; os textos e links continuam disponíveis.
+
+O pacote foi preparado sobre o commit indicado. Se o repositório evoluiu, compare os documentos antes de substituir arquivos. Não sobrescreva alterações posteriores sem conciliá-las.
+
+## Regenerar a apresentação
+
+Se alterar o manual, a matriz ou o estudo de desempenho, gere novamente o HTML. Em um ambiente com Python e `Markdown` disponíveis, execute na raiz:
+
+```powershell
+python documentacao/gerar_manual_visual.py
+```
+
+O gerador usa o commit de referência nas ligações ao GitHub. Ao criar uma nova revisão, atualize a identificação, as fontes e o commit de referência. Essa dependência documental não foi adicionada aos pacotes npm do piloto.
+
+## Verificações e limites
+
+- Conferência da sintaxe do JavaScript do manual visual e do gerador Python.
+- Verificação de IDs, âncoras internas, referências locais dos documentos editados e presença das 18 seções.
+- Comparação dos arquivos rastreados com o commit de origem. Somente quatro documentos rastreados foram alterados.
+- Conteúdo funcional, scripts operacionais, testes, configurações de exemplo, lockfiles, skill e matriz preservados.
+- A abertura do arquivo HTML na prévia do navegador foi bloqueada pela política do ambiente. Não houve inspeção visual final em navegador nem validação interativa de busca, cópia, menu móvel ou impressão. A marcação e a sintaxe foram verificadas.
+- Não foram executados novos ensaios no MES, SQL ou CLP, nem uma nova regressão funcional. Os números citados mantêm sua origem histórica.
+- Nenhum commit, push, merge, tag ou publicação remota foi realizado.
