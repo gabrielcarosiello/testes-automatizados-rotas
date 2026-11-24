@@ -167,7 +167,7 @@ function executarCenario(cenario) {
   return cy.task('planejarPrePartidaRecebimento', cenario.id).then(recebimento =>
     cy.env(['observarRecebimento']).then(({ observarRecebimento }) => {
     if (habilitado(observarRecebimento)) {
-      abrirReceberGranel(recebimento.modalidade)
+      abrirReceberGranel(recebimento.modalidade, recebimento.aba)
       return observarRecebimentoEmUso(recebimento)
     }
     const { ordem, rota, produto } = recebimento
@@ -175,7 +175,7 @@ function executarCenario(cenario) {
       ordem, codigoRota: rota.codigo, destino: rota.destino, codigoProduto: produto.codigoProduto,
     }, { timeout: 60000 }).then(confirmado => {
       if (confirmado) return cy.log('OR ' + ordem + ' já recebida em ' + rota.destino + ' — ' + confirmado.pesoRecebido + ' kg. Evidência: ' + confirmado.evidencia)
-      abrirReceberGranel(recebimento.modalidade)
+      abrirReceberGranel(recebimento.modalidade, recebimento.aba)
       recuperarRecebimentoAntesDaPartida(recebimento)
       prepararFormulario(recebimento)
       cy.get(painel).contains(/^Não há nenhum recebimento em uso$/).should('be.visible')
@@ -219,5 +219,5 @@ function executarCenario(cenario) {
 }
 
 for (const cenario of cenarios) {
-  it('Executa o ciclo do cenário ' + cenario.id, () => executarCenario(cenario))
+  it('Executa o ciclo do cenário ' + cenario.id, { viewportWidth: 1920, viewportHeight: 900 }, () => executarCenario(cenario))
 }

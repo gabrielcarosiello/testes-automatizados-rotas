@@ -8,5 +8,10 @@
     "id": "farelo-soja-cg-moido",
     "codigoProduto": "42490CP|GR",
     "nomeProduto": "Farelo de Soja CG Moído"
+  },
+  {
+    "id": "oleo-de-soja",
+    "codigoProduto": "56111CG|",
+    "nomeProduto": "Óleo de Soja"
   }
 ]

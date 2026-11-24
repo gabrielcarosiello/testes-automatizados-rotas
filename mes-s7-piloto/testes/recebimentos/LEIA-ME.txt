@@ -3,7 +3,7 @@ Pasta reservada para os futuros testes de recebimento.
 Partida Grãos RG (ordem do cenário, MG01)
 A partir de mes-s7-piloto:
   npm.cmd run abrir
-Em E2E Testing > Specs, selecione graos-rg.recebimento.js.
+Em E2E Testing > Specs, selecione recebimento.js.
 Para abrir só Recebimento:
   npm.cmd run abrir -- --config-file cypress.recebimento.config.js
 Em modo run, selecione o spec explicitamente se quiser executar apenas um processo.
@@ -28,8 +28,10 @@ O painel mostra os sinais durante a espera pelo nível alto. No fim do prazo, as
 
 No ensaio de nível alto, após confirmar o alarme o spec aguarda Parando na ordem do cenário, restaura a LSH e confirma a releitura. Em seguida aguarda a mensagem de painel sem recebimento em uso e registra a captura final. Se a etapa falhar, o afterEach mantém a restauração de segurança e registra o JSON. Após o nível alto, o spec clica em Parar no cartão e confirma os diálogos identificados pelo texto de parada e de finalização da ordem. Outros diálogos permanecem para conferência.
 
-Ciclo por cenário: graos-rg.recebimento.js registra um teste por entrada de cenarios-prepartida.json, na ordem do arquivo. Uma OR ausente no seletor falha no prazo do Cypress antes de Iniciar. O cenário seguinte só inicia se o painel estiver livre.
+Ciclo por cenário: recebimento.js registra um teste por entrada de cenarios-prepartida.json, na ordem do arquivo. Uma OR ausente no seletor falha no prazo do Cypress antes de Iniciar. O cenário seguinte só inicia se o painel estiver livre.
 
 Antes de abrir o seletor de OR, o spec consulta se a mesma ordem e rota já foram finalizadas no destino, com peso recebido e estoque atual do mesmo produto. Se confirmar, registra a evidência em eventos.jsonl e segue ao próximo cenário. Sem essa confirmação, executa a seleção normal no MES.
 
 Retomada: antes de selecionar a OR, o spec verifica pendência de LSH. Se a mesma OR ainda estiver ativa em estado conhecido, aciona Parar, responde Não ao diálogo de finalização e aguarda o painel livre. Somente então verifica se a OR continua oferecida e pode ser reiniciada. Outro cartão, diálogo aberto, estado indefinido ou pendência de LSH exigem conferência antes de nova partida.
+
+Líquidos usa a mesma spec. Configure em cenarios-prepartida.json o ID do cenário de produto, o código da rota na LIR e o nome da modalidade no MES. Se o rótulo da aba diferir da opção do formulário, configure aba. Origem, caminho, destino e LSH vêm da LIR de cada instalação. A rota 692 deste cliente começa em IBC e termina em UT14. Crie e confirme a OR de óleo no spec de ordens antes de validar esse cenário.

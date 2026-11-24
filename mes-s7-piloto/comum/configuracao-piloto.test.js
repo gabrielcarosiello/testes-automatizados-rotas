@@ -95,6 +95,12 @@ test('consulta do botão usa documento atual após rerender e recusa ambiguidade
   assert.equal(resolver().length, 1, 'reconhece Iniciar com espaços e ignora o duplicado invisível')
   documento.elementos.push({ textContent: 'Iniciar', visivel: true })
   assert.throws(resolver, /Mais de um/)
+  documento = { elementos: [{ textContent: 'Recebimento Liquidos UT', visivel: true, id: 'aba-liquidos' },
+    { textContent: 'Recebimento Manual Líquidos', visivel: true, id: 'aba-manual' }] }
+  const resolverAba = query.call({ set() {} }, '.dxbl-tabs-text-container .dxbl-tabs-text-overflow',
+    'Recebimento Líquidos UT', { ignorarAcentos: true })
+  assert.equal(resolverAba().length, 1)
+  assert.equal(resolverAba().elementos[0].id, 'aba-liquidos')
 })
 
 test('imports locais dos testes apontam para arquivos presentes no pacote', () => {

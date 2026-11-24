@@ -1,1 +1,17 @@
-Pasta reservada para os futuros testes de dosagem.
+Dosagem — esboço no Piloto-12
+
+Consultas realizadas somente por leitura no NEXXUS-MES de simulação.
+dbo.Formula expõe código, nome, versão e peso padrão.
+dbo.[Formula.Composicao] relaciona a fórmula à sequência, ao produto, ao peso requisitado, ao grupo de balança e ao silo, quando cadastrado.
+dbo.[Ordem.Producao] relaciona a OP com fórmula, linha de produção e bateladas.
+
+Fórmula candidata 238 — Rc Neopigg Feed KG F4
+Ordem | Produto | Peso requisitado no SQL | Grupo de balança
+1 | MICRO (1) | 84 | 3
+2 | Milho CG Moído (2) | 1360 | sem grupo cadastrado
+3 | Farelo de Soja CG Moído (4) | 516 | sem grupo cadastrado
+4 | Óleo de Soja 56111CG (6) | 40 | 4
+
+Estoque observado durante o levantamento: MG01, milho 4000 kg; RG08, farelo 2000 kg.
+Nenhuma linha de composição da fórmula 238 tem silo explícito. Conferir os silos oferecidos pelo MES, a unidade dos pesos e a disponibilidade dos demais insumos antes de preparar uma Dosagem completa.
+O desenvolvimento do ciclo fica para depois dos testes de Recebimento de Líquidos (Óleo de Soja) e Ensacados (MICRO).

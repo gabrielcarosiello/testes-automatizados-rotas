@@ -137,3 +137,10 @@ Os cinco destinos tinham o produto 2 e não estavam marcados com bloqueio de car
 2. Adaptar lir-recebimento.js para carregar linhas elegíveis da aba de Recebimento. O cenário deve carregar modalidade, ordem e item, origem, destino, código e caminho da rota e a LSH aplicável. Usar a configuração compartilhada do Piloto.
 3. Parametrizar o spec, o leitor do cartão, a tarefa S7 e a pasta de evidência com o cenário atual. Reutilizar consulta S7, capturas, confirmação dos dois diálogos, restauração e confirmação do painel livre.
 4. Validar primeiro a rota 14 com uma nova ordem. Em seguida executar uma segunda rota com outro destino. Só então ampliar o lote e automatizar a criação e a atribuição das ordens. Conferir uma ordem nova, ordem já finalizada, produto incompatível e recuperação após falha. Uma confirmação de finalização consome a disponibilidade da ordem para nova execução.
+
+## Dependências para Dosagem — Líquidos e MICRO
+
+- Líquidos deve entrar como cenário na spec de Recebimento existente, reaproveitando o cadastro da OR, a seleção e a evidência do Granel. O SQL confirma Recebimento Líquidos UT (5) e o produto 6, Óleo de Soja, com código 56111CG|.
+- A LIR associa RCP05 à rota 692, IBC → UT07 → UT10 → UT14. O caminho coincide com o SQL e UT14 estava vazio e sem bloqueio no levantamento. Confirmar no MES que a OR do produto 6 oferece esse tanque e essa rota. A conferência da linha 47 comprovou LSH_UT14 em M47 e ID 198 em N47. O cenário é configurável, e o ciclo de Líquidos ainda precisa ser validado no MES.
+- O MICRO segue pendente de identificação. Premix usa dosagem de ensacados. Microdosagem usa silos de dosagem. Confirmar qual dos dois o MES usa para o insumo MICRO da fórmula escolhida antes de criar um fluxo de recebimento específico.
+- Dosagem permanece como esboço.

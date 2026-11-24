@@ -15,7 +15,7 @@ function selecionar(rotulo, opcao, busca) {
   campo(rotulo).should($campo => expect($campo.text().trim()).to.match(opcao))
 }
 
-function abrirReceberGranel(modalidade) {
+function abrirReceberGranel(modalidade, aba = modalidade) {
   const acesso = Cypress.expose('recebimento')
   if (acesso?.erro) throw new Error(acesso.erro)
   if (!acesso?.urlMes) throw new Error('Configuração de acesso ao MES indisponível para Recebimento.')
@@ -39,7 +39,8 @@ function abrirReceberGranel(modalidade) {
   cy.location('pathname', { timeout }).should('match', /\/home\/?$/i)
   cy.contains('.text-navbar', /^Movimentação$/, { timeout }).should('be.visible').click()
   cy.contains(/^Receber Granel$/, { timeout }).should('be.visible').click()
-  cy.contains('[role="tab"]', modalidade, { timeout }).should('be.visible').click()
+  cy.elementoMes('.dxbl-tabs-text-container .dxbl-tabs-text-overflow', aba, { ignorarAcentos: true })
+    .should('have.length', 1).scrollIntoView().should('be.visible').click()
   cy.get(painel, { timeout }).contains('label', /^Recebimento:$/).should('be.visible')
 }
 

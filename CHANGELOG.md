@@ -6,6 +6,8 @@
 
 ## Piloto-12 — Recebimento Grãos RG (24/11/2026)
 
+- Renomeada a spec de Recebimento para recebimento.js nas configurações principal e dedicada do Cypress.
+- Incluído cenário de óleo na spec de ordens e de Recebimento. Modalidade e rota são dados de configuração, e a LIR fornece origem, destino e LSH.
 - O Recebimento passou a recuperar a mesma OR ativa antes de tentar nova partida, preservando a ordem e respeitando pendência de LSH.
 - Milho e farelo passaram a rodar como testes independentes no mesmo spec. OR indisponível interrompe apenas o cenário antes de Iniciar.
 - Após confirmar a parada, o Recebimento aceita o painel vazio confirmado quando o cartão sai rapidamente de Parando e mantém a verificação da restauração.

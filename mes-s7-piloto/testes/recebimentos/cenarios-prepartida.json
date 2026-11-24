@@ -8,5 +8,10 @@
     "id": "farelo-soja-cg-moido",
     "codigoRota": 1,
     "modalidade": "Recebimento Grãos RG"
+  },
+  {
+    "id": "oleo-de-soja",
+    "codigoRota": 692,
+    "modalidade": "Recebimento Líquidos UT"
   }
 ]

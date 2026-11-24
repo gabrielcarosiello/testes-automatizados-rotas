@@ -24,7 +24,7 @@ function tarefasRecebimento(raiz, planilha) {
         registro.item.id === id && registro.item.codigoProduto === produto.codigoProduto)
       if (!ordem) throw new Error('Nenhuma OR confirmada no cadastro para o cenário ' + id + '.')
       const rota = lerRotaRecebimento(raiz, planilha ? path.resolve(raiz, planilha) : undefined, cenario.codigoRota)
-      return { modalidade: cenario.modalidade, ordem: ordem.numero, produto: ordem.item, rota }
+      return { modalidade: cenario.modalidade, aba: cenario.aba ?? cenario.modalidade, ordem: ordem.numero, produto: ordem.item, rota }
     },
     async verificarRecebimentoNoSilo({ ordem, codigoRota, destino, codigoProduto }) {
       if (!/^\d+$/.test(ordem) || !/^\d+$/.test(codigoRota)) throw new Error('Ordem e rota inválidas para consulta do recebimento.')
