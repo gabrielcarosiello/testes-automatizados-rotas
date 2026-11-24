@@ -19,7 +19,7 @@ module.exports = defineConfig({
     ...base.e2e,
     testIsolation: false,
     supportFile: false,
-    specPattern: 'testes/**/*.cy.js',
+    specPattern: ['testes/**/*.cy.js', 'testes/recebimentos/*.recebimento.js', 'testes/ordens-recebimento/*.ordem.js'],
     // Executado ao carregar o projeto: resolve LIR, tarefas e opções públicas.
     // Senha MES permanece no Node e é solicitada pelo teste com cy.env.
     setupNodeEvents(on, config) {
@@ -30,6 +30,8 @@ module.exports = defineConfig({
       resultado.expose = resultado.expose || {}
       try {
         const execucao = lerExecucao(config.projectRoot)
+        on('task', require('./testes/recebimentos/s7').tarefasRecebimento(config.projectRoot, execucao.planilha))
+        resultado.expose.recebimento = { urlMes: execucao.urlMes, usuarioMes: execucao.usuarioMes, erroSenhaMes }
         resultado.numTestsKeptInMemory = execucao.numTestsKeptInMemory
         const arquivoS7 = path.join(config.projectRoot, 's7.local.json')
         const s7 = fs.existsSync(arquivoS7) ? JSON.parse(fs.readFileSync(arquivoS7, 'utf8').replace(/^\uFEFF/, '')) : null
@@ -69,6 +71,7 @@ module.exports = defineConfig({
           retomarPasta: dados.expose.retomarPasta || null
         }
       } catch (erro) {
+        resultado.expose.recebimento ??= { erro: erro.message }
         resultado.expose.catalogoRev00 = { erro: erro.message }
       }
       return resultado

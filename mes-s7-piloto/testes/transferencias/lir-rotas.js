@@ -35,19 +35,19 @@ function mapearColunas(aba) {
   return colunas
 }
 
-function abrir(arquivo) {
+function abrir(arquivo, abaNome = nomeAba, mapear = mapearColunas) {
   const conteudo = fs.readFileSync(arquivo)
   const pacote = abrirPacote(conteudo)
   const livro = XLSX.read(pacote.reparos.length ? gerarZip(pacote) : conteudo, { type: 'buffer' })
-  const aba = livro.Sheets[nomeAba]
-  if (!aba?.['!ref']) throw Error(`Aba "${nomeAba}" ausente ou vazia`)
+  const aba = livro.Sheets[abaNome]
+  if (!aba?.['!ref']) throw Error(`Aba "${abaNome}" ausente ou vazia`)
   const cel = (c,r) => String(aba[XLSX.utils.encode_cell({c,r})]?.v ?? '').trim()
-  const colunas = mapearColunas(aba)
+  const colunas = mapear(aba)
   const valor = (nome, r) => colunas[nome] === undefined ? '' : cel(colunas[nome], r)
   return { arquivo, conteudo, aba, cel, colunas, valor, reparosNamespace: pacote.reparos }
 }
 
-function localizar(root) {
+function localizar(root, abrirPlanilha = abrir) {
   const pasta = path.join(root, 'planilhas')
   const nomes = fs.readdirSync(pasta, { withFileTypes: true }).filter(item =>
     item.isFile() && /\.xlsx$/i.test(item.name) && !item.name.startsWith('~$')
@@ -56,7 +56,7 @@ function localizar(root) {
   const erros = []
   for (const nome of nomes) {
     try {
-      compativeis.push(abrir(path.join(pasta, nome)))
+      compativeis.push(abrirPlanilha(path.join(pasta, nome)))
     } catch (erro) {
       erros.push(`${nome}: ${erro.message}`)
     }
@@ -69,6 +69,11 @@ function localizar(root) {
     throw Error(`Nenhuma LIR .xlsx compatível em "${pasta}".${erros.length ? ' ' + erros.join(' | ') : ''}`)
   }
   return compativeis[0]
+}
+
+function abrirLir(root, caminho, abaNome, mapear) {
+  const abrirPlanilha = arquivo => abrir(arquivo, abaNome, mapear)
+  return caminho ? abrirPlanilha(caminho) : localizar(root, abrirPlanilha)
 }
 
 function ler(root, caminho) {
@@ -152,4 +157,4 @@ function mensagemSemPendencias(rotas) {
   return null
 }
 
-module.exports = { ler, registrar, reconciliarNivelNaoAplicavel, mensagemSemPendencias, mapearColunas }
+module.exports = { abrirLir, ler, registrar, reconciliarNivelNaoAplicavel, mensagemSemPendencias, mapearColunas }

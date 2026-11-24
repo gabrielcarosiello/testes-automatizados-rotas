@@ -1,1 +1,29 @@
 Pasta reservada para os futuros testes de recebimento.
+
+Partida Grãos RG (ordem 9390, MG01)
+A partir de mes-s7-piloto:
+  npm.cmd run abrir
+Em E2E Testing > Specs, selecione graos-rg.recebimento.js.
+Para abrir só Recebimento:
+  npm.cmd run abrir -- --config-file cypress.recebimento.config.js
+Em modo run, selecione o spec explicitamente se quiser executar apenas um processo.
+Ao executar este spec, o Cypress seleciona a ordem 9390, o destino MG01 e a rota, clica em Iniciar e aguarda o cartão em Iniciado. Use uma ordem disponível na VM. O operador encerra a operação pelo MES.
+
+
+Conferência de uma ordem já iniciada na VM
+  npm.cmd run executar -- --config-file cypress.recebimento.config.js --env observarRecebimento=true
+O modo de observação confere o cartão da ordem 9390 para MG01 e registra o status visível.
+A estrutura do cartão ativo ainda precisa ser confirmada neste modo. Não envia comandos ao MES ou S7.
+
+Validação S7 na simulação
+O spec segue s7.local.json, assim como o Transporte. Em modo MES + S7, lê a rota na aba Lista de Rotas - Recebimento da LIR e confere o caminho, o destino e a ordem 9390, usa o SQL para identificar os equipamentos e verifica o nível alto quando habilitado e aplicável. Ao sair, restaura a entrada e grava a evidência em resultados/Recebimento_9390_*. O operador encerra e limpa a ordem pelo MES. A vinculação pelo dbo.Recebimento fica pendente.
+
+Validação em etapas: conferir a leitura da LIR, validar partida e retornos na bancada, validar nível alto e restauração, e só depois automatizar a distribuição SQL de ordens. Finalização e limpeza continuam pelo MES.
+
+Para validar só a partida e os retornos do Recebimento, use "recebimento": { "nivelAltoHabilitado": false } no s7.local.json. Para a etapa de nível alto, remova a opção ou defina true. A configuração global do Transporte continua valendo para ele.
+
+As capturas do painel S7 dos equipamentos e do ensaio de nível alto são gravadas junto à evidência da ordem. O spec também captura o cartão do MES após confirmar Nível Alto.
+
+O painel mostra os sinais durante a espera pelo nível alto. No fim do prazo, as capturas são gravadas também quando o cartão do MES não confirma o estado.
+
+No ensaio de nível alto, após confirmar o alarme o spec aguarda Parando na ordem 9390, restaura a LSH e confirma a releitura. Em seguida aguarda a mensagem de painel sem recebimento em uso e registra a captura final. Se a etapa falhar, o afterEach mantém a restauração de segurança e registra o JSON. Após o nível alto, o spec clica em Parar no cartão e confirma os diálogos identificados pelo texto de parada e de finalização da ordem. Outros diálogos permanecem para conferência.

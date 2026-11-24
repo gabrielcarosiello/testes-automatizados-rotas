@@ -1,6 +1,6 @@
 # Manual de operação do Piloto MES e S7
 
-**Piloto-12 · Monitor 0.13.0 · Revisão documental 04 · 24 de novembro de 2026**
+**Piloto-12 · Monitor 0.13.0 · Revisão documental 05 · 24 de novembro de 2026**
 
 Este manual orienta a preparação da bancada, a execução dos testes de Transporte e a conferência dos resultados. Também descreve como tratar falhas e recuperar operações interrompidas, preservando a LIR, as evidências e o estado de escrita no S7.
 
@@ -478,6 +478,8 @@ Os arquivos `VERSOES_INTEGRACAO.json`, relatórios e manifestos devem ser lidos 
 
 <a id="16-evolução-dos-processos"></a>
 ## 16. Evolução dos processos
+
+A [preparação do Recebimento](.agents/skills/piloto-evolucao-processos/references/recebimento.md) registra o cenário proposto, os limites de compartilhamento e as decisões pendentes. O manual visual Rev04 corresponde à edição anterior.
 
 O Transporte possui regras implementadas T01–T08. Recebimento e Dosagem permanecem **pendentes de levantamento**; compartilhar módulos não comprova equivalência funcional entre processos.
 

@@ -6,7 +6,7 @@
 
 ![Piloto](https://img.shields.io/badge/Piloto-12-167D8D?style=flat-square)
 ![Monitor](https://img.shields.io/badge/Monitor-0.13.0-263B68?style=flat-square)
-![Documentação](https://img.shields.io/badge/Documenta%C3%A7%C3%A3o-Rev04-6D55A3?style=flat-square)
+![Documentação](https://img.shields.io/badge/Documenta%C3%A7%C3%A3o-Rev05-6D55A3?style=flat-square)
 
 **[Manual de operação](MANUAL_OPERACAO.md) · [Manual visual](documentacao/visual/Piloto_12_Manual_Visual_Rev04.html) · [Matriz de processos](.agents/skills/piloto-evolucao-processos/references/matriz-processos.md) · [Histórico](CHANGELOG.md)**
 
@@ -59,7 +59,7 @@ Forneça as configurações locais, a LIR e o projeto TIA da bancada antes de in
 | Processo | Situação nesta branch | Referência |
 | --- | --- | --- |
 | Transporte | Implementado; critérios e limites registrados | T01–T08 na matriz |
-| Recebimento | Pendente de levantamento | Confirmar fluxo e condições próprias |
+| Recebimento | Pendente de levantamento | [Matriz de compartilhamento e cenário inicial](.agents/skills/piloto-evolucao-processos/references/recebimento.md) |
 | Dosagem | Pendente de levantamento | Confirmar ciclo, tolerâncias e recuperação |
 
 Reaproveite serviços somente após comprovar a equivalência do comportamento. Mudanças em módulos comuns exigem análise dos consumidores e regressão correspondente.
@@ -70,4 +70,4 @@ O manual visual funciona offline, sem bibliotecas externas. Inclui o manual oper
 
 Os números de testes e as medições mantêm a identificação da revisão que os produziu. A revisão documental 04 verificou apresentação, links e integridade dos arquivos funcionais; não executou novos testes contra a bancada.
 
-[Alterações desta revisão](documentacao/REVISAO_DOCUMENTAL_Rev04.md) · [Changelog](CHANGELOG.md)
+[Registro editorial da Rev04](documentacao/REVISAO_DOCUMENTAL_Rev04.md) · [Changelog](CHANGELOG.md)

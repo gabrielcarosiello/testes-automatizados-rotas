@@ -4,7 +4,7 @@ const vm = require('node:vm')
 const fs = require('node:fs')
 const path = require('node:path')
 
-function configurar(s7, rotas = [{ codigo: '91', status: 'NT' }, { codigo: '73', status: 'NT' }]) {
+function configurar(s7, rotas = [{ codigo: '91', status: 'NT' }, { codigo: '73', status: 'NT' }], erroExecucao) {
   const tarefas = []
   const mensagens = []
   const origem = fs.readFileSync(path.join(__dirname, '..', 'cypress.config.js'), 'utf8')
@@ -21,8 +21,12 @@ function configurar(s7, rotas = [{ codigo: '91', status: 'NT' }, { codigo: '73',
       if (id === 'path') return path
       if (id === 'cypress') return { defineConfig: objeto => objeto }
       if (id === './versao.json') return require('../versao.json')
-      if (id === './comum/execucao') return { lerExecucao: () => ({ planilha: null, numTestsKeptInMemory: 5 }) }
+      if (id === './comum/execucao') return { lerExecucao: () => {
+        if (erroExecucao) throw new Error(erroExecucao)
+        return { urlMes: 'http://localhost/nexxus-mes', planilha: null, numTestsKeptInMemory: 5 }
+      } }
       if (id === './comum/credenciais-mes') return { lerSenhaMes: () => ({ erro: 'Senha MES ausente.' }) }
+      if (id === './testes/recebimentos/s7') return { tarefasRecebimento: () => ({}) }
       if (id === './comum/s7/nivel-alto') return require('./s7/nivel-alto')
       if (id === './comum/s7/piloto') return { criarPiloto: () => ({ prepararS7() {}, confirmarS7() {} }) }
       if (id === './cypress.base.config') return { e2e: { setupNodeEvents: (_, config) => config } }
@@ -35,7 +39,7 @@ function configurar(s7, rotas = [{ codigo: '91', status: 'NT' }, { codigo: '73',
   const config = modulo.exports.e2e.setupNodeEvents((tipo, valores) => tarefas.push(...Object.keys(valores)), {
     projectRoot: '/projeto', specPattern: 'testes/**/*.cy.js', env: {},
   })
-  return { dados: config.expose.catalogoRev00, tarefas, mensagens }
+  return { dados: config.expose.catalogoRev00, recebimento: config.expose.recebimento, tarefas, mensagens }
 }
 
 test('S7 ativa por arquivo local, filtra 91 e registra tarefas sem depender de env', () => {
@@ -85,6 +89,9 @@ test('consulta do botão usa documento atual após rerender e recusa ambiguidade
   assert.equal(resolver().elementos[0].id, 'antigo')
   documento = { elementos: [{ textContent: 'Iniciar', visivel: true, id: 'novo' }] }
   assert.equal(resolver().elementos[0].id, 'novo')
+  documento.elementos[0].textContent = '\n  Iniciar \t'
+  documento.elementos.push({ textContent: 'Iniciar', visivel: false })
+  assert.equal(resolver().length, 1, 'reconhece Iniciar com espaços e ignora o duplicado invisível')
   documento.elementos.push({ textContent: 'Iniciar', visivel: true })
   assert.throws(resolver, /Mais de um/)
 })
@@ -115,4 +122,10 @@ test('rota explícita já OK entra como reteste; lote continua apenas NT/NOK', (
   assert.equal(explicita.rotas[0].statusInicial, 'OK')
   const lote = configurar({ habilitado: true, codigoRota: null }, linhas).dados
   assert.deepEqual(lote.rotas.map(r => r.codigo), ['73'])
+})
+
+test('Recebimento informa o erro da LIR ativa antes de abrir o MES', () => {
+  const mensagem = 'Planilha ativa não encontrada: planilhas/LIR-antiga.xlsx'
+  const { recebimento } = configurar(undefined, undefined, mensagem)
+  assert.equal(recebimento.erro, mensagem)
 })

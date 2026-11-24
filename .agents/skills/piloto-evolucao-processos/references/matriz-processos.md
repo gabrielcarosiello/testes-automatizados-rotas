@@ -33,6 +33,8 @@ Caminhos relativos a `mes-s7-piloto/`. O uso compartilhado abaixo foi observado 
 
 ## Recebimento
 
+Consulte a [matriz de compartilhamento e o cenário inicial](recebimento.md).
+
 **Pendente de levantamento.** Confirmar o ponto de entrada do MES, as condições de liberação e encerramento, os vínculos SQL, os sinais de confirmação e os registros esperados. Fonte inicial para a próxima revisão: fluxo operacional e implementação identificada pelo responsável pelo processo.
 
 ## Dosagem
