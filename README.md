@@ -1,10 +1,9 @@
 <div align="center">
 
-# Piloto MES e S7
+# Nexxus Validação de Processos
 
-### Testes de Transporte e Recebimento com Cypress, SQL Server e Monitor Siemens S7
+### Testes automatizados de processos industriais com MES e Siemens S7
 
-![Piloto](https://img.shields.io/badge/Piloto-12-167D8D?style=flat-square)
 ![Monitor](https://img.shields.io/badge/Monitor-0.13.0-263B68?style=flat-square)
 ![Documentação](https://img.shields.io/badge/Documenta%C3%A7%C3%A3o-Rev06-6D55A3?style=flat-square)
 
@@ -14,9 +13,7 @@
 
 ---
 
-O Piloto verifica Transporte, criação de ordens e Recebimento. Transporte e Recebimento a Granel usam MES, SQL e S7 conforme o cenário. Ensacados confirma a entrada em estoque por SQL.
-
-> A documentação Markdown está na Rev06 do **Piloto-12**.
+O programa verifica Transporte, criação de ordens e Recebimento. O cadastro de produção para Dosagem está em validação. Transporte e Recebimento a Granel usam MES, SQL e S7 conforme o cenário. Ensacados confirma a entrada em estoque por SQL.
 
 ## Comece pelo documento certo
 

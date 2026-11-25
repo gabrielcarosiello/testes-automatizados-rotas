@@ -1,5 +1,7 @@
 # Changelog
 
+- Adotado o nome Nexxus Validação de Processos no README e no manual. Piloto-12 permanece como identificador interno para versionamento e evidências.
+
 - Recebimento passou a registrar a entrega confirmada por SQL no diário de evidências, com origem, OR, item, produto, destino e peso. Documentada a regra R08 e atualizada a skill piloto-evolucao-processos para 0.7.0.
 
 - Organizadas as regressões locais em `mes-s7-piloto/regressao/`. O manual explica a descoberta e a execução, e a skill piloto-evolucao-processos 0.6.0 adota a pasta como padrão.

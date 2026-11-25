@@ -1,10 +1,10 @@
-# Manual de operação do Piloto MES e S7
+# Manual de operação da Nexxus Validação de Processos
 
-**Piloto-12 · Monitor 0.13.0 · Revisão documental 06 · 25 de novembro de 2026**
+**Monitor 0.13.0 · Revisão documental 06 · 25 de novembro de 2026**
 
 Este manual orienta a preparação da bancada, a execução dos testes de Transporte e Recebimento e a conferência dos resultados. Também descreve como tratar falhas e recuperar operações interrompidas, preservando a LIR, as evidências e o estado de escrita no S7.
 
-A revisão foi feita na branch `piloto-12-recebimento`. A versão funcional consta em `mes-s7-piloto/versao.json`. Consulte o [registro da auditoria Rev06](documentacao/AUDITORIA_PILOTO_Rev06.md).
+O identificador interno `Piloto-12` consta em `mes-s7-piloto/versao.json` e vincula as evidências ao histórico técnico. Consulte o [registro da auditoria Rev06](documentacao/AUDITORIA_PILOTO_Rev06.md).
 
 > **Antes de iniciar:** confirme a CPU, a seleção de rotas, a planilha ativa e a ausência de pendências de restauração. Mantenha apenas uma execução por bancada MES/CLP.
 
@@ -483,7 +483,7 @@ Referências: [Cypress AI Skills](https://docs.cypress.io/app/tooling/ai-skills)
 | Piloto 11 a 11.3 | Persistência, recuperação, identificação de cartões e confirmação do local vazio |
 | Piloto 11.4 | Gravador Node, validação XML, backups e recuperação da LIR em cópia |
 | Revisões documentais 01 e 02 | Consolidação do manual e inclusão da skill de evolução |
-| Piloto-12 | Identificação funcional atual e coletor offline de tempos |
+| Piloto-12 | Identificação interna da versão e coletor offline de tempos |
 | Revisão documental 04 | Redação revisada, README de entrada e manual visual; sem mudança funcional |
 
 ### Evidências históricas
@@ -503,7 +503,7 @@ A matriz registra T01–T09 para Transporte e R01–R08 para Recebimento. Dosage
 
 Use a [matriz de processos](.agents/skills/piloto-evolucao-processos/references/matriz-processos.md) para identificar regras e consumidores. Antes de alterar um módulo comum, confira os pontos de uso e as evidências exigidas. Registre ambiguidades sem inventar critérios.
 
-A skill [piloto-evolucao-processos v0.4.0](.agents/skills/piloto-evolucao-processos/SKILL.md) orienta a revisão de regras e consumidores com um roteiro para as skills Cypress locais.
+A skill [piloto-evolucao-processos v0.7.0](.agents/skills/piloto-evolucao-processos/SKILL.md) orienta a revisão de regras e consumidores com um roteiro para as skills Cypress locais.
 
 <a id="entrega-recebimento"></a>
 ### Entrega confirmada do Recebimento
