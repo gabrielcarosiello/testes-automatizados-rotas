@@ -38,4 +38,4 @@ Líquidos usa a mesma spec. Configure em cenarios-prepartida.json o ID do cenár
 
 Ensacados: recebimento-ensacados.js abre Movimentação → Receber Ensacado por Ordem de Recebimento, seleciona Ensacado e a OR confirmada mais recente do cenário de produto. Confere os dois campos, clica em Iniciar e salva uma captura da tela seguinte.
 
-Fechamento de Ensacados: depois de Iniciar, aguarda os campos de recebimento e OR serem limpos ou desaparecerem. Confirma a movimentação de estoque da ordem e do item por leitura no SQL. Se a OR já estiver finalizada com o movimento registrado, a spec grava evidência e termina sem novo clique. Não há validação S7 neste cenário.
+Fechamento de Ensacados: depois de Iniciar, confirma a movimentação de estoque da ordem e do item por leitura no SQL, sem aguardar estado na interface. Se a OR já estiver finalizada com o movimento registrado, a spec grava evidência e termina sem novo clique. Não há validação S7 neste cenário.

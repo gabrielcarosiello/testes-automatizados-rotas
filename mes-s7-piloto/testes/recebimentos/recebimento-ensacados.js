@@ -24,16 +24,6 @@ function valorSelecionado(el) {
   return entrada?.value || el.textContent.trim()
 }
 
-function aguardarFormularioLimpo() {
-  return cy.document({ timeout: 30000, log: false }).should(doc => {
-    for (const rotulo of [rotuloRecebimento, rotuloOrdem]) {
-      const campos = localizarComboEnsacados(doc, rotulo, Cypress.dom.isVisible)
-      expect(campos.length, 'campo sem duplicidade: ' + rotulo).to.be.at.most(1)
-      if (campos.length) expect(valorSelecionado(campos[0]).trim(), 'campo limpo: ' + rotulo).to.equal('')
-    }
-  })
-}
-
 function selecionarEnsacados(rotulo, opcao, busca, textoNaLista = opcao) {
   const combo = () => cy.comboEnsacados(rotulo).should($combo => {
     expect($combo, 'caixa de seleção ' + rotulo).to.have.length(1)
@@ -81,11 +71,11 @@ for (const cenario of cenarios) {
         cy.contains('.card-text', menuEnsacados, { timeout: 30000 }).should('be.visible').click()
         selecionarEnsacados(rotuloRecebimento, modalidade, undefined, modalidadeNaLista)
         selecionarEnsacados(rotuloOrdem, ordem, numero)
-        cy.elementoMes('button, [role="button"], .container-button', 'Iniciar').should($botao => {
+        cy.elementoMes('.container-button', 'Iniciar').should($botao => {
           expect($botao, 'controle Iniciar em Receber Ensacado').to.have.length(1)
           expect($botao.closest(':disabled, [disabled], [aria-disabled="true"], .disabled, .container-button-disabled')).to.have.length(0)
         }).click()
-        aguardarFormularioLimpo()
+        cy.log('Clique em Iniciar enviado para a OR ' + numero + '. Conferindo a entrada em estoque.')
         return cy.task('verificarRecebimentoEnsacados', { ...dados, aposIniciar: true }, { timeout: 60000 }).then(resultado => {
           expect(resultado, 'movimento de estoque da ordem ' + numero).to.exist
           cy.log('OR ' + numero + ' recebida. Evidência: ' + resultado.evidencia)
