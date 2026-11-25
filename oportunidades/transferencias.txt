@@ -1,0 +1,36 @@
+﻿OPORTUNIDADES DE OTIMIZAÇÃO — TRANSFERÊNCIAS
+Registro de 25/11/2026 · Piloto-12
+
+LOTE DE REFERÊNCIA
+
+Lote Teste_rotas_Rev00_2026-11-25-08-38-09-714.
+Fonte local: mes-s7-piloto/resultados/<lote>/eventos.jsonl.
+Duração de 43 min 05 s, do início ao último resultado persistido.
+Foram selecionadas 265 rotas e todos os 265 resultados foram persistidos.
+
+- 40 rotas concluídas. Em 39, o ensaio de nível alto também foi concluído. Na outra, o ensaio não se aplicava.
+- 222 rotas bloqueadas antes da partida por estoque zero confirmado na origem. O motivo foi registrado na LIR e no diário.
+- Rotas 86 e 79: MG01 não apareceu na busca de destino. O diário não informa a causa da indisponibilidade.
+- Rota 550: o botão Parar desapareceu durante a atualização da tela e o Cypress registrou falha no clique. O encerramento foi confirmado por observação posterior no MES. A evidência registra a restauração da LSH. O resultado da rota permaneceu como falha.
+
+OPORTUNIDADES
+
+1. Reaproveitar a conexão SQL na conferência de estoque da origem — T09
+   A etapa somou 3 min 38 s, com mediana de 0,87 s por rota e P90 de 1,01 s. O tempo inclui trabalho do Cypress.
+   Medir abertura, consulta e fechamento separadamente. Avaliar o reaproveitamento da conexão mantendo uma consulta nova de estoque por rota e o tratamento atual de leitura inconclusiva.
+   Comparar várias execuções equivalentes e conferir origem vazia, origem abastecida e indisponibilidade do SQL.
+
+2. Investigar a espera da lista durante a busca — T02
+   Nas rotas aprovadas, foram registradas 158 buscas sem repetição. Os tempos típicos foram de cerca de 60 ms para preencher e 560 ms para obter o resultado. Nos dois casos de MG01 ausente, a espera foi de cerca de 8,5 s.
+   Separar a espera fixa da resposta do MES. Avaliar uma condição observável que confirme a atualização da lista para o filtro atual, preservando a correspondência exata e o prazo existente. Validar resultado encontrado, resultado ausente e atualização tardia.
+
+3. Investigar a atualização do cartão durante a parada — T07
+   Usar o caso da rota 550 para conferir quando o botão deixa de estar disponível e quais evidências confirmam a liberação do cartão. Preservar a identificação da transferência e evitar qualquer repetição automática do comando.
+
+ETAPAS A PRESERVAR
+
+As medianas de confirmação dos retornos S7 e de nível alto no MES foram de 5,21 s e 6,85 s. Essas etapas incluem espera por condições do processo e a medição não separa uma parcela removível. A persistência teve mediana de 0,30 s e gravou todos os resultados. Mantém-se em prioridade inferior.
+
+SITUAÇÃO
+
+Análise de leitura dos registros locais. Nenhuma otimização aplicada ou ganho comprovado. Comparações futuras devem registrar versão, cenário, quantidade de execuções e variação dos tempos, inclusive em falha e recuperação.
