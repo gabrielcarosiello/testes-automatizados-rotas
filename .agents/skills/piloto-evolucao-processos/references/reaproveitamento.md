@@ -9,3 +9,5 @@
 | Evidência | [JSONL reutilizado](../../../../mes-s7-piloto/comum/registro-execucao.js) pelo [cadastro](../../../../mes-s7-piloto/testes/ordens-recebimento/evidencias.js) e pelas tarefas de Recebimento e Transporte. | Registrar identidade, etapa, erro e captura na pasta compartilhada. Se Cypress Tap não enxergar a sessão na VM, diagnosticar pelos arquivos antes de repetir a operação. |
 
 Valide primeiro seleção, depois um ciclo completo e por fim o segundo cenário e a retomada. Use os dados de cenário para variar produtos, ordens e destinos. Distinga o que foi observado no código, coberto em regressão local ou confirmado na VM.
+
+Todo novo teste operacional deve aplicar o procedimento de evidência do [Piloto](../SKILL.md) e prever o caso de falha antes da primeira ação no MES.

@@ -2,7 +2,7 @@
 name: piloto-evolucao-processos
 description: Mapeia regras e consumidores de módulos do Piloto MES + S7 para revisar mudanças por processo. Use para evoluir ou documentar Transporte, Recebimento e Dosagem com rastreabilidade entre regra, implementação e validação.
 metadata:
-  version: "0.4.0"
+  version: "0.5.0"
 ---
 
 # Evolução dos processos do Piloto
@@ -24,3 +24,9 @@ Para analisar um lote, aguarde confirmação de término. Use os resultados e ev
 - [Cypress Author](../cypress-author/SKILL.md) para desenvolver ou corrigir. Reuse os helpers da modalidade, confirme a identidade da operação, prefira condições observáveis e mantenha o diff e a regressão limitados à regra afetada.
 - [Cypress Docs](../cypress-docs/SKILL.md) para dúvidas de API da versão instalada. Em tarefas exclusivamente locais, confira os tipos, o código instalado e os usos do projeto. Registre as dúvidas que essas fontes deixarem em aberto.
 - [Cypress Tap](../cypress-tap/SKILL.md) para sessão local autorizada. Identifique sessão e spec, confirme o início de uma execução nova antes de atribuir um veredito e preserve os logs e evidências do lote.
+
+## Evidência obrigatória para novos testes do Piloto
+
+- Abra um diário JSONL por execução antes do login ou de qualquer ação no MES. Use o gravador do Piloto e registre início, identidade do cenário, etapas antes das ações e resultado final, inclusive falhas anteriores ao cadastro ou à partida.
+- Na falha, registre a etapa, o erro sanitizado e a captura da tela. O Command Log do runner complementa o diário persistido. Omita credenciais e aplique blackout nos campos de senha.
+- Valide o caminho do diário, a última etapa gravada e a captura em um caso de falha, além do resultado no caso nominal. Na análise de falha, leia esses arquivos antes de alterar o fluxo ou repetir uma operação.

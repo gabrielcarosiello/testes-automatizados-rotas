@@ -28,6 +28,7 @@ module.exports = defineConfig({
       if (senha) resultado.env = { ...resultado.env, senhaMES: senha }
       if (!String(config.specPattern || '').includes('testes')) return resultado
       resultado.expose = resultado.expose || {}
+      on('task', require('./testes/dosagem/evidencias').tarefasEvidenciasDosagem(config.projectRoot))
       on('task', require('./testes/ordens-recebimento/evidencias').tarefasEvidenciasOrdem(config.projectRoot, senha))
       try {
         const execucao = lerExecucao(config.projectRoot)
