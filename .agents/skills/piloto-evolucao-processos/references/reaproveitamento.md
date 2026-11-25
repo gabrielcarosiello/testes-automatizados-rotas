@@ -11,3 +11,7 @@
 Valide primeiro seleção, depois um ciclo completo e por fim o segundo cenário e a retomada. Use os dados de cenário para variar produtos, ordens e destinos. Distinga o que foi observado no código, coberto em regressão local ou confirmado na VM.
 
 Todo novo teste operacional deve aplicar o procedimento de evidência do [Piloto](../SKILL.md) e prever o caso de falha antes da primeira ação no MES.
+
+Crie regressões locais na pasta do processo em `mes-s7-piloto/regressao/`, conforme a [skill do Piloto](../SKILL.md). As specs operacionais continuam em `mes-s7-piloto/testes/`.
+
+Para integrar fases, use uma entrega baseada em confirmação do processo de origem. O Recebimento registra esse resultado conforme R08 na [matriz](matriz-processos.md). A confirmação de estoque para a próxima fase deve usar leitura atual.

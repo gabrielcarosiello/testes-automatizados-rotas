@@ -7,6 +7,12 @@ const { criarPiloto } = require('../../comum/s7/piloto')
 const { lerOrdensConfirmadas } = require('./ordens-confirmadas')
 const { lerRotaRecebimento } = require('./lir-recebimento')
 
+function registrarConfirmacao(raiz, pasta, aposIniciar, dados, entrega) {
+  fs.mkdirSync(path.join(raiz, 'resultados', pasta), { recursive: true })
+  gravarEvento(raiz, pasta, aposIniciar ? 'recebimento-confirmado' : 'recebimento-ja-confirmado', { ...dados, entrega })
+  return { pasta, evidencia: 'resultados/' + pasta + '/eventos.jsonl', entrega }
+}
+
 function tarefasRecebimento(raiz, planilha) {
   let piloto
   let pasta
@@ -21,9 +27,13 @@ function tarefasRecebimento(raiz, planilha) {
       const confirmado = await consultarRecebimentoEnsacados({ numero, codigoProduto })
       if (!confirmado) return null
       const pasta = 'Recebimento_Ensacados_' + numero + '_' + randomUUID()
-      fs.mkdirSync(path.join(raiz, 'resultados', pasta), { recursive: true })
-      gravarEvento(raiz, pasta, aposIniciar ? 'recebimento-confirmado' : 'recebimento-ja-confirmado', { numero, codigoProduto, ...confirmado })
-      return { pasta, evidencia: 'resultados/' + pasta + '/eventos.jsonl' }
+      return registrarConfirmacao(raiz, pasta, aposIniciar, { numero, codigoProduto, ...confirmado }, {
+        origem: aposIniciar ? 'nesta-execucao' : 'ja-recebido',
+        modalidade: 'Ensacados', ordem: String(numero), codigoProduto, item: confirmado.item,
+        destino: { tipo: 'armazem', codigo: confirmado.armazem },
+        quantidadeRecebida: confirmado.quantidadeRecebida, pesoRecebidoKg: confirmado.pesoRecebido,
+        confirmadoEm: confirmado.recebidoEm,
+      })
     },
     planejarRecebimentoEnsacados(id) {
       const produto = require('../ordens-recebimento/cenarios-ensacados.json').find(item => item.id === id)
@@ -44,15 +54,20 @@ function tarefasRecebimento(raiz, planilha) {
       const rota = lerRotaRecebimento(raiz, planilha ? path.resolve(raiz, planilha) : undefined, cenario.codigoRota)
       return { modalidade: cenario.modalidade, aba: cenario.aba ?? cenario.modalidade, ordem: ordem.numero, produto: ordem.item, rota }
     },
-    async verificarRecebimentoNoSilo({ ordem, codigoRota, destino, codigoProduto }) {
+    async verificarRecebimentoNoSilo({ ordem, codigoRota, destino, codigoProduto, modalidade = "Granel", aposIniciar = false }) {
       if (!/^\d+$/.test(ordem) || !/^\d+$/.test(codigoRota)) throw new Error('Ordem e rota inválidas para consulta do recebimento.')
       const { consultarRecebimentoNoSilo } = require('../../comum/s7/consultarRota')
       const confirmado = await consultarRecebimentoNoSilo({ ordem, codigoRota, destino, codigoProduto })
       if (!confirmado) return null
       const pastaConfirmacao = 'Recebimento_' + ordem + '_confirmado_' + randomUUID()
-      fs.mkdirSync(path.join(raiz, 'resultados', pastaConfirmacao), { recursive: true })
-      gravarEvento(raiz, pastaConfirmacao, 'recebimento-ja-confirmado', { ordem, codigoRota, destino, codigoProduto, ...confirmado })
-      return { ...confirmado, evidencia: 'resultados/' + pastaConfirmacao + '/eventos.jsonl' }
+      const registro = registrarConfirmacao(raiz, pastaConfirmacao, aposIniciar, { ordem, codigoRota, destino, codigoProduto, ...confirmado }, {
+        origem: aposIniciar ? 'nesta-execucao' : 'ja-recebido',
+        modalidade, ordem: String(ordem), codigoProduto, item: confirmado.item,
+        codigoRota: String(codigoRota), destino: { tipo: 'silo', codigo: destino },
+        pesoRecebidoKg: confirmado.pesoRecebido, saldoSiloKg: confirmado.saldoSilo,
+        confirmadoEm: confirmado.finalizadoEm,
+      })
+      return { ...confirmado, ...registro }
     },
     async prepararRecebimentoS7({ ordem, codigo } = {}) {
       if (!/^\d+$/.test(ordem) || !/^\d+$/.test(codigo)) throw new Error('Informe a ordem e o código de rota selecionados na pré-partida.')

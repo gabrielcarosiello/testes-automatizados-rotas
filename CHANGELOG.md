@@ -1,5 +1,9 @@
 # Changelog
 
+- Recebimento passou a registrar a entrega confirmada por SQL no diário de evidências, com origem, OR, item, produto, destino e peso. Documentada a regra R08 e atualizada a skill piloto-evolucao-processos para 0.7.0.
+
+- Organizadas as regressões locais em `mes-s7-piloto/regressao/`. O manual explica a descoberta e a execução, e a skill piloto-evolucao-processos 0.6.0 adota a pasta como padrão.
+
 - A Transferência identifica origem com estoque zero antes da partida e registra o motivo na LIR e no histórico.
 
 - O cadastro de OR de Ensacados reutiliza o fluxo completo e marca Ensacados antes de liberar o cabeçalho.

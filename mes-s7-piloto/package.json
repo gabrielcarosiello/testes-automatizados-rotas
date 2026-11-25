@@ -9,7 +9,7 @@
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "scripts": {
-    "test": "node --test comum/*.test.js comum/s7/*.test.js testes/transferencias/*.test.js",
+    "test": "node ../verificar-tudo.cjs --piloto",
     "diagnostico": "node scripts/diagnosticar.cjs",
     "resumo": "node scripts/resumir.cjs",
     "abrir": "cypress open",

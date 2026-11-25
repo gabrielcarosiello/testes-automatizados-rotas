@@ -171,9 +171,10 @@ function executarCenario(cenario) {
       return observarRecebimentoEmUso(recebimento)
     }
     const { ordem, rota, produto } = recebimento
-    return cy.task('verificarRecebimentoNoSilo', {
-      ordem, codigoRota: rota.codigo, destino: rota.destino, codigoProduto: produto.codigoProduto,
-    }, { timeout: 60000 }).then(confirmado => {
+    const identidade = {
+      ordem, codigoRota: rota.codigo, destino: rota.destino, codigoProduto: produto.codigoProduto, modalidade: recebimento.modalidade,
+    }
+    return cy.task('verificarRecebimentoNoSilo', identidade, { timeout: 60000 }).then(confirmado => {
       if (confirmado) return cy.log('OR ' + ordem + ' já recebida em ' + rota.destino + ' — ' + confirmado.pesoRecebido + ' kg. Evidência: ' + confirmado.evidencia)
       abrirReceberGranel(recebimento.modalidade, recebimento.aba)
       recuperarRecebimentoAntesDaPartida(recebimento)
@@ -213,6 +214,11 @@ function executarCenario(cenario) {
                 throw new Error(resultado.detalhe)
               }))
           .then(() => aguardarFinalizacaoRecebimento(recebimento, pasta))
+          .then(() => cy.task('verificarRecebimentoNoSilo', { ...identidade, aposIniciar: true }, { timeout: 60000 }))
+          .then(confirmacao => {
+            if (!confirmacao) return cy.log('Recebimento encerrado no MES. Entrega pendente de confirmação SQL para a OR ' + ordem + '.')
+            return cy.log('Entrega confirmada para a OR ' + ordem + '. Evidência: ' + confirmacao.evidencia)
+          })
       })
     })
   }))

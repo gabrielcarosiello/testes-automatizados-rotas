@@ -1,6 +1,7 @@
 ﻿// Spec preparada com Cypress Author em 25/11/2026.
 require('../../comum/consultas-mes')
-const { acessarMes } = require('../ordens-recebimento/acesso-ordem')
+const { acessarMes } = require('../../comum/acesso-mes')
+const { localizarConfirmarProducao, confirmarProducaoHabilitado } = require('./confirmar-producao')
 
 const timeout = 30000
 const painel = '[role="tabpanel"]:visible'
@@ -45,15 +46,7 @@ Cypress.Commands.addQuery('campoProducao', function (rotulo, seletor, quantidade
 
 Cypress.Commands.addQuery('confirmarProducao', function () {
   this.set('timeout', timeout)
-  return () => {
-    const doc = cy.state('document')
-    const acao = 'button, [role="button"], input[type="submit"], a, .container-button'
-    const rotulos = [...doc.querySelectorAll('input[type="submit"], button, a, div, span, label, [role="button"]')].filter(el =>
-      Cypress.dom.isVisible(el) && /^Confirmar$/i.test(el.tagName === 'INPUT' ? el.value : texto(el)) &&
-      ![...el.children].some(filho => Cypress.dom.isVisible(filho) && /^Confirmar$/i.test(texto(filho))))
-    const modais = rotulos.filter(el => el.closest('[role="dialog"], [aria-modal="true"], .dxbl-modal'))
-    return Cypress.$([...new Set((modais.length ? modais : rotulos).map(el => el.closest(acao) || el))])
-  }
+  return () => Cypress.$(localizarConfirmarProducao(cy.state('document'), Cypress.dom.isVisible))
 })
 
 const campo = (rotulo, seletor, quantidade = 1, indice = 0) =>
@@ -124,7 +117,7 @@ describe('Cadastro de produção — Rações RC', { testIsolation: true }, () =
     etapaAtual = undefined
     cy.task('registrarEvidenciaDosagem', { lote, tipo: 'inicio' }, { log: false })
     etapa('Acessar MES')
-    acessarMes()
+    acessarMes(Cypress.expose('criacaoOrdem') || Cypress.expose('recebimento'), { contexto: 'Dosagem' })
     etapa('Abrir formulário Rações RC')
     cy.contains('.text-navbar', /^Produção$/, { timeout }).should('be.visible').click()
     cy.contains('.card-text', /^Produzir$/, { timeout }).should('be.visible').click()
@@ -157,8 +150,7 @@ describe('Cadastro de produção — Rações RC', { testIsolation: true }, () =
     etapa('Confirmar cadastro')
     cy.confirmarProducao().should($botao => {
       expect($botao, 'controle Confirmar da produção').to.have.length(1)
-      expect($botao.closest(':disabled, [aria-disabled="true"], .disabled, .container-button-disabled'),
-        'controle Confirmar habilitado').to.have.length(0)
+      expect(confirmarProducaoHabilitado($botao[0]), 'controle Confirmar habilitado').to.equal(true)
     }).should('be.visible').click()
     etapa('Conferir produção na grade')
     cy.get(painel, { timeout }).find('tr, [role="row"]').filter((_, linha) =>

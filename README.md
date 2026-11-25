@@ -27,7 +27,7 @@ O Piloto verifica Transporte, criação de ordens e Recebimento. Transporte e Re
 | Entender os condicionamentos do Transporte | [Matriz de regras e consumidores](.agents/skills/piloto-evolucao-processos/references/matriz-processos.md) |
 | Investigar um erro conhecido | [Diagnóstico](MANUAL_OPERACAO.md#11-diagnóstico-de-erros) e [registro de estabilidade](mes-s7-piloto/docs/PILOTO_11_ESTABILIDADE.md) |
 | Medir o tempo das etapas | [Estudo de desempenho do Piloto-12](mes-s7-piloto/docs/DESEMPENHO_PILOTO_12.md) |
-| Revisar uma alteração antes da liberação | [Regressão](MANUAL_OPERACAO.md#14-eficiência-manutenção-e-regressão) e [skill de evolução](.agents/skills/piloto-evolucao-processos/SKILL.md) |
+| Revisar uma alteração antes da liberação | [Como funciona a regressão local](MANUAL_OPERACAO.md#regressao-local) e [skill de evolução](.agents/skills/piloto-evolucao-processos/SKILL.md) |
 
 ## Preparação rápida
 

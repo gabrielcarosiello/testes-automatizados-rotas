@@ -23,7 +23,7 @@ A revisão foi feita na branch `piloto-12-recebimento`. A versão funcional cons
 11. [Diagnóstico de erros](#11-diagnóstico-de-erros)
 12. [Git e versionamento](#12-git-e-controle-de-versão)
 13. [Configuração de outro projeto](#13-configurar-outro-projeto)
-14. [Desempenho e regressão](#14-eficiência-manutenção-e-regressão)
+14. [Desempenho e regressão](#14-eficiência-manutenção-e-regressão) · [Como funciona a regressão local](#regressao-local)
 15. [Histórico e limites da validação](#15-histórico-consolidado-e-limites)
 16. [Evolução dos processos](#16-evolução-dos-processos)
 
@@ -43,7 +43,7 @@ Abra `mes-s7-piloto` como projeto Cypress. O Monitor é um serviço separado, na
 | `mes-s7-piloto/planilhas/` | Local da LIR operacional, fornecida pela instalação |
 | `mes-s7-piloto/clp/System/PEData.plf` | Fonte TIA local, correspondente ao projeto da bancada |
 | `mes-s7-piloto/resultados/` | Eventos, evidências, históricos, backups e controle persistente |
-| `mes-s7-piloto/comum/fixtures/` | Planilhas de regressão; não usar como LIR operacional |
+| `mes-s7-piloto/regressao/fixtures/` | Planilhas de regressão; não usar como LIR operacional |
 | `monitor-s7/` | Serviço HTTP, interface e driver S7 |
 | `.agents/skills/piloto-evolucao-processos/` | Procedimento de evolução e matriz de processos |
 | `verificar-tudo.cjs` | Regressão do Piloto, do Monitor e da integração simulada |
@@ -426,24 +426,24 @@ Melhorias de desempenho devem ser medidas sem reduzir os critérios de aprovaç�
 - Arquive somente lotes encerrados e mantenha seus históricos, JSONL e referências. Não compacte ou apague o lote ativo nem `resultados/controle`.
 - Gerencie cache Cypress, dependências, catálogos e resultados separadamente.
 
-### Regressão isolada
+<a id="regressao-local"></a>
+### Como funciona a regressão local
 
-Na raiz do repositório, com as dependências dos dois projetos instaladas:
+A regressão confere se uma mudança preserva comportamentos já testados, como seleção de rotas, interpretação de cartões, configuração, evidências e restauração simulada. Ela usa dados de teste, arquivos temporários e serviços locais simulados. Os fluxos com o MES, SQL e CLP da bancada continuam a ser validados nas specs do Cypress.
 
-```powershell
-node verificar-tudo.cjs
-```
+| Onde executar | Comando | O que executa |
+| --- | --- | --- |
+| Raiz do repositório | `node verificar-tudo.cjs` ou `VERIFICAR_REGRESSAO.cmd` | Piloto, Monitor e integração simulada |
+| `mes-s7-piloto/` | `npm.cmd test` | Apenas as regressões locais do Piloto, com a mesma descoberta do verificador |
+| `mes-s7-piloto/` | `node --test regressao/recebimentos/cartao-recebimento.test.cjs` | Um teste direcionado ao módulo de cartão do Recebimento |
 
-Também é possível executar `VERIFICAR_REGRESSAO.cmd`. Para o piloto isoladamente, execute `npm.cmd test` em `mes-s7-piloto`; para conferir o catálogo offline, use `npm.cmd run verificar:catalogo` nessa mesma pasta, com a fonte configurada.
+Instale as dependências conforme a seção 2. Para usar `npm.cmd test`, mantenha o subprojeto dentro do repositório, pois o script chama o verificador da raiz. A integração simulada usa o arquivo `verificar-integracao.test.cjs`.
 
-A regressão usa arquivos temporários e peers locais. Ela não substitui a validação do Windows/Excel nem do MES, SQL e CLP da bancada.
+O verificador descobre recursivamente arquivos `.test.js`, `.test.cjs` e `.test.mjs` em `mes-s7-piloto/regressao/` e `monitor-s7/test/`. Ao criar uma regressão do Piloto, use a subpasta do processo ou as pastas `comum/` e `s7/`. Coloque planilhas e outros dados de teste em `regressao/fixtures/`. As specs operacionais ficam em `mes-s7-piloto/testes/`.
 
-A regressão padrão cobre as suítes `.test.js` do Piloto, as do Monitor e a integração simulada. Para incluir o Recebimento, o cadastro de OR e a regra de estoque da origem, execute também a partir de `mes-s7-piloto`.
+Confira no terminal a quantidade de arquivos descobertos e os totais de testes aprovados, com falha e pulados. Se um grupo falhar, o verificador executa os grupos seguintes e termina com código de saída `1`. Registre a versão, o grupo executado e os totais. Uma falha pode ser investigada repetindo apenas o arquivo indicado.
 
-```powershell
-$testes = Get-ChildItem -File -Path testes/recebimentos/*.test.cjs,testes/ordens-recebimento/*.test.cjs,testes/transferencias/estoque-origem.test.cjs | Select-Object -ExpandProperty FullName
-node --test @testes
-```
+Para conferir o catálogo offline, use `npm.cmd run verificar:catalogo` em `mes-s7-piloto/`, com a fonte configurada.
 
 ### Dependências
 
@@ -499,11 +499,22 @@ Os arquivos `VERSOES_INTEGRACAO.json`, relatórios e manifestos devem ser lidos 
 
 A [referência de Recebimento](.agents/skills/piloto-evolucao-processos/references/recebimento.md) registra modalidades, validações e decisões pendentes.
 
-A matriz registra T01–T09 para Transporte e R01–R07 para Recebimento. Dosagem segue como esboço até a confirmação do ciclo, das tolerâncias e da modalidade do MICRO.
+A matriz registra T01–T09 para Transporte e R01–R08 para Recebimento. Dosagem segue como esboço até a confirmação do ciclo, das tolerâncias e da modalidade do MICRO.
 
 Use a [matriz de processos](.agents/skills/piloto-evolucao-processos/references/matriz-processos.md) para identificar regras e consumidores. Antes de alterar um módulo comum, confira os pontos de uso e as evidências exigidas. Registre ambiguidades sem inventar critérios.
 
 A skill [piloto-evolucao-processos v0.4.0](.agents/skills/piloto-evolucao-processos/SKILL.md) orienta a revisão de regras e consumidores com um roteiro para as skills Cypress locais.
+
+<a id="entrega-recebimento"></a>
+### Entrega confirmada do Recebimento
+
+A tarefa de Recebimento grava `dados.entrega` no `eventos.jsonl` em `resultados/Recebimento_*` após confirmação no SQL. Os eventos `recebimento-confirmado` e `recebimento-ja-confirmado` distinguem a confirmação nesta execução de uma OR já recebida.
+
+A entrega registra modalidade, OR, item, produto, destino, peso recebido em kg e horário registrado no banco. Em Grãos e Líquidos, inclui rota e saldo observado no silo. Em Ensacados, inclui armazém e quantidade recebida.
+
+No Granel, a consulta reconhece uma OR já recebida antes de iniciar. Após o encerramento e a restauração da LSH, a spec consulta o SQL novamente. Se o registro final ainda estiver ausente, a entrega fica pendente. Cenários limitados à partida dependem de confirmação posterior. Ensacados confirma a entrada em estoque da OR e do produto.
+
+A integração futura deve conferir o estoque atual antes de avançar, pois o saldo registrado representa o momento da consulta.
 
 ### Referências históricas da Rev04
 

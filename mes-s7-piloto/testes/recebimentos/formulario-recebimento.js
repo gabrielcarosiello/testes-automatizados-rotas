@@ -1,3 +1,5 @@
+const { acessarMes } = require('../../comum/acesso-mes')
+
 const painel = '[role="tabpanel"]:visible'
 const lista = '.custom-dropdown-list:visible'
 
@@ -17,26 +19,8 @@ function selecionar(rotulo, opcao, busca, escopo = painel) {
 
 function abrirReceberGranel(modalidade, aba = modalidade) {
   const acesso = Cypress.expose('recebimento')
-  if (acesso?.erro) throw new Error(acesso.erro)
-  if (!acesso?.urlMes) throw new Error('Configuração de acesso ao MES indisponível para Recebimento.')
-  const { urlMes, usuarioMes, erroSenhaMes } = acesso
   const timeout = 30000
-  cy.visit(urlMes)
-  cy.location('pathname', { timeout }).should('match', /\/(login|home)\/?$/i).then(caminho => {
-    if (/\/home\/?$/i.test(caminho)) return
-    cy.get('.form-select', { timeout }).should('be.visible').click()
-    cy.get('[title=' + JSON.stringify(usuarioMes || 'ADMIN') + ']', { timeout })
-      .should('have.length', 1).should('be.visible').click()
-    cy.env(['senhaMES'], { log: false }).then(({ senhaMES }) => {
-      if (typeof senhaMES !== 'string' || !senhaMES.trim()) {
-        throw new Error(erroSenhaMes || 'Senha MES ausente. Confira credenciais.local.json.')
-      }
-      cy.get('[name="loginModel.Password"]', { timeout }).should('be.visible')
-        .type(senhaMES, { log: false, parseSpecialCharSequences: false })
-    })
-    cy.get('.btn:visible', { timeout }).should('have.length', 1).click()
-  })
-  cy.location('pathname', { timeout }).should('match', /\/home\/?$/i)
+  acessarMes({ ...acesso, usuarioMes: acesso?.usuarioMes || 'ADMIN' }, { contexto: 'Recebimento', timeout })
   cy.contains('.text-navbar', /^Movimentação$/, { timeout }).should('be.visible').click()
   cy.contains(/^Receber Granel$/, { timeout }).should('be.visible').click()
   cy.elementoMes('.dxbl-tabs-text-container .dxbl-tabs-text-overflow', aba, { ignorarAcentos: true })
