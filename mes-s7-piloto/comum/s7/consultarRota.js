@@ -105,7 +105,7 @@ async function consultarSilo(destino) {
   const nome = destino.toUpperCase().replace(/[- ]/g, '')
   return consultarBanco(async request => {
     const { recordset } = await request.input('Destino', sql.NVarChar(128), nome).query(`
-      SELECT TOP (2) cod_silo, nom_silo, num_silo_clp, des_string_conexao
+      SELECT TOP (2) cod_silo, nom_silo, num_silo_clp, des_string_conexao, val_peso_estoque
       FROM dbo.Silo
       WHERE REPLACE(REPLACE(UPPER(nom_silo), '-', ''), ' ', '') = @Destino
       ORDER BY cod_silo

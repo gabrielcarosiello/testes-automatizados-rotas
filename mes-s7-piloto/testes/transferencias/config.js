@@ -4,6 +4,7 @@ const { defineConfig } = require('cypress')
 const { piloto: versaoPiloto } = require('../../versao.json')
 const { ler, registrar, mensagemSemPendencias } = require('./lir-rotas')
 const { selecionarRotas, resumirLir, conferirRotaAtual } = require('./selecao-lir')
+const { conferirEstoqueOrigem } = require('./estoque-origem')
 const { gravarEvento, classificarFalha } = require('../../comum/registro-execucao')
 const original = { e2e: { setupNodeEvents: (_on, config) => config } }
 
@@ -37,6 +38,11 @@ module.exports = defineConfig({
       }
       const resultado = original.e2e.setupNodeEvents(on, config) || config
       on('task', {
+        conferirEstoqueOrigemTransferencia(codigo) {
+          const rota = autorizadas.get(String(codigo))
+          if (!rota) throw new Error('Rota inválida para a consulta de estoque da origem.')
+          return conferirEstoqueOrigem(rota.origem, origem => require('../../comum/s7/consultarRota').consultarSilo(origem))
+        },
         validarRotaLir(codigo) {
           const inicial = autorizadas.get(String(codigo))
           conferirRotaAtual(ler(config.projectRoot, lir.arquivo).rotas, inicial)

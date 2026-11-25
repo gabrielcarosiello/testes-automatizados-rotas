@@ -2,11 +2,11 @@
 
 ## Estado atual no Piloto-12
 
-Ciclo de Grãos RG e reconhecimento pelo SQL de OR já recebida foram validados na VM para milho em MG01 e farelo em RG08. A retomada da mesma OR ativa com resposta Não foi coberta localmente e ainda aguarda validação na VM. Consulte a [matriz atual](matriz-processos.md) e o [roteiro de reaproveitamento](reaproveitamento.md). As seções seguintes preservam o histórico do levantamento.
+Ciclo de Grãos RG e reconhecimento pelo SQL de OR já recebida foram validados na VM para milho em MG01 e farelo em RG08. A retomada da mesma OR ativa com resposta Não foi coberta localmente e ainda aguarda validação na VM. Consulte a [matriz atual](matriz-processos.md) e o [roteiro de reaproveitamento](reaproveitamento.md). Óleo de soja usa a mesma spec de Granel. O operador confirmou a seleção da aba de Líquidos e o reconhecimento de uma OR já recebida. Em Ensacados, o operador confirmou o recebimento por OR. A spec verifica o movimento de estoque associado à ordem e ao produto, com evidência própria. As seções de levantamento abaixo preservam o contexto histórico.
 
-## Referência e diagnóstico
+## Referência e diagnóstico inicial (histórico)
 
-Base analisada em 24/11/2026: Piloto-12, HEAD `1cae9ac`, branch `piloto-12`, árvore limpa e um commit à frente de `origin/piloto-12` na conferência inicial. A Rev04 e seus artefatos visuais ficam como referência editorial. O README, a seção 16 do manual e a matriz registram Recebimento como pendente. Na base documental analisada, a busca direcionada não encontrou um fluxo de Recebimento definido. A conferência posterior na tela está registrada abaixo.
+Base analisada em 24/11/2026: Piloto-12, HEAD `1cae9ac`, branch `piloto-12`, árvore limpa e um commit à frente de `origin/piloto-12` na conferência inicial. O README, a seção 16 do manual e a matriz registram Recebimento como pendente. Na base documental analisada, a busca direcionada não encontrou um fluxo de Recebimento definido. A conferência posterior na tela está registrada abaixo.
 
 O [Cypress](../../../../mes-s7-piloto/cypress.config.js) seleciona a LIR de Transporte, registra as tarefas Rev 00/S7 no Node e expõe `catalogoRev00` ao [spec de transferências](../../../../mes-s7-piloto/testes/transferencias/transferencias.cy.js). Hoje o `specPattern` abrangente pode descobrir qualquer novo `.cy.js` sob `testes/`, enquanto o carregamento seleciona configuração de Transporte. A [orquestração](../../../../mes-s7-piloto/testes/transferencias/rotas-transferencias.js) preserva a sessão com `testIsolation: false`. Login e navegação precedem as rotas. O estado em memória liga os testes, e os hooks registram o resultado e tratam pendências e recuperação. Rodar apenas o teste de uma rota pode pular a preparação necessária.
 
@@ -94,7 +94,7 @@ Registrar respostas e fontes nesta referência antes de atribuir IDs ou implemen
 
 ## Registro editorial
 
-Revisão 05, skill 0.2.0. `SKILL.md` concentra o procedimento e o isolamento. `matriz-processos.md` aponta para este levantamento e preserva T01–T08. Esta referência documenta classificação, impacto, cobertura e questões em aberto. `README.md`, `MANUAL_OPERACAO.md` e `CHANGELOG.md` registram a revisão e seus atalhos. O manual visual e os registros gerados da Rev04 são a edição anterior.
+Revisão 05, skill 0.2.0. `SKILL.md` concentra o procedimento e o isolamento. `matriz-processos.md` aponta para este levantamento e preserva T01–T08. Esta referência documenta classificação, impacto, cobertura e questões em aberto. `README.md`, `MANUAL_OPERACAO.md` e `CHANGELOG.md` registram a revisão e seus atalhos.
 
 Revisão estrutural orientada por `cypress-explain` e proposta de organização orientada por `cypress-author`. A consulta `cypress-docs` fica reservada para dúvidas de API ou comportamento que o código não responda. Nenhuma sessão `cypress-tap` foi necessária. As conclusões são documentais e não constituem validação do Recebimento.
 
@@ -140,7 +140,7 @@ Os cinco destinos tinham o produto 2 e não estavam marcados com bloqueio de car
 
 ## Dependências para Dosagem — Líquidos e MICRO
 
-- Líquidos deve entrar como cenário na spec de Recebimento existente, reaproveitando o cadastro da OR, a seleção e a evidência do Granel. O SQL confirma Recebimento Líquidos UT (5) e o produto 6, Óleo de Soja, com código 56111CG|.
-- A LIR associa RCP05 à rota 692, IBC → UT07 → UT10 → UT14. O caminho coincide com o SQL e UT14 estava vazio e sem bloqueio no levantamento. Confirmar no MES que a OR do produto 6 oferece esse tanque e essa rota. A conferência da linha 47 comprovou LSH_UT14 em M47 e ID 198 em N47. O cenário é configurável, e o ciclo de Líquidos ainda precisa ser validado no MES.
-- O MICRO segue pendente de identificação. Premix usa dosagem de ensacados. Microdosagem usa silos de dosagem. Confirmar qual dos dois o MES usa para o insumo MICRO da fórmula escolhida antes de criar um fluxo de recebimento específico.
-- Dosagem permanece como esboço.
+- Líquidos usa a spec de Recebimento existente, com o cadastro da OR, a seleção e a evidência do Granel. O SQL confirma Recebimento Líquidos UT (5) e o produto 6, Óleo de Soja, com código 56111CG|.
+- A LIR associa RCP05 à rota 692, IBC → UT07 → UT10 → UT14. O caminho coincide com o SQL e UT14 estava vazio e sem bloqueio no levantamento. Confirmar no MES que a OR do produto 6 oferece esse tanque e essa rota. A conferência da linha 47 comprovou LSH_UT14 em M47 e ID 198 em N47. O cenário é configurável. A validação do operador no MES está registrada no estado atual.
+- O MICRO já foi exercitado no Recebimento de Ensacados. Sua modalidade na Dosagem segue pendente. Premix usa dosagem de ensacados. Microdosagem usa silos de dosagem. Confirmar qual dos dois o MES usa para o insumo MICRO da fórmula escolhida antes de implementar a Dosagem correspondente.
+- Dosagem permanece como [esboço](../../../../mes-s7-piloto/testes/dosagem/LEIA-ME.txt).

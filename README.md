@@ -2,28 +2,27 @@
 
 # Piloto MES e S7
 
-### Testes de Transporte com Cypress, SQL Server e Monitor Siemens S7
+### Testes de Transporte e Recebimento com Cypress, SQL Server e Monitor Siemens S7
 
 ![Piloto](https://img.shields.io/badge/Piloto-12-167D8D?style=flat-square)
 ![Monitor](https://img.shields.io/badge/Monitor-0.13.0-263B68?style=flat-square)
-![Documentação](https://img.shields.io/badge/Documenta%C3%A7%C3%A3o-Rev05-6D55A3?style=flat-square)
+![Documentação](https://img.shields.io/badge/Documenta%C3%A7%C3%A3o-Rev06-6D55A3?style=flat-square)
 
-**[Manual de operação](MANUAL_OPERACAO.md) · [Manual visual](documentacao/visual/Piloto_12_Manual_Visual_Rev04.html) · [Matriz de processos](.agents/skills/piloto-evolucao-processos/references/matriz-processos.md) · [Histórico](CHANGELOG.md)**
+**[Manual de operação](MANUAL_OPERACAO.md) · [Matriz de processos](.agents/skills/piloto-evolucao-processos/references/matriz-processos.md) · [Histórico](CHANGELOG.md)**
 
 </div>
 
 ---
 
-O piloto verifica o fluxo de Transporte no MES e, no modo integrado, cruza os equipamentos cadastrados no SQL com os retornos S7. Os ensaios registram partida, nível alto quando aplicável, restauração, encerramento e resultados na LIR.
+O Piloto verifica Transporte, criação de ordens e Recebimento. Transporte e Recebimento a Granel usam MES, SQL e S7 conforme o cenário. Ensacados confirma a entrada em estoque por SQL.
 
-> **Versão:**: o código atual se identifica como **Piloto-12**. A revisão documental 04 não altera o funcionamento da aplicação.
+> A documentação Markdown está na Rev06 do **Piloto-12**.
 
 ## Comece pelo documento certo
 
 | Você precisa de… | Consulte |
 | --- | --- |
 | Preparar a instalação e configurar MES, SQL e S7 | [Manual de operação](MANUAL_OPERACAO.md#2-preparação-e-instalação) |
-| Ler com cores, busca e navegação lateral | [Manual visual em HTML](documentacao/visual/Piloto_12_Manual_Visual_Rev04.html) — baixe e abra no navegador |
 | Tratar uma escrita pendente ou interrupção | [Recuperação operacional](MANUAL_OPERACAO.md#10-recuperar-escrita-pendente) |
 | Entender os condicionamentos do Transporte | [Matriz de regras e consumidores](.agents/skills/piloto-evolucao-processos/references/matriz-processos.md) |
 | Investigar um erro conhecido | [Diagnóstico](MANUAL_OPERACAO.md#11-diagnóstico-de-erros) e [registro de estabilidade](mes-s7-piloto/docs/PILOTO_11_ESTABILIDADE.md) |
@@ -58,16 +57,14 @@ Forneça as configurações locais, a LIR e o projeto TIA da bancada antes de in
 
 | Processo | Situação nesta branch | Referência |
 | --- | --- | --- |
-| Transporte | Implementado; critérios e limites registrados | T01–T08 na matriz |
-| Recebimento | Pendente de levantamento | [Matriz de compartilhamento e cenário inicial](.agents/skills/piloto-evolucao-processos/references/recebimento.md) |
+| Transporte | Implementado; critérios e limites registrados | T01–T09 na matriz |
+| Recebimento | Grãos, Líquidos e Ensacados com cadastro e execução por cenário | [Regras e validações](.agents/skills/piloto-evolucao-processos/references/recebimento.md) |
 | Dosagem | Pendente de levantamento | Confirmar ciclo, tolerâncias e recuperação |
 
 Reaproveite serviços somente após comprovar a equivalência do comportamento. Mudanças em módulos comuns exigem análise dos consumidores e regressão correspondente.
 
 ## Sobre a documentação
 
-O manual visual funciona offline, sem bibliotecas externas. Inclui o manual operacional, a matriz existente e o estudo de desempenho. O GitHub apresenta o código do HTML; baixe o arquivo para visualizar o layout no navegador. O Markdown permanece como fonte editável dos procedimentos.
-
 Os números de testes e as medições mantêm a identificação da revisão que os produziu. A revisão documental 04 verificou apresentação, links e integridade dos arquivos funcionais; não executou novos testes contra a bancada.
 
-[Registro editorial da Rev04](documentacao/REVISAO_DOCUMENTAL_Rev04.md) · [Changelog](CHANGELOG.md)
+[Auditoria da Rev06](documentacao/AUDITORIA_PILOTO_Rev06.md) · [Changelog](CHANGELOG.md)

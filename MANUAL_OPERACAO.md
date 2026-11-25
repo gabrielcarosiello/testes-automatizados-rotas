@@ -1,10 +1,10 @@
 # Manual de operação do Piloto MES e S7
 
-**Piloto-12 · Monitor 0.13.0 · Revisão documental 05 · 24 de novembro de 2026**
+**Piloto-12 · Monitor 0.13.0 · Revisão documental 06 · 25 de novembro de 2026**
 
-Este manual orienta a preparação da bancada, a execução dos testes de Transporte e a conferência dos resultados. Também descreve como tratar falhas e recuperar operações interrompidas, preservando a LIR, as evidências e o estado de escrita no S7.
+Este manual orienta a preparação da bancada, a execução dos testes de Transporte e Recebimento e a conferência dos resultados. Também descreve como tratar falhas e recuperar operações interrompidas, preservando a LIR, as evidências e o estado de escrita no S7.
 
-A branch de distribuição é `piloto-11`, mas a identificação funcional atual é **Piloto-12**, conforme `mes-s7-piloto/versao.json`. Esta revisão melhora a documentação e a apresentação; não altera o código funcional.
+A revisão foi feita na branch `piloto-12-recebimento`. A versão funcional consta em `mes-s7-piloto/versao.json`. Consulte o [registro da auditoria Rev06](documentacao/AUDITORIA_PILOTO_Rev06.md).
 
 > **Antes de iniciar:** confirme a CPU, a seleção de rotas, a planilha ativa e a ausência de pendências de restauração. Mantenha apenas uma execução por bancada MES/CLP.
 
@@ -36,7 +36,6 @@ Abra `mes-s7-piloto` como projeto Cypress. O Monitor é um serviço separado, na
 | --- | --- |
 | `README.md` | Apresentação do projeto e acesso rápido aos documentos |
 | `MANUAL_OPERACAO.md` | Procedimentos operacionais desta revisão |
-| `documentacao/visual/Piloto_12_Manual_Visual_Rev04.html` | Manual visual com navegação, pesquisa e impressão |
 | `mes-s7-piloto/cypress.config.js` | Configuração integrada e registro de tarefas |
 | `mes-s7-piloto/testes/transferencias/` | Especificação, orquestração e regras do Transporte |
 | `mes-s7-piloto/comum/` e `comum/s7/` | Serviços, persistência, catálogo, perfis e comunicação |
@@ -249,6 +248,16 @@ O catálogo PEData pode ser parcial. Confirme área, tipo e offsets no projeto, 
 <a id="7-executar-o-cypress"></a>
 ## 7. Execução no Cypress
 
+| Processo | Entrada no runner |
+| --- | --- |
+| Transporte | `transferencias.cy.js` |
+| Cadastro de OR a Granel e Líquidos | `nova-ordem.ordem.js` |
+| Cadastro de OR de Ensacados | `nova-ordem.ensacados.js` |
+| Recebimento a Granel e Líquidos | `recebimento.js` |
+| Recebimento de Ensacados | `recebimento-ensacados.js` |
+
+Em Ensacados, o MES é acessado em **Movimentação → Receber Ensacado por Ordem de Recebimento**. O cenário identifica a OR e o produto, verifica se já existe movimento de estoque e, quando necessário, inicia e confirma o movimento por SQL. Em Granel e Líquidos, a spec acompanha o cartão no MES e os retornos S7 do cenário.
+
 Na pasta `mes-s7-piloto`, execute `ABRIR_CYPRESS.cmd` ou:
 
 ```powershell
@@ -284,6 +293,8 @@ Para interromper, use Stop e confira os estados MES/S7 antes de uma nova execuç
 | Persistência | Gravar eventos, evidência, histórico e resultado na LIR |
 
 ### Recusas, impedimentos e recuperação
+
+A preparação do Transporte consulta o silo de origem. Estoque zero confirmado impede a partida e registra a origem e o motivo na LIR e no histórico. A consulta inconclusiva fica no diagnóstico e o fluxo de validação prossegue.
 
 A recusa por nível alto deve corresponder ao destino da rota. Preserve a mensagem, a captura e o resultado. Quando as guardas do rearme PLCSIM permitem nova tentativa, ela é única. Uma segunda recusa com S7 normal pode adiar o mesmo destino naquele local até o próximo lote, conforme o fluxo implementado.
 
@@ -427,6 +438,13 @@ Também é possível executar `VERIFICAR_REGRESSAO.cmd`. Para o piloto isoladame
 
 A regressão usa arquivos temporários e peers locais. Ela não substitui a validação do Windows/Excel nem do MES, SQL e CLP da bancada.
 
+A regressão padrão cobre as suítes `.test.js` do Piloto, as do Monitor e a integração simulada. Para incluir o Recebimento, o cadastro de OR e a regra de estoque da origem, execute também a partir de `mes-s7-piloto`.
+
+```powershell
+$testes = Get-ChildItem -File -Path testes/recebimentos/*.test.cjs,testes/ordens-recebimento/*.test.cjs,testes/transferencias/estoque-origem.test.cjs | Select-Object -ExpandProperty FullName
+node --test @testes
+```
+
 ### Dependências
 
 O `package.json` atual usa SheetJS `xlsx` **0.20.3**, por URL do fornecedor. A referência histórica a uma pendência em `xlsx` 0.18.5 pertence à versão anterior e não descreve a dependência declarada neste checkout. Esta revisão documental não executou uma nova auditoria nem declara ausência de vulnerabilidades. Preserve a origem de cada relatório e evite atualizações forçadas sem regressão da LIR.
@@ -438,7 +456,7 @@ Registre commit, versão do Node, resultado por grupo e limites da validação. 
 | Skill | Aplicação | Evidência esperada |
 | --- | --- | --- |
 | `$cypress-explain` | Revisar a intenção, a sequência e as dependências do teste | Condição, tarefa, seletor e comportamento relacionado |
-| `$cypress-docs` | Conferir APIs para a versão instalada | Versão e referência oficial |
+| `$cypress-docs` | Conferir APIs para a versão instalada | Versão instalada e fonte disponível no escopo autorizado |
 | `$cypress-author` | Criar ou corrigir testes com os helpers existentes | Cenário, asserção e regressão |
 | `$cypress-tap` | Inspecionar a sessão local correta e seu Command Log | PID/sessão, spec, novo início e resultado efetivamente executado |
 
@@ -479,19 +497,19 @@ Os arquivos `VERSOES_INTEGRACAO.json`, relatórios e manifestos devem ser lidos 
 <a id="16-evolução-dos-processos"></a>
 ## 16. Evolução dos processos
 
-A [preparação do Recebimento](.agents/skills/piloto-evolucao-processos/references/recebimento.md) registra o cenário proposto, os limites de compartilhamento e as decisões pendentes. O manual visual Rev04 corresponde à edição anterior.
+A [referência de Recebimento](.agents/skills/piloto-evolucao-processos/references/recebimento.md) registra modalidades, validações e decisões pendentes.
 
-O Transporte possui regras implementadas T01–T08. Recebimento e Dosagem permanecem **pendentes de levantamento**; compartilhar módulos não comprova equivalência funcional entre processos.
+A matriz registra T01–T09 para Transporte e R01–R07 para Recebimento. Dosagem segue como esboço até a confirmação do ciclo, das tolerâncias e da modalidade do MICRO.
 
 Use a [matriz de processos](.agents/skills/piloto-evolucao-processos/references/matriz-processos.md) para identificar regras e consumidores. Antes de alterar um módulo comum, confira os pontos de uso e as evidências exigidas. Registre ambiguidades sem inventar critérios.
 
-A skill [`piloto-evolucao-processos` v0.1.0](.agents/skills/piloto-evolucao-processos/SKILL.md) orienta essa revisão. Esta entrega preserva integralmente seu conteúdo e a matriz existente. A separação entre infraestrutura, regras compartilhadas comprovadas e regras específicas continua sendo o princípio de desenvolvimento.
+A skill [piloto-evolucao-processos v0.4.0](.agents/skills/piloto-evolucao-processos/SKILL.md) orienta a revisão de regras e consumidores com um roteiro para as skills Cypress locais.
 
-### Referências da revisão
+### Referências históricas da Rev04
 
 - Branch: `piloto-11`.
 - Commit de origem: `7e0f7a4cddb39f244c8be13389c7ec4c59bf0806`.
 - Código funcional: `Piloto-12`.
 - Monitor: `0.13.0`.
 - Revisão documental: `04`.
-- Detalhes e arquivos alterados: [registro da revisão](documentacao/REVISAO_DOCUMENTAL_Rev04.md).
+- O [changelog](CHANGELOG.md) preserva o histórico das revisões documentais.

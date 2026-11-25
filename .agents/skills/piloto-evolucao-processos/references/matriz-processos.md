@@ -1,6 +1,6 @@
 # Matriz de processos do Piloto
 
-Base observada no código do Piloto 11.4 em 23/11/2026. As regras de Transporte descrevem o fluxo implementado. A matriz de módulos lista consumidores diretos verificados e cobre os pontos de integração principais.
+Base revista em 25/11/2026 no Piloto-12, branch piloto-12-recebimento, HEAD 51a94cc, incluindo a alteração local de estoque da origem. As regras de Transporte descrevem o fluxo implementado. A matriz de módulos lista consumidores diretos verificados e cobre os pontos de integração principais.
 
 ## Transporte
 
@@ -14,6 +14,7 @@ Base observada no código do Piloto 11.4 em 23/11/2026. As regras de Transporte 
 | T06 | Persistir a intenção antes da escrita. Restaurar o valor original com releitura e na sessão proprietária. Uma pendência em disco bloqueia outro ensaio. A proteção de prazo pode atuar enquanto o Node permanece ativo. | [Estado persistente](../../../../mes-s7-piloto/comum/s7/estado-escrita.js), [controle da LSH](../../../../mes-s7-piloto/comum/s7/nivel-alto.js) e [recuperação operacional](../../../../MANUAL_OPERACAO.md#10-recuperar-escrita-pendente) |
 | T07 | Confirmar liberação do local no MES. A limpeza de uma rota interrompida exige identificação do cartão da rota e diagnóstico. A parada de recuperação depende do mesmo cartão observado em **Iniciado** e das guardas de execução e restauração. | [Diagnóstico e limpeza](../../../../mes-s7-piloto/comum/impedimento-transferencia.js) e [recuperação de encerramento](../../../../mes-s7-piloto/comum/recuperar-encerramento.js) |
 | T08 | Registrar eventos, evidências S7 e histórico Rev 00. A LIR recebe o resultado normal, o nível alto quando aplicável e o resumo dos equipamentos afetados quando houver diagnóstico. O histórico mantém as leituras detalhadas. | [Tarefas Rev 00](../../../../mes-s7-piloto/testes/transferencias/config.js) e [gravação LIR](../../../../mes-s7-piloto/testes/transferencias/lir-rotas.js) |
+| T09 | Na preparação, consultar o estoque da origem por silo no SQL. Zero confirmado bloqueia a partida e registra o motivo. Origem sem cadastro ou leitura inconclusiva segue o fluxo existente. | [Regra de estoque](../../../../mes-s7-piloto/testes/transferencias/estoque-origem.js), [tarefas Rev 00](../../../../mes-s7-piloto/testes/transferencias/config.js) e [orquestração](../../../../mes-s7-piloto/testes/transferencias/rotas-transferencias.js) |
 
 ## Módulos compartilhados e consumidores
 
@@ -26,7 +27,7 @@ Caminhos relativos a `mes-s7-piloto/`. O uso compartilhado abaixo foi observado 
 | [limpar-transferencia.js](../../../../mes-s7-piloto/comum/limpar-transferencia.js) | Conduz a limpeza e confirma o encerramento. | `comum/impedimento-transferencia.js`, `testes/transferencias/rotas-transferencias.js` | T07 |
 | [s7/cliente-monitor.js](../../../../mes-s7-piloto/comum/s7/cliente-monitor.js) e [s7/estado-escrita.js](../../../../mes-s7-piloto/comum/s7/estado-escrita.js) | Cliente HTTP do Monitor e controle persistente da escrita. | Ambos são usados por `comum/s7/piloto.js` e `scripts/diagnosticar.cjs`. | T03, T06 |
 | [s7/indice-catalogo.js](../../../../mes-s7-piloto/comum/s7/indice-catalogo.js) e [s7/catalogo-projeto.js](../../../../mes-s7-piloto/comum/s7/catalogo-projeto.js) | Indexação, obtenção do catálogo e conferência de sinais. | Ambos são usados por `comum/s7/piloto.js` e `scripts/verificar-catalogo.cjs`. O índice também atende `comum/s7/nivel-alto.js` e `comum/s7/gerarRotaCLP.js`. | T03, T05 |
-| [s7/consultarRota.js](../../../../mes-s7-piloto/comum/s7/consultarRota.js) | Consulta os vínculos de rota e o cadastro de silo. | `comum/s7/piloto.js` usa `consultarRota`; `cypress.config.js` injeta `consultarSilo`. | T03, T05 |
+| [s7/consultarRota.js](../../../../mes-s7-piloto/comum/s7/consultarRota.js) | Consulta vínculos, estoque de silo e confirmações SQL de Recebimento. | `comum/s7/piloto.js` usa `consultarRota`; `cypress.config.js` injeta `consultarSilo`, usado também pelas tarefas de Transferência. `testes/recebimentos/s7.js` consulta a confirmação de Recebimento. | T03, T05, T09, R03, R07 |
 | [s7/nivel-alto.js](../../../../mes-s7-piloto/comum/s7/nivel-alto.js) e [s7/diagnostico-equipamentos.js](../../../../mes-s7-piloto/comum/s7/diagnostico-equipamentos.js) | Controles da LSH e leitura de estados dos equipamentos. | Ambos atendem `comum/s7/piloto.js`. O primeiro também atende `cypress.config.js` e `scripts/verificar-catalogo.cjs`; o segundo atende `scripts/diagnosticar.cjs`. | T02, T04, T05, T06, T07 |
 | [registro-execucao.js](../../../../mes-s7-piloto/comum/registro-execucao.js) | Grava o diário e fornece a classificação das falhas. | `comum/s7/piloto.js` e `testes/transferencias/config.js` | T06, T08 |
 | [gravar-lir.js](../../../../mes-s7-piloto/comum/gravar-lir.js) | Atualiza ou recupera a planilha preservando sua estrutura. | `testes/transferencias/lir-rotas.js` e `scripts/reparar-planilha.cjs` | T08 |
@@ -40,8 +41,10 @@ Caminhos relativos a `mes-s7-piloto/`. O uso compartilhado abaixo foi observado 
 | R03 | A consulta SQL confirma OR finalizada na mesma rota e destino, com peso recebido e saldo atual do produto. O cenário segue sem nova partida. | [Consulta SQL](../../../../mes-s7-piloto/comum/s7/consultarRota.js) |
 | R04 | Confirma retornos S7 e Iniciado. Quando aplicável, confirma nível alto no S7 e no cartão, encerra a ordem, restaura a LSH e verifica o painel livre. | [Spec de Recebimento](../../../../mes-s7-piloto/testes/recebimentos/recebimento.js) e [leitor de cartão](../../../../mes-s7-piloto/testes/recebimentos/cartao-recebimento.js) |
 | R05 | Antes de retomar, verifica a pendência de LSH. Para somente a OR ativa do cenário em estado conhecido, responde Não à finalização e aguarda painel livre. | [Spec de Recebimento](../../../../mes-s7-piloto/testes/recebimentos/recebimento.js) e [estado da escrita](../../../../mes-s7-piloto/comum/s7/estado-escrita.js) |
+| R06 | Líquidos usa a mesma spec de Granel. A modalidade, o produto, o destino, a rota e a LSH vêm do cenário e da LIR aplicável. | [Formulário](../../../../mes-s7-piloto/testes/recebimentos/formulario-recebimento.js) e [spec](../../../../mes-s7-piloto/testes/recebimentos/recebimento.js) |
+| R07 | Ensacados tem specs de cadastro e recebimento próprias. O cadastro usa o fluxo compartilhado com a opção Ensacados. O recebimento verifica o movimento de estoque da OR e do produto antes e depois de Iniciar. | [Cadastro](../../../../mes-s7-piloto/testes/ordens-recebimento/nova-ordem.ensacados.js), [spec](../../../../mes-s7-piloto/testes/recebimentos/recebimento-ensacados.js) e [tarefas](../../../../mes-s7-piloto/testes/recebimentos/s7.js) |
 
-R01–R04 foram exercitados na VM com milho e farelo. R05 passou na regressão local. A resposta Não e a disponibilidade da OR após a parada ainda precisam ser confirmadas na VM. Consulte o [levantamento](recebimento.md) e o [roteiro de reaproveitamento](reaproveitamento.md).
+R01–R04 foram exercitados na VM com milho e farelo. O operador também confirmou Líquidos e Ensacados na VM. R05 passou na regressão local. A resposta Não e a disponibilidade da OR após a parada ainda precisam ser confirmadas na VM. Consulte o [levantamento](recebimento.md) e o [roteiro de reaproveitamento](reaproveitamento.md).
 
 ## Dosagem
 

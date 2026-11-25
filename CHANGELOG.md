@@ -1,8 +1,17 @@
 # Changelog
 
+- A Transferência identifica origem com estoque zero antes da partida e registra o motivo na LIR e no histórico.
+
 - O cadastro de OR de Ensacados reutiliza o fluxo completo e marca Ensacados antes de liberar o cabeçalho.
 
 - Adicionados os specs iniciais de cadastro e Recebimento de Ensacados com login reaproveitado. A primeira validação em bancada cobre apenas a abertura das telas e a opção Ensacados.
+
+## Revisão documental 06 — 25/11/2026
+
+- Removidos o manual visual e os relatórios da Rev04, junto com os dois arquivos rotulados como Python. Os procedimentos atuais estão no manual de operação e o histórico permanece no Git.
+
+- Atualizada a skill piloto-evolucao-processos para 0.4.0, com roteiro local das skills Cypress e validação por regra.
+- Revisados manual, README e matriz para Transporte com conferência de estoque e Recebimento de Grãos, Líquidos e Ensacados. Registrados os candidatos à limpeza e a cobertura complementar da regressão.
 
 ## Revisão documental — Skills do Piloto (24/11/2026)
 

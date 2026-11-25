@@ -198,6 +198,16 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
             .should('contain.text', rota.nome))
       })
   }
+  function conferirEstoqueOrigem(rota) {
+    etapa('Conferir estoque da origem')
+    return cy.task('conferirEstoqueOrigemTransferencia', rota.codigo, { timeout: 40000 }).then(resultado => {
+      if (resultado.estado === 'inconclusivo') return cy.log(resultado.detalhe)
+      if (resultado.estado !== 'vazio') return
+      execucao.atual.falhaOrigem = resultado.detalhe
+      return capturar('origem-vazia').then(() => { throw new Error(resultado.detalhe) })
+    })
+  }
+
   function preparar(rota) {
     if (execucao.anterior) {
       cy.log('Verificando e parando a transferência da etapa anterior, se estiver em uso.')
@@ -210,6 +220,7 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
     etapa('Verificar transferência ativa')
     if (pilotoS7) verificarEParar(rota.nome, false, false, true)
     else verificarEParar()
+    conferirEstoqueOrigem(rota)
     transferencia(rota)
     selecionar(campo.origem, rota.origem, 'origem')
     selecionar(campo.destino, rota.destino, 'destino')
@@ -522,7 +533,7 @@ describe('Transferir Granel - Rev 00', { testIsolation: false }, () => {
         tipoExecucao: atual.validacaoLir?.tipoExecucao || atual.rota.tipoExecucao,
         statusInicial: atual.validacaoLir?.statusInicial || atual.rota.statusInicial,
         detalhes: [atual.detalhes, erro].filter(Boolean).join(' | '),
-        falhaLir: atual.resumoEquipamentos && [
+        falhaLir: atual.falhaOrigem || atual.resumoEquipamentos && [
           atual.resumoEquipamentos,
           execucao.restauracaoFalhou && 'Restauração pendente.',
           atual.tentouLimparInterrompida && execucao.anterior && 'Encerramento pendente no MES.',
