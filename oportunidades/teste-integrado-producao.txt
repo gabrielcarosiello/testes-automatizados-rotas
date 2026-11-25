@@ -1,0 +1,19 @@
+﻿TESTE INTEGRADO DE PRODUÇÃO
+Proposta registrada em 25/11/2026
+
+Objetivo
+Executar Recebimento → Transferências → Dosagem em uma única execução do Cypress, mantendo as specs individuais disponíveis para validação isolada.
+
+Fluxo proposto
+1. Receber os insumos com ordens e quantidades sintéticas configuráveis na simulação. Confirmar produto, ordem, quantidade e silo de entrada.
+2. Testar todas as rotas planejadas e registrar o resultado de cada uma. Programar as movimentações de abastecimento da linha Rações RC por último, respeitando compatibilidade de produto e disponibilidade de destino. Confirmar encerramento e restauração da LSH quando aplicável.
+3. Conferir os insumos nos silos de Dosagem. Cadastrar e liberar a CYPRESS RAC, com 10 bateladas de 230 kg. Confirmar a ocupação do passo pela produção correta, acompanhar os equipamentos por segmento e conferir as 10 bateladas e o lote em ME01.
+
+Evidências e critérios
+Usar um identificador de execução comum para vincular ordens, materiais, rotas, produção e lote. Registrar separadamente a cobertura das rotas e o resultado da Dosagem. Rotas bloqueadas ficam registradas com o motivo. Insumo indisponível ou restauração pendente impede a liberação da Dosagem.
+
+Validação proposta
+Começar com um percurso completo de abastecimento e Dosagem. Depois ampliar para todas as rotas previstas. O ciclo completo da Dosagem depende da validação no MES atualizado. Processo Contínuo poderá ser adicionado em uma etapa futura, usando o lote confirmado na saída da Dosagem.
+
+Situação
+Ideia registrada para desenvolvimento futuro.
