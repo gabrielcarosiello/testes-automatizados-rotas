@@ -15,3 +15,19 @@ Ordem | Produto | Peso requisitado no SQL | Grupo de balança
 Estoque observado durante o levantamento: MG01, milho 4000 kg; RG08, farelo 2000 kg.
 Nenhuma linha de composição da fórmula 238 tem silo explícito. Conferir os silos oferecidos pelo MES, a unidade dos pesos e a disponibilidade dos demais insumos antes de preparar uma Dosagem completa.
 O desenvolvimento do ciclo fica para depois dos testes de Recebimento de Líquidos (Óleo de Soja) e Ensacados (MICRO).
+
+Cenário validado manualmente em Rações RC
+- Produção 76956, CYPRESS RAC versão 2, Trajeto Rações, destino ME01, 10 bateladas de 230 kg.
+- Após Liberada para Produção, o MES mostrou Realizando. Passo 1 (Dosagem Bal. RC49) mostrou Rodando para a produção 76956, batelada 1. O lote estava vazio.
+- O operador interrompeu o passo 2 (Pulmão Bal. RC49). A captura mostra Interrompido, sem produção vinculada nessa linha. A execução demonstra a partida e a leitura do detalhe, com conclusão ainda pendente.
+- Detalhe Batelada vinculou produção 76956 à batelada 1. Milho moído 34130CP|GR: RC06, RC49, 100 kg solicitados, 109,5 kg observados enquanto Dosando. Farelo 42490CP|GR: RC04, RC49, 100 kg solicitados. Óleo 56111CG|: UT14, RC83, 30 kg solicitados. Farelo e óleo estavam Não Dosado nesse instante.
+- Usar o número da produção e a batelada para conferir o passo e o detalhe. Registrar origem, balança, pesos, situação e datas. Julgar tolerância pelo resultado final e pelos alarmes configurados no MES.
+
+Fases após confirmação do agendamento
+0. Agendamento. Execute cadastro-producao.cy.js para cadastrar 1.000 bateladas de 230 kg e conferir o número da produção pelo Código|Lote na grade, em 0/1000.
+1. Pré-validação no Teste Pr. A mesma spec abre o diagnóstico da produção recém-agendada. Aprovação exige os três insumos Ok e ausência de impedimento numerado. O diário e as capturas das duas fases ficam em resultados/Dosagem_<lote>/. Se a pré-validação passar, a mesma spec segue para a fase 2.
+2. Liberação. A spec fecha o diagnóstico, marca Liberada para Produção e abre Passo de Produção em Rações RC. A fase confirma Rodando ou Ocupado para a produção, o lote e o destino na grade, e grava o evento partida. A conclusão no silo fica para uma fase posterior.
+3. Acompanhamento da batelada. Registrar origem, balança, pesos e situação por insumo. Correlacionar passo e segmento com os equipamentos observados no Monitor S7.
+4. Encerramento. Conferir a batelada agendada e a produção no silo ME01. Registrar alarmes da bancada e manter a retomada sob operação humana.
+
+Execução prolongada: após confirmar a partida, a spec lê os passos da mesma produção e lote a cada 15 s por até 16 h. O diário grava mudanças, inclusive a ausência de passos visíveis. A execução permanece em observação durante interrupções, sem avançar bateladas ou rearmar a linha. Ao fim da janela, confira a chegada do lote em Lotes do Silo → ME01.

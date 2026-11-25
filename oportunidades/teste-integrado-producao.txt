@@ -4,10 +4,15 @@ Proposta registrada em 25/11/2026
 Objetivo
 Executar Recebimento → Transferências → Dosagem em uma única execução do Cypress, mantendo as specs individuais disponíveis para validação isolada.
 
+Plano de abastecimento antes do Recebimento
+Fixar fórmula, versão, linha e número de bateladas. Para cada insumo, registrar o código exato do produto no MES, a demanda total, o silo ou armazém de entrada, a rota de transferência quando necessária e o silo ou ponto de consumo na Dosagem. A entrada deve ter caminho confirmado até a linha. Vincular cada OR ao insumo do cenário e usar quantidades sintéticas configuráveis na simulação.
+
+Referência observada na produção 76956: CYPRESS RAC versão 2, Rações RC, 10 bateladas de 230 kg, destino final ME01. A batelada 1 mostrou milho moído 34130CP|GR em RC06 (RC49), farelo 42490CP|GR em RC04 (RC49) e óleo 56111CG| em UT14 (RC83). A demanda planejada é de 1.000 kg, 1.000 kg e 300 kg, respectivamente. Confirmar esses vínculos no MES a cada cenário.
+
 Fluxo proposto
-1. Receber os insumos com ordens e quantidades sintéticas configuráveis na simulação. Confirmar produto, ordem, quantidade e silo de entrada.
+1. Receber cada insumo conforme o plano de abastecimento. Confirmar OR, produto, quantidade e local de entrada por evidência de Recebimento.
 2. Testar todas as rotas planejadas e registrar o resultado de cada uma. Programar as movimentações de abastecimento da linha Rações RC por último, respeitando compatibilidade de produto e disponibilidade de destino. Confirmar encerramento e restauração da LSH quando aplicável.
-3. Conferir os insumos nos silos de Dosagem. Cadastrar e liberar a CYPRESS RAC, com 10 bateladas de 230 kg. Confirmar a ocupação do passo pela produção correta, acompanhar os equipamentos por segmento e conferir as 10 bateladas e o lote em ME01.
+3. Conferir produto e saldo atuais nos silos de Dosagem, descarga disponível e prioridade 1 nos silos selecionados. Cadastrar a CYPRESS RAC, com 10 bateladas de 230 kg, e executar Teste Produção. Registrar os impedimentos por insumo e liberar somente após a pré-validação do MES. Confirmar a ocupação do passo pela produção correta, acompanhar os equipamentos por segmento e conferir as 10 bateladas e o lote em ME01.
 
 Evidências e critérios
 Usar um identificador de execução comum para vincular ordens, materiais, rotas, produção e lote. Registrar separadamente a cobertura das rotas e o resultado da Dosagem. Rotas bloqueadas ficam registradas com o motivo. Insumo indisponível ou restauração pendente impede a liberação da Dosagem.
